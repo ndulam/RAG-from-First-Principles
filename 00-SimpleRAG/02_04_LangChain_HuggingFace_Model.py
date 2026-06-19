@@ -1,18 +1,18 @@
-# 1. 加载文档
+# 1. Load the document
 from langchain_community.document_loaders import WebBaseLoader # pip install beautifulsoup4
 
 loader = WebBaseLoader(
-    web_paths=("https://zh.wikipedia.org/wiki/black myth：Wukong",)
+    web_paths=("https://en.wikipedia.org/wiki/Black_Myth:_Wukong",)
 )
 docs = loader.load()
 
-# 2. 文档分块
+# 2. Split the document into chunks
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 all_splits = text_splitter.split_documents(docs)
 
-# 3. 设置嵌入模型
+# 3. Set up the embedding model
 from langchain_huggingface import HuggingFaceEmbeddings
 
 embeddings = HuggingFaceEmbeddings(
@@ -21,44 +21,45 @@ embeddings = HuggingFaceEmbeddings(
     encode_kwargs={'normalize_embeddings': True}
 )
 
-# 4. 创建向量存储
+# 4. Create the vector store
 from langchain_core.vectorstores import InMemoryVectorStore
 
 vector_store = InMemoryVectorStore(embeddings)
 vector_store.add_documents(all_splits)
 
-# 5. 构建用户查询
-question = "BlackMythWukong有哪些游戏场景？"
+# 5. Build the user query
+question = "What game scenes are there in Black Myth: Wukong?"
 
-# 6. 在向量存储中搜索相关文档，并准备上下文内容
+# 6. Search the vector store for relevant documents and prepare the context
 retrieved_docs = vector_store.similarity_search(question, k=3)
 docs_content = "\n\n".join(doc.page_content for doc in retrieved_docs)
 
-# 7. 构建提示模板
+# 7. Build the prompt template
 from langchain_core.prompts import ChatPromptTemplate
 
 prompt = ChatPromptTemplate.from_template("""
-                基于以下上下文，用中文回答问题。如果上下文中没有相关信息，
-                请说"我无法从提供的上下文中找到相关信息"。
-                上下文: {context}
-                问题: {question}
-                回答:"""
+                Answer the question in English based on the context below. If the context
+                doesn't contain relevant information, say "I cannot find relevant
+                information in the provided context."
+                Context: {context}
+                Question: {question}
+                Answer:"""
                                           )
 
-# 8. 使用大语言模型生成答案
+# 8. Use the large language model to generate the answer
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
 
-# 加载模型和分词器
+# Load the model and tokenizer
 model_name = "Qwen/Qwen2.5-1.5B"
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-model = AutoModelForCausalLM.from_pretrained(model_name, 
-                                             trust_remote_code=True, 
+model = AutoModelForCausalLM.from_pretrained(model_name,
+                                             trust_remote_code=True,
                                             #  device_map='auto'
                                              )
 
-# 创建pipeline
+# Create the pipeline
 pipe = pipeline(
     "text-generation",
     model=model,
@@ -70,7 +71,7 @@ pipe = pipeline(
     # low_cpu_mem_usage=True
 )
 
-# 创建LangChain的HuggingFace Pipeline包装器
+# Create the LangChain HuggingFace Pipeline wrapper
 llm = HuggingFacePipeline(pipeline=pipe)
 
 answer = llm.invoke(prompt.format(question=question, context=docs_content))

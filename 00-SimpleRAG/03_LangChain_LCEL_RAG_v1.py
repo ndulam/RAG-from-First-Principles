@@ -1,61 +1,62 @@
-# 1. 加载文档
+# 1. Load the document
 from langchain_community.document_loaders import WebBaseLoader
 
 loader = WebBaseLoader(
-    web_paths=("https://zh.wikipedia.org/wiki/black myth：Wukong",)
+    web_paths=("https://en.wikipedia.org/wiki/Black_Myth:_Wukong",)
 )
 docs = loader.load()
 
-# 2. 分割文档
+# 2. Split the document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 all_splits = text_splitter.split_documents(docs)
 
-# 3. 设置嵌入模型
+# 3. Set up the embedding model
 from langchain_openai import OpenAIEmbeddings
 
 embeddings = OpenAIEmbeddings()
 
-# 4. 创建向量存储
+# 4. Create the vector store
 from langchain_core.vectorstores import InMemoryVectorStore
 
 vectorstore = InMemoryVectorStore(embeddings)
 vectorstore.add_documents(all_splits)
 
-# 5. 创建检索器
+# 5. Create the retriever
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
-# 6. 创建提示模板
+# 6. Create the prompt template
 from langchain_core.prompts import ChatPromptTemplate
 
 prompt = ChatPromptTemplate.from_template("""
-基于以下上下文，回答问题。如果上下文中没有相关信息，
-请说"我无法从提供的上下文中找到相关信息"。
-上下文: {context}
-问题: {question}
-回答:""")
+Answer the question based on the context below. If the context
+doesn't contain relevant information, say "I cannot find relevant
+information in the provided context."
+Context: {context}
+Question: {question}
+Answer:""")
 
-# 7. 设置语言模型和输出解析器
+# 7. Set up the language model and output parser
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
 llm = ChatOpenAI(model="gpt-3.5-turbo")
 
-# 8. 构建 LCEL 链
-# 管道式数据流像使用 Unix 命令管道 (|) 一样，将不同的处理逻辑串联在一起
+# 8. Build the LCEL chain
+# This pipe-style data flow chains different processing steps together, like Unix pipes (|)
 chain = (
     {
-        "context": retriever | (lambda docs: "\n\n".join(doc.page_content for doc in docs)),        
+        "context": retriever | (lambda docs: "\n\n".join(doc.page_content for doc in docs)),
         "question": RunnablePassthrough()
-    }    
-    | prompt 
-    | llm 
-    | StrOutputParser() 
-) # 查看每个阶段的输入输出
+    }
+    | prompt
+    | llm
+    | StrOutputParser()
+) # inspect the input/output of each stage
 
-# 9. 执行查询
-question = "BlackMythWukong有哪些游戏场景？"
-response = chain.invoke(question) # 同步，可以换成异步执行
+# 9. Run the query
+question = "What game scenes are there in Black Myth: Wukong?"
+response = chain.invoke(question) # synchronous; can be swapped for async execution
 print(response)

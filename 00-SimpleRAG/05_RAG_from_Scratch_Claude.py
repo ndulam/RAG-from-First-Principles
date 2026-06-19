@@ -1,57 +1,57 @@
-# 1. 准备文档数据
+# 1. Prepare the document data
 import os
 from dotenv import load_dotenv
 
-# 加载环境变量
+# Load environment variables
 load_dotenv()
 
 docs = [
-    "black mythWukong的战斗如同武侠小说活过来一般，当金箍棒与妖魔碰撞时，火星四溅，招式行云流水。Wukong可随心切换狂猛或灵动的战斗风格，一棒横扫千军，或是腾挪如蝴蝶戏花。",    
-    "72变神通不只是变化形态，更是开启新世界的钥匙。化身飞鼠可以潜入妖魔巢穴打探军情，变作金鱼能够探索深海遗迹的秘密，每一种变化都是一段独特的冒险。",    
-    "每场BOSS战都是一场惊心动魄的较量。或是与身躯庞大的九头蟒激战于瀑布之巅，或是在雷电交织的云海中与雷公电母比拼法术，招招险象环生。",    
-    "驾着筋斗云翱翔在这片神话世界，瑰丽的场景令人屏息。云雾缭绕的仙山若隐若现，古老的妖兽巢穴中藏着千年宝物，月光下的古寺钟声回荡在山谷。",    
-    "这不是你熟悉的journey to the west。当Wukong踏上寻找身世之谜的旅程，他将遇见各路神仙妖魔。有的是旧识，如同样桀骜不驯的哪吒；有的是劲敌，如手持三尖两刃刀的二郎神。",    
-    "作为齐天大圣，Wukong的神通不止于金箍棒。火眼金睛可洞察妖魔真身，一个筋斗便是十万八千里。而这些能力还可以通过收集天外陨铁、悟道石等材料来强化升级。",    
-    "世界的每个角落都藏着故事。你可能在山洞中发现上古大能的遗迹，云端天宫里寻得昔日天兵的宝库，或是在凡间集市偶遇卖人参果的狐妖。",    
-    "故事发生在大唐之前的蛮荒世界，那时天庭还未定鼎三界，各路妖王割据称雄。这是一个神魔混战、群雄逐鹿的动荡年代，也是Wukong寻找真相的起点。",    
-    "游戏的音乐如同一首跨越千年的史诗。古琴与管弦交织出战斗的激昂，笛萧与木鱼谱写禅意空灵。而当Wukong踏入重要场景时，古风配乐更是让人仿佛穿越回那个神话的年代。"
-    ] 
+    "Combat in Black Myth: Wukong feels like a wuxia novel come to life - when the golden cudgel clashes with demons, sparks fly and the moves flow like water. Wukong can switch freely between ferocious and nimble fighting styles, sweeping through enemy ranks with a single strike or darting about like a butterfly among flowers.",
+    "The 72 Transformations are more than just shapeshifting - they're a key that unlocks new worlds. Turning into a flying squirrel lets you sneak into demon lairs to gather intel, while becoming a goldfish lets you explore the secrets of deep-sea ruins; every transformation is its own unique adventure.",
+    "Every boss fight is a heart-pounding showdown - whether battling a massive nine-headed serpent atop a waterfall, or trading spells with the Thunder God and Lightning Mother amid a storm-wracked sea of clouds, every move carries real danger.",
+    "Soaring across this mythic world on the Cloud-Somersault, the breathtaking scenery takes your breath away. Mist-wreathed immortal mountains drift in and out of view, ancient monster lairs hide treasures a thousand years old, and the bell of an old temple echoes through moonlit valleys.",
+    "This isn't the Journey to the West you know. As Wukong sets out to uncover the mystery of his origins, he'll encounter gods and demons of every kind - some old acquaintances, like the equally headstrong Nezha; others formidable rivals, like Erlang Shen with his three-pointed double-edged blade.",
+    "As the Great Sage Equal to Heaven, Wukong's powers go well beyond the golden cudgel. His Fiery Golden Eyes can see through any demon's disguise, and a single somersault carries him a hundred thousand leagues. These abilities can be upgraded further by collecting materials like meteoric iron and enlightenment stones.",
+    "Every corner of the world hides a story. You might discover the ruins of an ancient power deep in a mountain cave, find the treasure vault of long-gone celestial soldiers in a sky palace, or stumble upon a fox spirit selling ginseng fruit at a mortal marketplace.",
+    "The story is set in a wild world that predates the Tang dynasty, when the Heavenly Court had not yet established its rule over the Three Realms and demon kings carved up the land among themselves. It was a turbulent age of warring gods and demons vying for supremacy - and the starting point of Wukong's search for the truth.",
+    "The game's music is like an epic spanning a thousand years. Guqin and orchestral strings weave together the intensity of battle, while flutes and wooden fish carve out a serene, Zen-like calm. And when Wukong enters key story scenes, the classical-style score makes you feel transported back to that mythic age."
+    ]
 
-# 2. 设置嵌入模型
+# 2. Set up the embedding model
 from sentence_transformers import SentenceTransformer
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 doc_embeddings = model.encode(docs)
-print(f"文档向量维度: {doc_embeddings.shape}")
+print(f"Document embedding dimensions: {doc_embeddings.shape}")
 
-# 3. 创建向量存储
+# 3. Create the vector store
 import faiss
 import numpy as np
 dimension = doc_embeddings.shape[1]
 index = faiss.IndexFlatL2(dimension)
 index.add(doc_embeddings.astype('float32'))
-print(f"向量数据库中的文档数量: {index.ntotal}")
+print(f"Number of documents in the vector database: {index.ntotal}")
 
-# 4. 执行相似度检索
-question = "black mythWukong的战斗系统有什么特点?"
+# 4. Perform similarity search
+question = "What are the characteristics of the combat system in Black Myth: Wukong?"
 query_embedding = model.encode([question])[0]
 distances, indices = index.search(
-    np.array([query_embedding]).astype('float32'), 
+    np.array([query_embedding]).astype('float32'),
     k=3
 )
 context = [docs[idx] for idx in indices[0]]
-print("\n检索到的相关文档:")
+print("\nRetrieved relevant documents:")
 for i, doc in enumerate(context, 1):
     print(f"[{i}] {doc}")
 
-# 5. 构建提示词
-prompt = f"""根据以下参考信息回答问题，并给出信息源编号。
-如果无法从参考信息中找到答案，请说明无法回答。
-参考信息:
+# 5. Build the prompt
+prompt = f"""Answer the question based on the reference information below, and cite the source numbers.
+If the answer cannot be found in the reference information, say that you cannot answer.
+Reference information:
 {chr(10).join(f"[{i+1}] {doc}" for i, doc in enumerate(context))}
-问题: {question}
-答案:"""
+Question: {question}
+Answer:"""
 
-# 6. 使用Claude生成答案
+# 6. Use Claude to generate the answer
 from anthropic import Anthropic # pip install anthropic
 claude = Anthropic(api_key=os.getenv("CLAUDE_API_KEY"))
 response = claude.messages.create(
@@ -62,4 +62,4 @@ response = claude.messages.create(
     }],
     max_tokens=1024
 )
-print(f"\n生成的答案: {response.content[0].text}")
+print(f"\nGenerated answer: {response.content[0].text}")

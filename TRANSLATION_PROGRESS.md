@@ -17,7 +17,7 @@ Status values: `pending`, `in_progress`, `done`, `skipped` (with reason).
 
 | Directory | Files w/ Chinese | Status |
 | --- | --- | --- |
-| 00-SimpleRAG | 21 | pending |
+| 00-SimpleRAG | 21 | done |
 | 01-DataLoading | 47 | pending |
 | 02-DocChunking | 7 | pending |
 | 03-Embedding | 6 | pending |

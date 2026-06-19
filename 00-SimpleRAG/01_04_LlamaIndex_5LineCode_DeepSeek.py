@@ -1,35 +1,35 @@
-# 第一行代码：导入相关的库
+# Line 1: import the relevant libraries
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.deepseek import DeepSeek
 from dotenv import load_dotenv
 import os
 
-# 加载环境变量
+# Load environment variables
 load_dotenv()
 
-# 加载本地嵌入模型
+# Load a local embedding model
 embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
 
-# 创建 Deepseek LLM
+# Create the DeepSeek LLM
 llm = DeepSeek(
     model="deepseek-chat",
     api_key=os.getenv("DEEPSEEK_API_KEY")
 )
 
-# 第二行代码：加载数据
-documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/setup.txt"]).load_data() 
+# Line 2: load the data
+documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/setup.txt"]).load_data()
 
-# 第三行代码：构建索引
+# Line 3: build the index
 index = VectorStoreIndex.from_documents(
     documents,
     embed_model=embed_model
 )
 
-# 第四行代码：创建问答引擎
+# Line 4: create the query engine
 query_engine = index.as_query_engine(
     llm=llm
 )
 
-# 第五行代码: 开始问答
-print(query_engine.query("black mythWukong中有哪些战斗工具?"))
+# Line 5: start asking questions
+print(query_engine.query("What combat tools are there in Black Myth: Wukong?"))

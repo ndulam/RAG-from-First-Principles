@@ -1,55 +1,55 @@
 """
-使用Ollama本地运行大语言模型，无需OpenAI API密钥。
+Use Ollama to run a large language model locally, no OpenAI API key needed.
 
-1. 安装Ollama Server:
-   - Windows: 访问 https://ollama.com/download 下载安装包
-   - Linux/Mac: 运行 curl -fsSL https://ollama.com/install.sh | sh
+1. Install the Ollama server:
+   - Windows: visit https://ollama.com/download to download the installer
+   - Linux/Mac: run curl -fsSL https://ollama.com/install.sh | sh
 
-2. 下载并运行模型:
-   - 打开终端，运行以下命令下载模型:
-     ollama pull qwen:7b  # 下载通义千问7B模型
-     # 或
-     ollama pull llama2:7b  # 下载Llama2 7B模型
-     # 或
-     ollama pull mistral:7b  # 下载Mistral 7B模型
+2. Download and run a model:
+   - Open a terminal and run one of the following to download a model:
+     ollama pull qwen:7b  # download the Qwen 7B model
+     # or
+     ollama pull llama2:7b  # download the Llama2 7B model
+     # or
+     ollama pull mistral:7b  # download the Mistral 7B model
 
-3. 设置环境变量:
-   - 在.env文件中添加:
-     OLLAMA_MODEL=qwen:7b  # 或其他已下载的模型名称
+3. Set an environment variable:
+   - Add to your .env file:
+     OLLAMA_MODEL=qwen:7b  # or another downloaded model name
 """
 
-# 第一行代码：导入相关的库
+# Line 1: import the relevant libraries
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.ollama import Ollama # 需要pip install llama-index-llms-ollama
+from llama_index.llms.ollama import Ollama # requires pip install llama-index-llms-ollama
 from dotenv import load_dotenv
 import os
 
-# 加载环境变量
+# Load environment variables
 load_dotenv()
 
-# 加载本地嵌入模型
+# Load a local embedding model
 embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
 
-# 创建 Ollama LLM, 默认URL：http://localhost:11434
+# Create the Ollama LLM, default URL: http://localhost:11434
 llm = Ollama(
     model=os.getenv("OLLAMA_MODEL"),
     request_timeout=300.0
 )
 
-# 第二行代码：加载数据
-documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/setup.txt"]).load_data() 
+# Line 2: load the data
+documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/setup.txt"]).load_data()
 
-# 第三行代码：构建索引
+# Line 3: build the index
 index = VectorStoreIndex.from_documents(
     documents,
     embed_model=embed_model
 )
 
-# 第四行代码：创建问答引擎
+# Line 4: create the query engine
 query_engine = index.as_query_engine(
     llm=llm
 )
 
-# 第五行代码: 开始问答
-print(query_engine.query("black mythWukong中有哪些战斗工具?"))
+# Line 5: start asking questions
+print(query_engine.query("What combat tools are there in Black Myth: Wukong?"))

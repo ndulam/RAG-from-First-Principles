@@ -1,16 +1,16 @@
-# 1. 加载文档
+# 1. Load the document
 from langchain_community.document_loaders import WebBaseLoader
 loader = WebBaseLoader(
-    web_paths=("https://zh.wikipedia.org/wiki/black myth：Wukong",)
+    web_paths=("https://en.wikipedia.org/wiki/Black_Myth:_Wukong",)
 )
 docs = loader.load()
 
-# 2. 文档分块
+# 2. Split the document into chunks
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 all_splits = text_splitter.split_documents(docs)
 
-# 3. 设置嵌入模型
+# 3. Set up the embedding model
 from langchain_huggingface import HuggingFaceEmbeddings
 embeddings = HuggingFaceEmbeddings(
     model_name="BAAI/bge-small-zh-v1.5",
@@ -18,16 +18,16 @@ embeddings = HuggingFaceEmbeddings(
     encode_kwargs={'normalize_embeddings': True}
 )
 
-# 4. 创建向量存储aa
+# 4. Create the vector store
 from langchain_core.vectorstores import InMemoryVectorStore
 vector_store = InMemoryVectorStore(embeddings)
 vector_store.add_documents(all_splits)
 
-# 5. 定义RAG提示词
+# 5. Define the RAG prompt
 from langchain import hub
 prompt = hub.pull("rlm/rag-prompt")
 
-# 6. 定义应用状态
+# 6. Define the application state
 from typing import List
 from typing_extensions import TypedDict
 from langchain_core.documents import Document
@@ -36,12 +36,12 @@ class State(TypedDict):
     context: List[Document]
     answer: str
 
-# 7. 定义检索步骤
+# 7. Define the retrieval step
 def retrieve(state: State):
     retrieved_docs = vector_store.similarity_search(state["question"])
     return {"context": retrieved_docs}
 
-# 8. 定义生成步骤
+# 8. Define the generation step
 def generate(state: State):
     from langchain_openai import ChatOpenAI
     llm = ChatOpenAI(model="gpt-4")
@@ -50,7 +50,7 @@ def generate(state: State):
     response = llm.invoke(messages)
     return {"answer": response.content}
 
-# 9. 构建和编译应用
+# 9. Build and compile the application
 from langgraph.graph import START, StateGraph # pip install langgraph
 graph = (
     StateGraph(State)
@@ -59,8 +59,8 @@ graph = (
     .compile()
 )
 
-# 10. 运行查询
-question = "BlackMythWukong有哪些游戏场景？"
+# 10. Run the query
+question = "What game scenes are there in Black Myth: Wukong?"
 response = graph.invoke({"question": question})
-print(f"\n问题: {question}")
-print(f"答案: {response['answer']}")
+print(f"\nQuestion: {question}")
+print(f"Answer: {response['answer']}")

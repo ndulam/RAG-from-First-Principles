@@ -1,54 +1,55 @@
-# 1. 加载文档
+# 1. Load the document
 from langchain_community.document_loaders import WebBaseLoader
 
 loader = WebBaseLoader(
-    web_paths=("https://zh.wikipedia.org/wiki/black myth：Wukong",)
+    web_paths=("https://en.wikipedia.org/wiki/Black_Myth:_Wukong",)
 )
 docs = loader.load()
 
-# 2. 分割文档
+# 2. Split the document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,  # 每个文本块的大小（字符数）
-    chunk_overlap=200  # 相邻文本块之间的重叠字符数
+    chunk_size=1000,  # size of each text chunk (in characters)
+    chunk_overlap=200  # number of overlapping characters between adjacent chunks
 )
 all_splits = text_splitter.split_documents(docs)
 
-# 3. 设置嵌入模型
+# 3. Set up the embedding model
 from langchain_openai import OpenAIEmbeddings
 
 embeddings = OpenAIEmbeddings()
 
-# 4. 创建向量存储
+# 4. Create the vector store
 from langchain_core.vectorstores import InMemoryVectorStore
 
 vectorstore = InMemoryVectorStore(embeddings)
 vectorstore.add_documents(all_splits)
 
-# 5. 创建检索器
+# 5. Create the retriever
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
-# 6. 创建提示模板
+# 6. Create the prompt template
 from langchain_core.prompts import ChatPromptTemplate
 
 prompt = ChatPromptTemplate.from_template("""
-基于以下上下文回答问题。如果上下文中没有相关信息，请说
-"我无法从提供的上下文中找到相关信息"。
-上下文：{context}
-问题：{question}
-回答：""")
+Answer the question based on the context below. If the context doesn't
+contain relevant information, say "I cannot find relevant information
+in the provided context."
+Context: {context}
+Question: {question}
+Answer:""")
 
-# 7. 设置语言模型和输出解析器
+# 7. Set up the language model and output parser
 from langchain_openai import ChatDeepseek
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
-# 设置DeepSeek大模型    
+# Set up the DeepSeek large model
 from langchain_deepseek import ChatDeepSeek
 llm = ChatDeepSeek(model="deepseek-chat")
 
-# 8. 构建LCEL链
+# 8. Build the LCEL chain
 chain = (
     {
         "context": retriever | (lambda docs: "\n\n".join(doc.page_content for doc in docs)),
@@ -59,7 +60,7 @@ chain = (
     | StrOutputParser()
 )
 
-# 9. 执行查询
-question = "《black myth：Wukong》有哪些游戏场景？"
+# 9. Run the query
+question = "What game scenes are there in Black Myth: Wukong?"
 response = chain.invoke(question)
 print(response)
