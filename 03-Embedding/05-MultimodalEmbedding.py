@@ -1,5 +1,5 @@
 """
-多模态嵌入简单示例：使用Visualized-BGE模型对图片进行编码
+Multimodal嵌入简单示例：使用Visualized-BGE模型对图片进行编码
 安装visual_bge，参考：
 https://github.com/FlagOpen/FlagEmbedding/tree/master/research/visual_bge#readme
 
@@ -21,7 +21,7 @@ model = Visualized_BGE(model_name_bge=model_name, model_weight=model_path)
 model.eval()
 
 # 定义图片路径（如果有问题，请使用绝对路径）
-image_path = "/root/AI-BOX/code/rag/rag-in-action/90-文档-Data/多模态/query_image.jpg"
+image_path = "/root/AI-BOX/code/rag/rag-in-action/90-Data/Multimodal/query_image.jpg"
 
 # 对图片进行编码
 with torch.no_grad():
@@ -42,7 +42,7 @@ print(f"向量维度: {image_embedding_np.shape[1]}")
 print(f"向量示例 (前10个元素): {image_embedding_np[0][:10]}")
 print(f"向量范数: {np.linalg.norm(image_embedding_np[0])}")
 
-print("\n=== 多模态嵌入向量信息 ===")
+print("\n=== Multimodal嵌入向量信息 ===")
 print(f"向量维度: {multimodal_embedding_np.shape[1]}")
 print(f"向量示例 (前10个元素): {multimodal_embedding_np[0][:10]}")
 print(f"向量范数: {np.linalg.norm(multimodal_embedding_np[0])}") 

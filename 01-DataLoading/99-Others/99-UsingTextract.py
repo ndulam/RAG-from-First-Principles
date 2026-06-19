@@ -1,5 +1,5 @@
 import textract
-text = textract.process("data/黑Wukong/black mythWukong.pdf")
+text = textract.process("data/BlackMythWukong/black mythWukong.pdf")
 print(text)
 
 # Textract 与 PyMuPDF、Unstructured 对比:

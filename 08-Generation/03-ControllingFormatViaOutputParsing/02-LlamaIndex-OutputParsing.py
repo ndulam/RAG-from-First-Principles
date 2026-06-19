@@ -16,7 +16,7 @@ class GameInfo(BaseModel):
     reception: str = Field(description="市场反响")
 
 # 载入数据
-documents = SimpleDirectoryReader(input_files=["90-文档-Data/黑Wukong/黑Wukongwiki.txt"], encoding="utf-8").load_data()
+documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/BlackMythWukong-Wiki.txt"], encoding="utf-8").load_data()
 index = VectorStoreIndex.from_documents(documents)
 
 # 1. 基础解析模式 - 使用COMPACT模式

@@ -20,7 +20,7 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
 # ---------------------------
 # 1. 加载 PDF 正文（叙述性文本）
 # ---------------------------
-file_path = "90-文档-Data/复杂PDF/billionaires_page.pdf"
+file_path = "90-Data/ComplexPDF/billionaires_page.pdf"
 reader = PyMuPDFReader()
 docs = reader.load(file_path)
 

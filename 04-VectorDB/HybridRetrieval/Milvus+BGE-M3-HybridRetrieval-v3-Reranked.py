@@ -1,7 +1,7 @@
 # 1. 加载并预处理数据集
 import json
 from typing import Optional, Dict
-with open("90-文档-Data/Destruction of Gods/战斗场景.json", 'r', encoding='utf-8') as f:
+with open("90-Data/Destruction of Gods/BattleScenes.json", 'r', encoding='utf-8') as f:
     dataset = json.load(f)
 
 docs = []
@@ -98,7 +98,7 @@ print(f"数据插入完成，总数：{collection.num_entities}")
 # 6. 定义并执行混合搜索
 from pymilvus import AnnSearchRequest, WeightedRanker, RRFRanker
 
-query = "雪地中的战斗场景"
+query = "雪地中的BattleScenes"
 category = "combat"
 environment = "雪地"
 limit = 5

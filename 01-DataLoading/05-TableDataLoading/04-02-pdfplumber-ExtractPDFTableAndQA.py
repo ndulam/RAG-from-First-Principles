@@ -4,7 +4,7 @@ from llama_index.core import VectorStoreIndex
 from llama_index.core import Document
 from typing import List
 
-pdf_path = "90-文档-Data/复杂PDF/billionaires_page-1-5.pdf"
+pdf_path = "90-Data/ComplexPDF/billionaires_page-1-5.pdf"
 
 # 打开 PDF 并解析表格
 with pdfplumber.open(pdf_path) as pdf:

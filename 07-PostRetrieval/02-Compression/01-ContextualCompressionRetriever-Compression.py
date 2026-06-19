@@ -15,7 +15,7 @@ load_dotenv()
 
 documents = [
     Document(
-        page_content="五台山是中国四大佛教名山之一，以文殊菩萨道场闻名。",
+        page_content="Mount Wutai是中国四大佛教名山之一，以文殊菩萨道场闻名。",
         metadata={"source": "山西旅游指南"}
     ),
     Document(
@@ -23,7 +23,7 @@ documents = [
         metadata={"source": "山西旅游指南"}
     ),
     Document(
-        page_content="平遥古城是中国保存最完整的古代县城之一，被列为世界文化遗产。",
+        page_content="Pingyao Ancient City是中国保存最完整的古代县城之一，被列为世界文化遗产。",
         metadata={"source": "山西旅游指南"}
     )
 ]

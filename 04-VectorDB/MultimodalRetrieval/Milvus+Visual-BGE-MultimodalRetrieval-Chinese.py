@@ -1,6 +1,6 @@
 """
-多模态图像检索系统：基于Visualized-BGE和Milvus实现
-功能：对图像和文本进行多模态编码，并在图像数据库中检索相似内容
+Multimodal图像检索系统：基于Visualized-BGE和Milvus实现
+功能：对图像和文本进行Multimodal编码，并在图像数据库中检索相似内容
 """
 
 # ==================== 1. 初始化编码器 ====================
@@ -16,7 +16,7 @@ from PIL import Image
 from pymilvus import MilvusClient
 
 class WukongEncoder:
-    """多模态编码器：将图像和文本编码成向量"""
+    """Multimodal编码器：将图像和文本编码成向量"""
     def __init__(self, model_name: str, model_path: str):
         self.model = Visualized_BGE(model_name_bge=model_name, model_weight=model_path)
         self.model.eval()
@@ -73,7 +73,7 @@ class WukongDataset:
                 self.images.append(WukongImage(**img_data))
 
 # 初始化数据集
-dataset = WukongDataset("90-文档-Data/多模态", "90-文档-Data/多模态/metadata.json")
+dataset = WukongDataset("90-Data/Multimodal", "90-Data/Multimodal/metadata.json")
 
 # ==================== 3. 生成图像嵌入 ====================
 # 为所有图像生成嵌入向量
@@ -228,8 +228,8 @@ def visualize_results(query_image: str, results: List[dict], output_path: str):
 
 # ==================== 7. 执行查询示例 ====================
 # 执行查询
-query_image = "90-文档-Data/多模态/query_image.jpg"
-query_text = "寻找Wukong面对建筑物战斗场景"
+query_image = "90-Data/Multimodal/query_image.jpg"
+query_text = "寻找Wukong面对建筑物BattleScenes"
 
 results = search_similar_images(
     query_image=query_image,

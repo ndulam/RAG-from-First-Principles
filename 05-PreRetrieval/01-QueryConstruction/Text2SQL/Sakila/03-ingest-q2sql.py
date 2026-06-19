@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 embedding_function = model.dense.OpenAIEmbeddingFunction(model_name='text-embedding-3-large')
 
 # 2. 加载 Q->SQL 对（假设 q2sql_pairs.json 数组，每项 { "question": ..., "sql": ... }）
-with open("90-文档-Data/sakila/q2sql_pairs.json", "r") as f:
+with open("90-Data/sakila/q2sql_pairs.json", "r") as f:
     pairs = json.load(f)
     logging.info(f"[Q2SQL] 从JSON文件加载了 {len(pairs)} 个问答对")
 

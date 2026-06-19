@@ -40,6 +40,6 @@ finally:
     conn.close()
 
 # 5. 写入 YAML 文件
-with open("90-文档-Data/sakila/ddl_statements.yaml", "w") as f:
+with open("90-Data/sakila/ddl_statements.yaml", "w") as f:
     yaml.safe_dump(ddl_map, f, sort_keys=True, allow_unicode=True)
 print("✅ ddl_statements.yaml 已生成，共包含表：", list(ddl_map.keys()))

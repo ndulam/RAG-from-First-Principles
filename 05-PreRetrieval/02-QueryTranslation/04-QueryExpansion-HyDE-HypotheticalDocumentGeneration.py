@@ -6,7 +6,7 @@ from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 # 加载文档并构建向量数据库
-loader = TextLoader("90-文档-Data/黑Wukong/黑Wukongwiki.txt", encoding='utf-8')
+loader = TextLoader("90-Data/BlackMythWukong/BlackMythWukong-Wiki.txt", encoding='utf-8')
 data = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
 splits = text_splitter.split_documents(data)

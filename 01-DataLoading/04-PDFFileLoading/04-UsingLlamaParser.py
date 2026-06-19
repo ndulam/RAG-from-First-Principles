@@ -5,7 +5,7 @@ load_dotenv()
 # LlamaParse PDF reader for PDF Parsing
 from llama_parse import LlamaParse
 documents = LlamaParse(result_type="markdown").load_data(
-    "90-文档-Data/黑Wukong/black mythWukong.pdf"
+    "90-Data/BlackMythWukong/black mythWukong.pdf"
 )
 print(documents)
 

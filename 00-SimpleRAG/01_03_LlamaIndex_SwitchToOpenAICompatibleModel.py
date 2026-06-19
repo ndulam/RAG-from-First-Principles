@@ -38,9 +38,9 @@ Settings.embed_model = OpenAIEmbedding(
 # from llama_index.core import VectorStoreIndex, SimpleDirectoryReader (已导入)
 
 # 第二行代码：加载数据
-# 确保文件路径 "90-文档-Data/黑Wukong/setup.txt" 是正确的，并且程序有权限读取
+# 确保文件路径 "90-Data/BlackMythWukong/setup.txt" 是正确的，并且程序有权限读取
 try:
-    documents = SimpleDirectoryReader(input_files=["90-文档-Data/黑Wukong/setup.txt"]).load_data()
+    documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/setup.txt"]).load_data()
 except Exception as e:
     print(f"加载文档时出错: {e}")
     print("请检查文件路径和权限。")

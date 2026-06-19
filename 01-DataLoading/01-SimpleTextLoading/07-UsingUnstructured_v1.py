@@ -1,5 +1,5 @@
 from unstructured.partition.text import partition_text
-text = "90-文档-Data/黑Wukong/setup.txt"
+text = "90-Data/BlackMythWukong/setup.txt"
 elements = partition_text(text)
 for element in elements:
     print(element)

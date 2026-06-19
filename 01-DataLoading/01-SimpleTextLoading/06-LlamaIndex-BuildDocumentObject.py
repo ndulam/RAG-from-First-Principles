@@ -7,7 +7,7 @@ documents = [
         metadata={
             "filename": "火照深渊场景.md",
             "category": "游戏场景",
-            "file_path": "/data/黑Wukong/火照深渊场景.md",
+            "file_path": "/data/BlackMythWukong/火照深渊场景.md",
             "author": "GameScience",
             "creation_date": "2024-11-20",
             "last_modified_date": "2024-11-21",
@@ -20,7 +20,7 @@ documents = [
         metadata={
             "filename": "风起长空场景.md",
             "category": "游戏场景",
-            "file_path": "/data/黑Wukong/风起长空场景.md",
+            "file_path": "/data/BlackMythWukong/风起长空场景.md",
             "author": "GameScience",
             "creation_date": "2024-11-20",
             "last_modified_date": "2024-11-21",

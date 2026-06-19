@@ -11,7 +11,7 @@ from typing import List, Optional, Dict
 from visual_bge.modeling import Visualized_BGE
 
 class WukongEncoder:
-    """多模态编码器：将图像和文本编码成向量"""
+    """Multimodal编码器：将图像和文本编码成向量"""
     def __init__(self, model_name: str, model_path: str):
         self.model = Visualized_BGE(model_name_bge=model_name, model_weight=model_path)
         self.model.eval()
@@ -143,8 +143,8 @@ if __name__ == "__main__":
     searcher = MilvusSearcher("./wukong_images.db", "wukong_scenes")
     
     # 生成查询向量
-    query_image = "90-文档-Data/多模态/query_image.jpg"
-    query_text = "寻找类似的雪地战斗场景"
+    query_image = "90-Data/Multimodal/query_image.jpg"
+    query_text = "寻找类似的雪地BattleScenes"
     qvec = encoder.encode_query(query_image, query_text)
     
     # 带过滤条件检索

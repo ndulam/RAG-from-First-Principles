@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 embedding_function = model.dense.OpenAIEmbeddingFunction(model_name='text-embedding-3-large')
 
 # 2. 读取 DDL 列表（假设 ddl_statements.yaml 中存放 {table_name: "CREATE TABLE ..."}）
-with open("90-文档-Data/sakila/ddl_statements.yaml","r") as f:
+with open("90-Data/sakila/ddl_statements.yaml","r") as f:
     ddl_map = yaml.safe_load(f)
     logging.info(f"[DDL] 从YAML文件加载了 {len(ddl_map)} 个表/视图定义")
 

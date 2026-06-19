@@ -7,7 +7,7 @@ from langchain_openai import OpenAI
 import os
 
 # 1. 加载文档
-loader = TextLoader("90-文档-Data/黑Wukong/setup.txt")
+loader = TextLoader("90-Data/BlackMythWukong/setup.txt")
 documents = loader.load()
 
 # 2. 分割文档

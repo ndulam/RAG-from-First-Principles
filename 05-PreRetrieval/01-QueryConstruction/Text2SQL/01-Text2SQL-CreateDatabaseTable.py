@@ -1,6 +1,6 @@
 # 连接到SQLite数据库
 import sqlite3
-conn = sqlite3.connect('90-文档-Data/tourism.db')
+conn = sqlite3.connect('90-Data/tourism.db')
 cursor = conn.cursor()
 # 创建景区信息表
 cursor.execute('''
@@ -21,10 +21,10 @@ CREATE TABLE IF NOT EXISTS city_info (
 )''')
 # 插入示例数据到景区信息表
 sample_scenic_spots = [
-    (1, '晋祠', '太原市', 'AAAAA', 50000),
-    (2, '五台山', '忻州市', 'AAAAA', 80000),
+    (1, 'Jinci Temple', '太原市', 'AAAAA', 50000),
+    (2, 'Mount Wutai', '忻州市', 'AAAAA', 80000),
     (3, 'Yungang Grottoes', '大同市', 'AAAAA', 70000),
-    (4, '平遥古城', '晋中市', 'AAAAA', 90000),
+    (4, 'Pingyao Ancient City', '晋中市', 'AAAAA', 90000),
     (5, '乔家大院', '晋中市', 'AAAA', 45000)
 ]
 cursor.executemany('INSERT OR REPLACE INTO scenic_spots VALUES (?, ?, ?, ?, ?)', sample_scenic_spots)

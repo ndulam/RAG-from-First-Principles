@@ -19,7 +19,7 @@ class VideoMetadata(BaseModel):
     author: str = Field(description="作者")
 # 加载视频数据
 video_urls = [
-    "https://www.youtube.com/watch?v=zDvnAY0zH7U",  # 山西佛光寺
+    "https://www.youtube.com/watch?v=zDvnAY0zH7U",  # 山西Foguang Temple
     "https://www.youtube.com/watch?v=iAinNeOp6Hk",  # 中国最大宅院
     "https://www.youtube.com/watch?v=gCVy6NQtk2U",  # 宋代地下宫殿
 ]

@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import CSVLoader
 # # 第 1 部分: 基本加载 CSV 文件并打印记录
-file_path = "90-文档-Data/黑Wukong/black mythWukong.csv"
+file_path = "90-Data/BlackMythWukong/black mythWukong.csv"
 # loader = CSVLoader(file_path=file_path)
 # data = loader.load()
 # print("示例 1: 基本加载 CSV 文件并打印前两条记录")

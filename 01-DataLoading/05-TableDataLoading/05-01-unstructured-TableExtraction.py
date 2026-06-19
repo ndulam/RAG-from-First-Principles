@@ -59,7 +59,7 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
 
 # 解析 PDF 结构，提取文本和表格
 # 使用相对路径，确保从项目根目录开始
-file_path = "90-文档-Data/复杂PDF/billionaires_page-1-5.pdf"
+file_path = "90-Data/ComplexPDF/billionaires_page-1-5.pdf"
 
 # 检查文件是否存在
 if not os.path.exists(file_path):

@@ -10,7 +10,7 @@ embed_model = HuggingFaceEmbedding(
     )
 
 # 加载数据
-documents = SimpleDirectoryReader(input_files=["90-文档-Data/黑Wukong/setup.txt"]).load_data() 
+documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/setup.txt"]).load_data() 
 
 # 构建索引
 index = VectorStoreIndex.from_documents(

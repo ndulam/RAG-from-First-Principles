@@ -5,14 +5,14 @@ from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 # 定义两个提示模板
-combat_template = """你是一位精通黑Wukong战斗技巧的专家。
-你擅长以简洁易懂的方式回答关于黑Wukong战斗的问题。
+combat_template = """你是一位精通BlackMythWukong战斗技巧的专家。
+你擅长以简洁易懂的方式回答关于BlackMythWukong战斗的问题。
 当你不知道问题的答案时，你会坦诚相告。
 
 以下是一个问题：
 {query}"""
 
-story_template = """你是一位熟悉黑Wukong故事情节的专家。
+story_template = """你是一位熟悉BlackMythWukong故事情节的专家。
 你擅长将复杂的情节分解并详细解释。
 当你不知道问题的答案时，你会坦诚相告。
 
@@ -44,4 +44,4 @@ chain = (
 )
 
 # 示例问题
-print(chain.invoke("黑Wukong是如何打败敌人的？"))
+print(chain.invoke("BlackMythWukong是如何打败敌人的？"))

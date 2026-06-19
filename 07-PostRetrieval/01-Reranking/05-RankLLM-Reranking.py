@@ -43,7 +43,7 @@ print("🔄 初始化RankLLM重排系统...")
 
 # 1. 文档加载和预处理
 print("📖 加载和预处理文档...")
-doc_path = "90-文档-Data/Shanxi Cultural Tourism/Yungang Grottoes.txt"
+doc_path = "90-Data/Shanxi Cultural Tourism/Yungang Grottoes.txt"
 print(f"文档路径: {doc_path}")
 
 print("  🔤 使用TextLoader加载文档...")

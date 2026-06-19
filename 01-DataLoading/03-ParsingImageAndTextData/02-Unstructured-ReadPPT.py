@@ -11,7 +11,7 @@ sudo apt-get update && sudo apt-get install -y libreoffice
 """
 from unstructured.partition.ppt import partition_ppt
 # 解析 PPT 文件
-ppt_elements = partition_ppt(filename="90-文档-Data/黑Wukong/black mythWukong.pptx")
+ppt_elements = partition_ppt(filename="90-Data/BlackMythWukong/black mythWukong.pptx")
 print("PPT 内容：")
 # for element in ppt_elements:
 #     print(element.text)

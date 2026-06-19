@@ -20,7 +20,7 @@ Settings.node_parser = SentenceSplitter(chunk_size=250, chunk_overlap=20) # 50, 
 # Load PDF using standard PDFReader
 loader = PDFReader()
 documents = loader.load_data(
-    file="90-文档-Data/复杂PDF/uber_10q_march_2022_page26.pdf"
+    file="90-Data/ComplexPDF/uber_10q_march_2022_page26.pdf"
 )
 
 # Create index directly from documents

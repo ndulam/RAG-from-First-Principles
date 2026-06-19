@@ -5,7 +5,7 @@ import os
 script_dir = os.path.dirname(__file__)
 print(f"获取当前脚本文件所在的目录：{script_dir}") 
 # 结合相对路径构建完整路径
-data_dir = os.path.join(script_dir, '../../90-文档-Data/黑Wukong')
+data_dir = os.path.join(script_dir, '../../90-Data/BlackMythWukong')
 
 loader = DirectoryLoader(data_dir, 
                          glob="**/*.md", 

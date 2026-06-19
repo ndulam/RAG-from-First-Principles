@@ -21,7 +21,7 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
 # ---------------------------
 # 1. 解析 PDF 结构，提取文本和表格
 # ---------------------------
-file_path = "90-文档-Data/复杂PDF/billionaires_page-1-5.pdf"  # 修改为你的文件路径
+file_path = "90-Data/ComplexPDF/billionaires_page-1-5.pdf"  # 修改为你的文件路径
 
 elements = partition_pdf(
     file_path,

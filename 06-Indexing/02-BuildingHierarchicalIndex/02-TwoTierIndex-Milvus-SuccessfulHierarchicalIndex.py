@@ -55,7 +55,7 @@ if not client.has_collection(details_collection_name):
     )
 
 # 3. 加载Excel文件并准备数据
-excel_file = "90-文档-Data/复杂PDF/十大富豪/世界十大富豪.xlsx"
+excel_file = "90-Data/ComplexPDF/TopTenBillionaires/WorldTopTenBillionaires.xlsx"
 
 # 读取Excel文件中的所有sheet并插入数据
 with pd.ExcelFile(excel_file) as xls:

@@ -15,7 +15,7 @@ embedding_function = model.dense.OpenAIEmbeddingFunction(model_name='text-embedd
 #       column_name: "业务含义"
 #       ...
 # )
-with open("90-文档-Data/sakila/db_description.yaml", "r") as f:
+with open("90-Data/sakila/db_description.yaml", "r") as f:
     desc_map = yaml.safe_load(f)
     logging.info(f"[DBDESC] 从YAML文件加载了 {len(desc_map)} 个表的描述")
 

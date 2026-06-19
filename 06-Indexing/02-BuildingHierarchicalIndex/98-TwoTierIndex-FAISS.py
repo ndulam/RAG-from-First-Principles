@@ -11,11 +11,11 @@ load_dotenv()
 
 # 1. 准备表格说明数据
 table_descriptions = [
-    "2023年世界十大富豪榜单，展示了当年全球最富有的十位富豪及其财富情况。",
-    "2022年世界十大富豪榜单，记录了当年全球最富有的十位富豪及其财富情况。",
-    "2021年世界十大富豪榜单，展示了当年全球最富有的十位富豪及其财富情况。",
-    "2020年世界十大富豪榜单，记录了当年全球最富有的十位富豪及其财富情况。",
-    "2019年世界十大富豪榜单，展示了当年全球最富有的十位富豪及其财富情况。"
+    "2023年WorldTopTenBillionaires榜单，展示了当年全球最富有的十位富豪及其财富情况。",
+    "2022年WorldTopTenBillionaires榜单，记录了当年全球最富有的十位富豪及其财富情况。",
+    "2021年WorldTopTenBillionaires榜单，展示了当年全球最富有的十位富豪及其财富情况。",
+    "2020年WorldTopTenBillionaires榜单，记录了当年全球最富有的十位富豪及其财富情况。",
+    "2019年WorldTopTenBillionaires榜单，展示了当年全球最富有的十位富豪及其财富情况。"
 ]
 
 # 2. 设置第一层嵌入模型（用于匹配年份）
@@ -28,7 +28,7 @@ desc_index = faiss.IndexFlatL2(dimension)
 desc_index.add(desc_embeddings.astype('float32'))
 
 # 4. 加载Excel文件并准备第二层数据
-excel_file = "90-文档-Data/复杂PDF/十大富豪/世界十大富豪.xlsx"
+excel_file = "90-Data/ComplexPDF/TopTenBillionaires/WorldTopTenBillionaires.xlsx"
 all_tables_data = {}
 
 # 读取Excel文件中的所有sheet
