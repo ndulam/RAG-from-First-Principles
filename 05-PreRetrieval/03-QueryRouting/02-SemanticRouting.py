@@ -4,38 +4,38 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
-# 定义两个提示模板
-combat_template = """你是一位精通BlackMythWukong战斗技巧的专家。
-你擅长以简洁易懂的方式回答关于BlackMythWukong战斗的问题。
-当你不知道问题的答案时，你会坦诚相告。
+# Define two prompt templates
+combat_template = """You are an expert who is highly knowledgeable about Black Myth: Wukong's combat techniques.
+You are skilled at answering questions about Black Myth: Wukong's combat in a clear, concise way.
+When you don't know the answer to a question, you say so honestly.
 
-以下是一个问题：
+Here is a question:
 {query}"""
 
-story_template = """你是一位熟悉BlackMythWukong故事情节的专家。
-你擅长将复杂的情节分解并详细解释。
-当你不知道问题的答案时，你会坦诚相告。
+story_template = """You are an expert who is deeply familiar with the storyline of Black Myth: Wukong.
+You are skilled at breaking down complex plot points and explaining them in detail.
+When you don't know the answer to a question, you say so honestly.
 
-以下是一个问题：
+Here is a question:
 {query}"""
 
-# 初始化嵌入模型
+# Initialize the embedding model
 embeddings = OpenAIEmbeddings()
 prompt_templates = [combat_template, story_template]
 prompt_embeddings = embeddings.embed_documents(prompt_templates)
 
-# 定义路由函数
+# Define the routing function
 def prompt_router(input):
-    # 对用户问题进行嵌入
+    # Embed the user's question
     query_embedding = embeddings.embed_query(input["query"])
-    # 计算相似度
+    # Compute similarity
     similarity = cosine_similarity([query_embedding], prompt_embeddings)[0]
     most_similar = prompt_templates[similarity.argmax()]
-    # 选择最相似的提示模板
-    print("使用战斗技巧模板" if most_similar == combat_template else "使用故事情节模板")
+    # Choose the most similar prompt template
+    print("Using the combat techniques template" if most_similar == combat_template else "Using the storyline template")
     return PromptTemplate.from_template(most_similar)
 
-# 创建处理链
+# Create the processing chain
 chain = (
     {"query": RunnablePassthrough()}
     | RunnableLambda(prompt_router)
@@ -43,5 +43,5 @@ chain = (
     | StrOutputParser()
 )
 
-# 示例问题
-print(chain.invoke("BlackMythWukong是如何打败敌人的？"))
+# Example question
+print(chain.invoke("How does Wukong defeat enemies in Black Myth: Wukong?"))

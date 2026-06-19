@@ -32,14 +32,14 @@ summary_fields = [
     FieldSchema(name="table_name", dtype=DataType.VARCHAR, max_length=100)
 ]
 
-summary_schema = CollectionSchema(summary_fields, "富豪榜年份摘要")
+summary_schema = CollectionSchema(summary_fields, "Billionaires ranking yearly summary")
 if not client.has_collection(summary_collection_name):
     client.create_collection(
         collection_name=summary_collection_name,
         schema=summary_schema
     )
 
-# 2. 创建details向量数据库
+# 2. Create the details vector collection
 details_collection_name = "billionaires_details"
 details_fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
@@ -52,32 +52,32 @@ details_fields = [
     FieldSchema(name="industry", dtype=DataType.VARCHAR, max_length=100)
 ]
 
-details_schema = CollectionSchema(details_fields, "富豪榜详细信息")
+details_schema = CollectionSchema(details_fields, "Billionaires ranking detail information")
 if not client.has_collection(details_collection_name):
     client.create_collection(
         collection_name=details_collection_name,
         schema=details_schema
     )
 
-# 3. 加载Excel文件并准备数据
+# 3. Load the Excel file and prepare the data
 excel_file = "90-Data/ComplexPDF/TopTenBillionaires/WorldTopTenBillionaires.xlsx"
 
-# 读取Excel文件中的所有sheet并插入数据
+# Read every sheet in the Excel file and insert the data
 with pd.ExcelFile(excel_file) as xls:
     for sheet_name in xls.sheet_names:
         try:
             df = pd.read_excel(xls, sheet_name=sheet_name)
-            logging.info(f"正在处理sheet: {sheet_name}")
-            logging.info(f"列名: {df.columns.tolist()}")
-            
-            # 标准化列名（移除换行符和多余的空格）
+            logging.info(f"Processing sheet: {sheet_name}")
+            logging.info(f"Column names: {df.columns.tolist()}")
+
+            # Normalize column names (remove line breaks and extra whitespace)
             df.columns = [col.replace('\n', ' ').strip() for col in df.columns]
-            
-            # 使用新的列名格式
+
+            # Use the new column name format
             if 'Net_Worth' not in df.columns or 'Name' not in df.columns:
-                raise ValueError(f"找不到必要的列: Net_Worth 或 Name")
-            
-            # 插入summary数据
+                raise ValueError(f"Required column not found: Net_Worth or Name")
+
+            # Insert the summary data
             summary_embedding = embedding_function.encode([sheet_name])[0]
             
             client.insert(
@@ -89,9 +89,9 @@ with pd.ExcelFile(excel_file) as xls:
                 }]
             )
             
-            # 插入details数据
+            # Insert the details data
             for _, row in df.iterrows():
-                # 清理和格式化数据
+                # Clean and format the data
                 name = str(row['Name']).strip()
                 wealth = str(row['Net_Worth']).strip()
                 nationality = str(row['Nationality']).strip()
@@ -113,75 +113,75 @@ with pd.ExcelFile(excel_file) as xls:
                     }]
                 )
             
-            logging.info(f"成功处理sheet: {sheet_name}")
-            
+            logging.info(f"Successfully processed sheet: {sheet_name}")
+
         except Exception as e:
-            logging.error(f"处理sheet {sheet_name} 时出错: {str(e)}")
-            logging.error(f"错误详情: {e.__class__.__name__}")
+            logging.error(f"Error processing sheet {sheet_name}: {str(e)}")
+            logging.error(f"Error details: {e.__class__.__name__}")
             continue
 
-# 4. 创建索引
-# 删除已存在的索引（如果有）
+# 4. Create the indexes
+# Drop any existing index (if present)
 try:
     client.drop_index(collection_name=summary_collection_name, index_name="vector")
 except Exception as e:
-    logging.warning(f"删除summary索引时出错: {str(e)}")
+    logging.warning(f"Error dropping summary index: {str(e)}")
 
 try:
     client.drop_index(collection_name=details_collection_name, index_name="vector")
 except Exception as e:
-    logging.warning(f"删除details索引时出错: {str(e)}")
+    logging.warning(f"Error dropping details index: {str(e)}")
 
-# 创建新索引
+# Create new indexes
 try:
-    # 使用prepare_index_params方法创建索引参数
+    # Use prepare_index_params to build the index parameters
     summary_index_params = client.prepare_index_params()
     summary_index_params.add_index(
-        field_name="vector",  # 指定要为哪个字段创建索引，这里是向量字段
-        index_type="IVF_FLAT",  # 索引类型
-        metric_type="COSINE",  # 使用余弦相似度作为向量相似度度量方式
-        params={"nlist": 1024}  # 索引参数
+        field_name="vector",  # The field to index, here the vector field
+        index_type="IVF_FLAT",  # Index type
+        metric_type="COSINE",  # Use cosine similarity as the vector similarity metric
+        params={"nlist": 1024}  # Index parameters
     )
-    
+
     client.create_index(
         collection_name=summary_collection_name,
         index_params=summary_index_params
     )
-    logging.info("成功创建summary索引")
+    logging.info("Successfully created the summary index")
 except Exception as e:
-    logging.error(f"创建summary索引时出错: {str(e)}")
+    logging.error(f"Error creating the summary index: {str(e)}")
 
 try:
-    # 使用prepare_index_params方法创建索引参数
+    # Use prepare_index_params to build the index parameters
     details_index_params = client.prepare_index_params()
     details_index_params.add_index(
-        field_name="vector",  # 指定要为哪个字段创建索引，这里是向量字段
-        index_type="IVF_FLAT",  # 索引类型
-        metric_type="COSINE",  # 使用余弦相似度作为向量相似度度量方式
-        params={"nlist": 1024}  # 索引参数
+        field_name="vector",  # The field to index, here the vector field
+        index_type="IVF_FLAT",  # Index type
+        metric_type="COSINE",  # Use cosine similarity as the vector similarity metric
+        params={"nlist": 1024}  # Index parameters
     )
-    
+
     client.create_index(
         collection_name=details_collection_name,
         index_params=details_index_params
     )
-    logging.info("成功创建details索引")
+    logging.info("Successfully created the details index")
 except Exception as e:
-    logging.error(f"创建details索引时出错: {str(e)}")
+    logging.error(f"Error creating the details index: {str(e)}")
 
-# 加载集合以使索引生效
+# Load the collections so the indexes take effect
 try:
     client.load_collection(summary_collection_name)
     client.load_collection(details_collection_name)
-    logging.info("成功加载集合")
+    logging.info("Successfully loaded the collections")
 except Exception as e:
-    logging.error(f"加载集合时出错: {str(e)}")
+    logging.error(f"Error loading the collections: {str(e)}")
 
 def search_relevant_table(question):
-    # 第一层检索：在summary集合中搜索最相关的sheet
+    # First-tier retrieval: search the summary collection for the most relevant sheet
     query_embedding = embedding_function.encode([question])[0]
-    
-    # 使用正确的search参数格式
+
+    # Use the correct search parameter format
     summary_results = client.search(
         collection_name=summary_collection_name,
         data=[query_embedding.tolist()],
@@ -192,28 +192,28 @@ def search_relevant_table(question):
             "params": {"nprobe": 10}
         }
     )
-    
-    # 调试输出
+
+    # Debug output
     logging.info(f"Summary search results: {summary_results}")
-    
+
     if not summary_results or not summary_results[0]:
         return None, None
-    
-    # 检查结果结构并提取字段
+
+    # Check the result structure and extract the fields
     try:
         result_item = summary_results[0][0]
         logging.info(f"Result item keys: {result_item.keys()}")
         matched_summary = result_item.get('entity', {}).get('summary') or result_item.get('summary')
         matched_table = result_item.get('entity', {}).get('table_name') or result_item.get('table_name')
-        
+
         if not matched_summary or not matched_table:
-            logging.error(f"无法从结果中提取summary或table_name: {result_item}")
+            logging.error(f"Unable to extract summary or table_name from the result: {result_item}")
             return None, None
     except Exception as e:
-        logging.error(f"处理summary结果时出错: {str(e)}")
+        logging.error(f"Error processing the summary result: {str(e)}")
         return None, None
-    
-    # 第二层检索：在details集合中搜索具体信息
+
+    # Second-tier retrieval: search the details collection for specific information
     details_results = client.search(
         collection_name=details_collection_name,
         data=[query_embedding.tolist()],
@@ -225,38 +225,38 @@ def search_relevant_table(question):
             "params": {"nprobe": 10}
         }
     )
-    
-    # 调试输出
+
+    # Debug output
     logging.info(f"Details search results structure: {details_results}")
-    
+
     return matched_summary, details_results
 
 def generate_answer(question):
-    # 检索相关信息
+    # Retrieve the relevant information
     summary, details = search_relevant_table(question)
-    
+
     if not summary or not details:
-        return "抱歉，没有找到相关信息。"
-    
-    # 构建提示词
+        return "Sorry, no relevant information was found."
+
+    # Build the prompt
     details_text = "\n".join([
-        f"排名：{result.get('entity', {}).get('rank')}, 姓名：{result.get('entity', {}).get('name')}, 财富：{result.get('entity', {}).get('wealth')}, "
-        f"公司：{result.get('entity', {}).get('company')}, 行业：{result.get('entity', {}).get('industry')}"
+        f"Rank: {result.get('entity', {}).get('rank')}, Name: {result.get('entity', {}).get('name')}, Wealth: {result.get('entity', {}).get('wealth')}, "
+        f"Company: {result.get('entity', {}).get('company')}, Industry: {result.get('entity', {}).get('industry')}"
         for result in details[0]
     ])
-    
-    prompt = f"""根据以下参考信息回答问题：
-    
-表格说明：{summary}
 
-相关数据：
+    prompt = f"""Answer the question based on the following reference information:
+
+Table description: {summary}
+
+Relevant data:
 {details_text}
 
-问题：{question}
+Question: {question}
 
-请基于以上信息给出详细回答："""
+Please give a detailed answer based on the information above:"""
 
-    # 使用DeepSeek生成答案
+    # Use DeepSeek to generate the answer
     from openai import OpenAI
     client = OpenAI(
         api_key=os.getenv("DEEPSEEK_API_KEY"),
@@ -271,12 +271,12 @@ def generate_answer(question):
         }],
         max_tokens=1024
     )
-    
+
     return response.choices[0].message.content
 
-# 测试示例
+# Test example
 if __name__ == "__main__":
-    test_question = "2023年世界首富是谁？他的财富是多少？"
+    test_question = "Who was the world's richest person in 2023? How much was his wealth?"
     answer = generate_answer(test_question)
-    print(f"问题：{test_question}")
-    print(f"答案：{answer}") 
+    print(f"Question: {test_question}")
+    print(f"Answer: {answer}")

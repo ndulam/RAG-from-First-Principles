@@ -7,18 +7,18 @@ import json
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# 1. 初始化嵌入函数
+# 1. Initialize the embedding function
 embedding_function = model.dense.OpenAIEmbeddingFunction(model_name='text-embedding-3-large')
 
-# 2. 加载 Q->SQL 对（假设 q2sql_pairs.json 数组，每项 { "question": ..., "sql": ... }）
+# 2. Load the Q->SQL pairs (q2sql_pairs.json is assumed to be an array, each item { "question": ..., "sql": ... })
 with open("90-Data/sakila/q2sql_pairs.json", "r") as f:
     pairs = json.load(f)
-    logging.info(f"[Q2SQL] 从JSON文件加载了 {len(pairs)} 个问答对")
+    logging.info(f"[Q2SQL] Loaded {len(pairs)} Q&A pairs from the JSON file")
 
-# 3. 连接 Milvus
+# 3. Connect to Milvus
 client = MilvusClient("text2sql_milvus_sakila.db")
 
-# 4. 定义 Collection Schema
+# 4. Define the collection schema
 vector_dim = len(embedding_function(["dummy"])[0])
 fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
@@ -28,40 +28,40 @@ fields = [
 ]
 schema = CollectionSchema(fields, description="Q2SQL Knowledge Base", enable_dynamic_field=False)
 
-# 5. 创建 Collection（如不存在）
+# 5. Create the collection (if it doesn't already exist)
 collection_name = "q2sql_knowledge"
 if not client.has_collection(collection_name):
     client.create_collection(collection_name=collection_name, schema=schema)
-    logging.info(f"[Q2SQL] 创建了新的集合 {collection_name}")
+    logging.info(f"[Q2SQL] Created new collection {collection_name}")
 else:
-    logging.info(f"[Q2SQL] 集合 {collection_name} 已存在")
+    logging.info(f"[Q2SQL] Collection {collection_name} already exists")
 
-# 6. 为向量字段添加索引
+# 6. Add an index to the vector field
 index_params = client.prepare_index_params()
 index_params.add_index(field_name="vector", index_type="AUTOINDEX", metric_type="COSINE", params={"nlist": 1024})
 client.create_index(collection_name=collection_name, index_params=index_params)
 
-# 7. 批量插入 Q2SQL 对
+# 7. Bulk insert the Q2SQL pairs
 data = []
 texts = []
 for pair in pairs:
     texts.append(pair["question"])
     data.append({"question": pair["question"], "sql_text": pair["sql"]})
 
-logging.info(f"[Q2SQL] 准备处理 {len(data)} 个问答对")
+logging.info(f"[Q2SQL] Preparing to process {len(data)} Q&A pairs")
 
-# 生成全部嵌入
+# Generate all embeddings
 embeddings = embedding_function(texts)
-logging.info(f"[Q2SQL] 成功生成了 {len(embeddings)} 个向量嵌入")
+logging.info(f"[Q2SQL] Successfully generated {len(embeddings)} vector embeddings")
 
-# 组织为 Milvus insert 格式
+# Organize into Milvus insert format
 records = []
 for emb, rec in zip(embeddings, data):
     rec["vector"] = emb
     records.append(rec)
 
 res = client.insert(collection_name=collection_name, data=records)
-logging.info(f"[Q2SQL] 成功插入了 {len(records)} 条记录到Milvus")
-logging.info(f"[Q2SQL] 插入结果: {res}")
+logging.info(f"[Q2SQL] Successfully inserted {len(records)} records into Milvus")
+logging.info(f"[Q2SQL] Insert result: {res}")
 
-logging.info("[Q2SQL] 知识库构建完成")
+logging.info("[Q2SQL] Knowledge base construction complete")

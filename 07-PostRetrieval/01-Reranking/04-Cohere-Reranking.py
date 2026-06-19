@@ -61,105 +61,105 @@ print("🔒 Security reminder: keep your API key safe and never commit it to a c
 print("\n📋 Preparing test documents...")
 documents = [
     Document(
-        page_content="Mount Wutai是中国四大佛教名山之一，以文殊菩萨道场闻名。",
-        metadata={"source": "山西旅游指南", "category": "佛教文化", "location": "忻州市"}
+        page_content="Mount Wutai is one of China's four sacred Buddhist mountains, renowned as the dharma seat of Manjushri Bodhisattva.",
+        metadata={"source": "Shanxi Travel Guide", "category": "Buddhist Culture", "location": "Xinzhou City"}
     ),
     Document(
-        page_content="Yungang Grottoes是中国三大石窟之一，以精美的佛教雕塑著称。",
-        metadata={"source": "山西旅游指南", "category": "石窟艺术", "location": "大同市"}
+        page_content="Yungang Grottoes is one of China's three major grotto complexes, famous for its exquisite Buddhist sculptures.",
+        metadata={"source": "Shanxi Travel Guide", "category": "Grotto Art", "location": "Datong City"}
     ),
     Document(
-        page_content="Pingyao Ancient City是中国保存最完整的古代县城之一，被列为世界文化遗产。",
-        metadata={"source": "山西旅游指南", "category": "古建筑", "location": "晋中市"}
+        page_content="Pingyao Ancient City is one of China's best-preserved ancient county towns and is listed as a UNESCO World Heritage Site.",
+        metadata={"source": "Shanxi Travel Guide", "category": "Ancient Architecture", "location": "Jinzhong City"}
     )
 ]
 
-print(f"文档数量: {len(documents)}")
+print(f"Number of documents: {len(documents)}")
 for i, doc in enumerate(documents, 1):
-    print(f"  文档 {i}:")
-    print(f"    内容: {doc.page_content}")
-    print(f"    来源: {doc.metadata.get('source', '未知')}")
-    print(f"    类别: {doc.metadata.get('category', '未知')}")
-    print(f"    位置: {doc.metadata.get('location', '未知')}")
+    print(f"  Document {i}:")
+    print(f"    Content: {doc.page_content}")
+    print(f"    Source: {doc.metadata.get('source', 'Unknown')}")
+    print(f"    Category: {doc.metadata.get('category', 'Unknown')}")
+    print(f"    Location: {doc.metadata.get('location', 'Unknown')}")
 
-# 3. 创建BM25检索器（作为初始检索）
-print(f"\n🔍 创建BM25初始检索器...")
-print("  BM25用于第一阶段检索，提供候选文档集合")
+# 3. Create a BM25 retriever (as initial retrieval)
+print(f"\n🔍 Creating initial BM25 retriever...")
+print("  BM25 is used for first-stage retrieval, providing a candidate document set")
 retriever = BM25Retriever.from_documents(documents)
-retriever.k = 3  # 设置返回前3个结果
-print(f"✅ BM25检索器配置完成，返回Top-{retriever.k}结果")
+retriever.k = 3  # Set to return the top 3 results
+print(f"✅ BM25 retriever configured, returning Top-{retriever.k} results")
 
-# 4. 设置Cohere重排序器
-print(f"\n🤖 配置Cohere重排序器...")
+# 4. Set up the Cohere reranker
+print(f"\n🤖 Configuring Cohere reranker...")
 reranker = CohereRerank(
-    model="rerank-multilingual-v3.0"  # 多语言重排模型，支持中文
+    model="rerank-multilingual-v3.0"  # Multilingual reranking model, supports Chinese
 )
-print(f"使用模型: rerank-multilingual-v3.0")
-print("  模型特点:")
-print("  - ✅ 支持多语言（包括中文）")
-print("  - ✅ 基于先进的Transformer架构")
-print("  - ✅ 针对重排任务专门优化")
-print("  - ✅ 持续更新和改进")
+print(f"Using model: rerank-multilingual-v3.0")
+print("  Model features:")
+print("  - ✅ Supports multiple languages (including Chinese)")
+print("  - ✅ Based on advanced Transformer architecture")
+print("  - ✅ Specifically optimized for reranking tasks")
+print("  - ✅ Continuously updated and improved")
 
-# 5. 执行查询和重排
-print(f"\n🎯 开始执行查询和重排...")
-query = "山西有哪些著名的旅游景点？"
-print(f"查询: {query}")
+# 5. Execute query and reranking
+print(f"\n🎯 Starting query and reranking...")
+query = "What are the famous tourist attractions in Shanxi?"
+print(f"Query: {query}")
 
-print(f"\n第一阶段 - BM25初始检索:")
-print("  🔍 使用BM25算法进行初始检索...")
+print(f"\nStage 1 - Initial BM25 retrieval:")
+print("  🔍 Performing initial retrieval using the BM25 algorithm...")
 initial_docs = retriever.invoke(query)
-print(f"  📊 BM25检索到 {len(initial_docs)} 个候选文档")
+print(f"  📊 BM25 retrieved {len(initial_docs)} candidate documents")
 
 for i, doc in enumerate(initial_docs, 1):
     print(f"    {i}. {doc.page_content}")
 
-print(f"\n第二阶段 - Cohere重排:")
-print("  🤖 调用Cohere API进行语义重排...")
-print("  ⏳ 正在处理中（可能需要几秒钟）...")
+print(f"\nStage 2 - Cohere reranking:")
+print("  🤖 Calling the Cohere API for semantic reranking...")
+print("  ⏳ Processing (this may take a few seconds)...")
 
 try:
-    # 使用Cohere重排序器对BM25结果进行重排
+    # Use the Cohere reranker to rerank the BM25 results
     reranked_docs = reranker.compress_documents(
-        documents=initial_docs, 
+        documents=initial_docs,
         query=query
     )
-    print("  ✅ Cohere重排完成")
-    
-    # 6. 输出重排结果
+    print("  ✅ Cohere reranking complete")
+
+    # 6. Output reranking results
     print(f"\n{'='*60}")
-    print(f"🏆 Cohere重排最终结果")
+    print(f"🏆 Final Cohere reranking results")
     print(f"{'='*60}")
-    print(f"查询: {query}")
-    print(f"\n重排序后的结果（按相关性降序）:")
-    
+    print(f"Query: {query}")
+    print(f"\nReranked results (in descending order of relevance):")
+
     for i, doc in enumerate(reranked_docs, 1):
-        print(f"\n📄 排名 {i}:")
-        print(f"   文档内容: {doc.page_content}")
-        
-        # 显示文档元数据
+        print(f"\n📄 Rank {i}:")
+        print(f"   Document content: {doc.page_content}")
+
+        # Display document metadata
         if hasattr(doc, 'metadata') and doc.metadata:
-            print(f"   文档来源: {doc.metadata.get('source', '未知')}")
-            print(f"   景点类别: {doc.metadata.get('category', '未知')}")
-            print(f"   所在位置: {doc.metadata.get('location', '未知')}")
-        
-        # 如果有重排分数，显示出来
+            print(f"   Document source: {doc.metadata.get('source', 'Unknown')}")
+            print(f"   Attraction category: {doc.metadata.get('category', 'Unknown')}")
+            print(f"   Location: {doc.metadata.get('location', 'Unknown')}")
+
+        # If a rerank score is available, display it
         if hasattr(doc, 'score'):
-            print(f"   重排分数: {doc.score:.4f}")
+            print(f"   Rerank score: {doc.score:.4f}")
 
 except Exception as e:
-    print(f"  ❌ Cohere API调用失败: {str(e)}")
-    print("  💡 可能的原因:")
-    print("    - API密钥无效或已过期")
-    print("    - 网络连接问题")
-    print("    - API配额已用完")
-    print("    - 请检查API密钥配置和网络状态")
+    print(f"  ❌ Cohere API call failed: {str(e)}")
+    print("  💡 Possible reasons:")
+    print("    - Invalid or expired API key")
+    print("    - Network connection issue")
+    print("    - API quota exhausted")
+    print("    - Please check your API key configuration and network status")
 
-print(f"\n📋 Cohere重排总结:")
-print("- ✅ 企业级性能：基于大规模预训练模型")
-print("- ✅ 多语言支持：原生支持中文等多种语言")
-print("- ✅ 即用即得：无需本地部署，API调用即可使用")
-print("- ✅ 持续优化：模型定期更新，性能不断提升")
-print("- 💰 成本考虑：按API调用次数计费")
-print("- 🔐 安全提醒：保护好您的API密钥")
-print("- 📈 适用场景：商业级搜索、快速原型、多语言应用")
+print(f"\n📋 Cohere reranking summary:")
+print("- ✅ Enterprise-grade performance: based on large-scale pretrained models")
+print("- ✅ Multilingual support: natively supports Chinese and many other languages")
+print("- ✅ Ready to use: no local deployment needed, just call the API")
+print("- ✅ Continuous optimization: models are updated regularly, with performance steadily improving")
+print("- 💰 Cost considerations: billed per API call")
+print("- 🔐 Security reminder: keep your API key safe")
+print("- 📈 Suitable scenarios: commercial-grade search, rapid prototyping, multilingual applications")

@@ -21,10 +21,10 @@ Status values: `pending`, `in_progress`, `done`, `skipped` (with reason).
 | 01-DataLoading | 47 | done |
 | 02-DocChunking | 7 | done |
 | 03-Embedding | 6 | done |
-| 04-VectorDB | 28 | pending |
-| 05-PreRetrieval | 22 | pending |
-| 06-Indexing | 16 | pending |
-| 07-PostRetrieval | 10 | pending |
+| 04-VectorDB | 28 | in_progress (4/28 done) |
+| 05-PreRetrieval | 22 | done |
+| 06-Indexing | 16 | done |
+| 07-PostRetrieval | 10 | done |
 | 08-Generation | 12 | pending |
 | 09-Evaluation | 4 | pending |
 | 10-AdvanceRAG | 6 | pending |
@@ -50,6 +50,19 @@ Status values: `pending`, `in_progress`, `done`, `skipped` (with reason).
   no pedagogical value. Same handling should apply to any other notebook
   where the only remaining Chinese is in stale execution output rather than
   source/markdown.
+
+- 2026-06-19: ran parallel subagents (one per directory: 04-VectorDB,
+  05-PreRetrieval, 06-Indexing, 07-PostRetrieval) without git isolation. One
+  agent disobeyed the "do not run git commands" instruction and ran a bare
+  `git commit -m init` mid-task, which snapshotted whatever was on disk at
+  that moment across all four directories' in-flight edits into one commit
+  (see commit `a8c500d`). No work was lost - verified by reconciling each
+  directory's file count against the agent's own report - but the commit
+  message/grouping doesn't follow the one-commit-per-directory convention.
+  Lesson: don't run multiple file-editing subagents against the same working
+  tree concurrently without git worktree isolation, even when told not to
+  touch git; instruct future agents to use a dedicated worktree, or run them
+  fully sequentially.
 
 ## Resume instructions
 

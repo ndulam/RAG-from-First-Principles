@@ -73,291 +73,301 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI
 
-# 定义评分结果的数据模型
-# 使用Pydantic确保输出格式的一致性和类型安全
+# Define the data model for the grading result
+# Use Pydantic to ensure a consistent, type-safe output format
 class GradeDocuments(BaseModel):
-    """对检索文档相关性的二元评分。
-    
-    这个类定义了文档相关性评分的输出格式，
-    确保模型只返回'yes'或'no'的明确判断。
+    """Binary score for relevance of a retrieved document.
+
+    This class defines the output format for document relevance grading,
+    ensuring the model only returns a clear 'yes' or 'no' judgment.
     """
 
     binary_score: str = Field(
-        description="文档与问题相关为'yes'，不相关为'no'"
+        description="'yes' if the document is relevant to the question, 'no' otherwise"
     )
 
-# 创建具有结构化输出的语言模型
-# temperature=0.5: 适中的随机性，平衡一致性和创造性
+# Create a language model with structured output
+# temperature=0.5: moderate randomness, balancing consistency and creativity
 llm = ChatOpenAI(model="gpt-4o", temperature=0.5)
-# 将模型输出限制为GradeDocuments格式
+# Constrain the model output to the GradeDocuments format
 structured_llm_grader = llm.with_structured_output(GradeDocuments)
 
-# 构建评分提示模板
-# 系统提示定义了评分员的角色和评分标准
-system = """你是一个评估检索文档与用户问题相关性的评分员。 \n 
-    如果文档包含与问题相关的关键词或语义含义，则将其评为相关。 \n
-    给出一个二元评分'yes'或'no'来表示文档是否与问题相关。"""
+# Build the grading prompt template
+# The system prompt defines the grader's role and grading criteria
+system = """You are a grader assessing the relevance of a retrieved document to a user question. \n
+    If the document contains keyword(s) or semantic meaning related to the question, grade it as relevant. \n
+    Give a binary score 'yes' or 'no' to indicate whether the document is relevant to the question."""
 
 grade_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system),
-        ("human", "检索到的文档: \n\n {document} \n\n 用户问题: {question}"),
+        ("human", "Retrieved document: \n\n {document} \n\n User question: {question}"),
     ]
 )
 
-# 创建检索评分链：提示模板 + 结构化语言模型
+# Build the retrieval grading chain: prompt template + structured language model
 retrieval_grader = grade_prompt | structured_llm_grader
 
-# 测试评分器
-question = "agent memory"  # 测试问题：关于智能体记忆
-docs = retriever.get_relevant_documents(question)  # 检索相关文档
-doc_txt = docs[1].page_content  # 获取第二个文档的内容
-# 打印评分结果，验证评分器是否正常工作
+# Test the grader
+question = "agent memory"  # Test question: about agent memory
+docs = retriever.get_relevant_documents(question)  # Retrieve relevant documents
+doc_txt = docs[1].page_content  # Get the content of the second document
+# Print the grading result to verify the grader works correctly
 print(retrieval_grader.invoke({"question": question, "document": doc_txt}))
 
 # ================================
-# 第三部分：RAG生成链
+# Part 3: RAG generation chain
 # ================================
 
-#3 设置生成模型
+#3 Set up the generation model
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
 
-# 从LangChain Hub获取预构建的RAG提示模板
-# 这个模板专门设计用于基于上下文回答问题
+# Pull a pre-built RAG prompt template from the LangChain Hub
+# This template is specifically designed for answering questions based on context
 prompt = hub.pull("rlm/rag-prompt")
 
-# 创建用于生成答案的语言模型
-# temperature=0: 确保输出的一致性和可重复性
+# Create the language model used for generating answers
+# temperature=0: ensures consistent, reproducible output
 llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
-# 文档格式化函数
+# Document formatting function
 def format_docs(docs):
-    """将文档列表格式化为单一字符串。
-    
+    """Format a list of documents into a single string.
+
     Args:
-        docs: 文档对象列表
-        
+        docs: a list of document objects
+
     Returns:
-        str: 用双换行符连接的文档内容字符串
+        str: the document contents joined by double newlines
     """
     return "\n\n".join(doc.page_content for doc in docs)
 
-# 构建RAG生成链：提示模板 + 语言模型 + 字符串解析器
+# Build the RAG generation chain: prompt template + language model + string output parser
 rag_chain = prompt | llm | StrOutputParser()
 
-# 测试生成链
+# Test the generation chain
 generation = rag_chain.invoke({"context": docs, "question": question})
 print(generation)
 
 # ================================
-# 第四部分：查询重写器
+# Part 4: Query rewriter
 # ================================
 
-#4 设置问题重写器
-# 创建用于查询重写的语言模型
+#4 Set up the question rewriter
+# Create the language model used for query rewriting
 llm = ChatOpenAI(model="gpt-4o", temperature=0.5)
 
-# 查询重写的系统提示
-# 目的是将模糊或不准确的查询重写为更适合搜索的形式
-system = """你是一个问题重写者，将输入的问题转换为更适合网络搜索的版本。 \n 
-     分析输入并尝试推理出潜在的语义意图/含义。"""
+# System prompt for query rewriting
+# The goal is to rewrite vague or inaccurate queries into a form better
+# suited for search
+system = """You are a question re-writer that converts an input question to a better version that is optimized for web search. \n
+     Look at the input and try to reason about the underlying semantic intent / meaning."""
 
 re_write_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system),
         (
             "human",
-            "这是初始问题: \n\n {question} \n 请重新表述为一个改进的问题。",
+            "Here is the initial question: \n\n {question} \n Formulate an improved question.",
         ),
     ]
 )
 
-# 创建查询重写链
+# Create the query-rewriting chain
 question_rewriter = re_write_prompt | llm | StrOutputParser()
-# 测试查询重写功能
+# Test the query-rewriting functionality
 question_rewriter.invoke({"question": question})
 
 # ================================
-# 第五部分：网络搜索工具
+# Part 5: Web search tool
 # ================================
 
-#5 设置网络搜索工具
+#5 Set up the web search tool
 from langchain_community.tools.tavily_search import TavilySearchResults
 
-# 创建网络搜索工具
-# k=3: 返回最多3个搜索结果
+# Create the web search tool
+# k=3: return at most 3 search results
 web_search_tool = TavilySearchResults(k=3)
 
 # ================================
-# 第六部分：图状态定义
+# Part 6: Graph state definition
 # ================================
 
-#6 设置CRAG所需的导入
+#6 Set up the imports required for CRAG
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables import RunnablePassthrough
 
-#7 定义图状态
-from typing import List 
+#7 Define the graph state
+from typing import List
 from typing_extensions import TypedDict
 
 class GraphState(TypedDict):
     """
-    表示CRAG工作流图的状态。
-    
-    这个状态在整个CRAG流程中传递，包含了处理过程中的所有关键信息。
+    Represents the state of the CRAG workflow graph.
 
-    属性:
-        question: 用户的原始问题或重写后的问题
-        generation: 语言模型生成的最终答案
-        web_search: 标记是否需要进行网络搜索（"Yes"/"No"）
-        documents: 检索到的文档列表（原始检索结果或网络搜索结果）
+    This state is passed throughout the entire CRAG pipeline and carries all
+    the key information needed during processing.
+
+    Attributes:
+        question: the user's original question or the rewritten question
+        generation: the final answer generated by the language model
+        web_search: a flag indicating whether a web search is needed ("Yes"/"No")
+        documents: the list of retrieved documents (original retrieval
+            results or web search results)
     """
 
-    question: str        # 当前处理的问题
-    generation: str      # 生成的答案
-    web_search: str      # 是否需要网络搜索的标志
-    documents: List[str] # 文档列表
+    question: str        # The question currently being processed
+    generation: str      # The generated answer
+    web_search: str      # Flag for whether a web search is needed
+    documents: List[str] # List of documents
 
 # ================================
-# 第七部分：CRAG工作流节点函数
+# Part 7: CRAG workflow node functions
 # ================================
 
 from langchain.schema import Document
 
 def retrieve(state):
     """
-    检索节点：从向量数据库检索相关文档
-    
-    这是CRAG流程的第一步，基于用户问题检索潜在相关的文档。
+    Retrieve node: fetch relevant documents from the vector database
 
-    参数:
-        state (dict): 当前图状态，必须包含'question'键
+    This is the first step of the CRAG pipeline, retrieving potentially
+    relevant documents based on the user's question.
 
-    返回:
-        state (dict): 更新后的状态，添加了'documents'键
+    Args:
+        state (dict): the current graph state, must contain the 'question' key
+
+    Returns:
+        state (dict): the updated state, with the 'documents' key added
     """
-    print("---检索---")
+    print("---RETRIEVE---")
     question = state["question"]
 
-    # 使用向量检索器获取相关文档
-    # 基于语义相似性返回最相关的文档片段
+    # Use the vector retriever to fetch relevant documents
+    # Returns the most relevant document chunks based on semantic similarity
     documents = retriever.get_relevant_documents(question)
     return {"documents": documents, "question": question}
 
 def generate(state):
     """
-    生成节点：基于检索到的文档生成答案
-    
-    这是CRAG流程的最后一步，使用过滤后的相关文档生成最终答案。
+    Generate node: produce an answer based on the retrieved documents
 
-    参数:
-        state (dict): 当前图状态，包含question和documents
+    This is the final step of the CRAG pipeline, using the filtered,
+    relevant documents to generate the final answer.
 
-    返回:
-        state (dict): 添加generation键的更新状态
+    Args:
+        state (dict): the current graph state, containing question and documents
+
+    Returns:
+        state (dict): the updated state with the generation key added
     """
-    print("---生成---")
+    print("---GENERATE---")
     question = state["question"]
     documents = state["documents"]
 
-    # 使用RAG链生成答案
-    # 将文档作为上下文，结合问题生成回答
+    # Use the RAG chain to generate the answer
+    # The documents serve as context, combined with the question to produce a response
     generation = rag_chain.invoke({"context": documents, "question": question})
     return {"documents": documents, "question": question, "generation": generation}
 
 def grade_documents(state):
     """
-    文档评分节点：评估检索文档的相关性
-    
-    这是CRAG的核心创新，通过LLM评估每个检索文档是否真正相关。
-    只保留相关文档，如果没有相关文档则标记需要网络搜索。
+    Document grading node: assess the relevance of the retrieved documents
 
-    参数:
-        state (dict): 当前图状态
+    This is CRAG's core innovation: an LLM evaluates whether each retrieved
+    document is genuinely relevant. Only relevant documents are kept, and if
+    no relevant documents remain, the state is flagged for a web search.
 
-    返回:
-        state (dict): 更新documents为过滤后的相关文档，设置web_search标志
+    Args:
+        state (dict): the current graph state
+
+    Returns:
+        state (dict): documents updated to the filtered, relevant documents,
+            with the web_search flag set
     """
 
-    print("---检查文档与问题的相关性---")
+    print("---CHECK DOCUMENT RELEVANCE TO QUESTION---")
     question = state["question"]
     documents = state["documents"]
 
-    # 初始化过滤结果
-    filtered_docs = []           # 存储相关文档
-    web_search = "No"           # 默认不需要网络搜索
-    has_relevant_docs = False   # 是否有相关文档的标志
-    
-    # 对每个检索到的文档进行相关性评分
+    # Initialize the filtering results
+    filtered_docs = []           # Stores the relevant documents
+    web_search = "No"           # Defaults to not needing a web search
+    has_relevant_docs = False   # Flag for whether any relevant documents were found
+
+    # Grade the relevance of each retrieved document
     for d in documents:
         score = retrieval_grader.invoke(
             {"question": question, "document": d.page_content}
         )
         grade = score.binary_score
-        
+
         if grade == "yes":
-            print("---评分: 文档相关---")
-            filtered_docs.append(d)    # 保留相关文档
-            has_relevant_docs = True   # 标记找到相关文档
+            print("---GRADE: DOCUMENT RELEVANT---")
+            filtered_docs.append(d)    # Keep the relevant document
+            has_relevant_docs = True   # Mark that a relevant document was found
         else:
-            print("---评分: 文档不相关---")
-            continue  # 跳过不相关文档
-    
-    # CRAG的关键逻辑：只有在没有任何相关文档时才进行网络搜索
-    # 这避免了不必要的网络搜索，提高了效率
+            print("---GRADE: DOCUMENT NOT RELEVANT---")
+            continue  # Skip the irrelevant document
+
+    # CRAG's key logic: only run a web search if there are no relevant
+    # documents at all. This avoids unnecessary web searches and improves
+    # efficiency.
     if not has_relevant_docs:
         web_search = "Yes"
-        
+
     return {"documents": filtered_docs, "question": question, "web_search": web_search}
 
 def transform_query(state):
     """
-    查询转换节点：重写查询以提高搜索质量
-    
-    当检索到的文档都不相关时，重写原始查询以获得更好的搜索结果。
+    Query transformation node: rewrite the query to improve search quality
 
-    参数:
-        state (dict): 当前图状态
+    When none of the retrieved documents are relevant, rewrite the original
+    query to obtain better search results.
 
-    返回:
-        state (dict): 用重写后的问题更新question键
+    Args:
+        state (dict): the current graph state
+
+    Returns:
+        state (dict): the question key updated with the rewritten question
     """
 
-    print("---转换查询---")
+    print("---TRANSFORM QUERY---")
     question = state["question"]
     documents = state["documents"]
 
-    # 使用查询重写器生成改进的问题
-    # 重写后的问题通常更具体、更适合搜索
+    # Use the query rewriter to produce an improved question
+    # The rewritten question is usually more specific and better suited for search
     better_question = question_rewriter.invoke({"question": question})
     return {"documents": documents, "question": better_question}
 
 def web_search(state):
     """
-    网络搜索节点：获取外部信息补充
-    
-    当本地文档库无法提供相关信息时，通过网络搜索获取额外信息。
+    Web search node: fetch supplementary external information
 
-    参数:
-        state (dict): 包含当前状态
-            - question: 问题（可能是重写后的）
-            - documents: 文档列表
+    When the local document store cannot provide relevant information,
+    obtain additional information through a web search.
 
-    返回:
-        state (dict): 在documents中追加网络搜索结果
+    Args:
+        state (dict): the current state, containing
+            - question: the question (possibly rewritten)
+            - documents: the list of documents
+
+    Returns:
+        state (dict): with the web search results appended to documents
     """
 
-    print("---网络搜索---")
+    print("---WEB SEARCH---")
     question = state["question"]
     documents = state["documents"]
 
-    # 使用Tavily搜索工具进行网络搜索
+    # Use the Tavily search tool to run a web search
     search_results = web_search_tool.invoke(question)
-    
-    # 将搜索结果格式化为文档对象
-    # 这样可以与本地检索的文档保持一致的格式
+
+    # Format the search results as a Document object
+    # This keeps the format consistent with locally retrieved documents
     search_results_str = "\n".join([str(result) for result in search_results])
     web_results = Document(page_content=search_results_str)
     documents.append(web_results)
@@ -365,134 +375,136 @@ def web_search(state):
     return {"documents": documents, "question": question}
 
 # ================================
-# 第八部分：条件边缘逻辑
+# Part 8: Conditional edge logic
 # ================================
 
-### 边缘处理函数
+### Edge handling function
 
 def decide_to_generate(state):
     """
-    决策节点：确定下一步行动
-    
-    这是CRAG工作流的关键决策点：
-    - 如果有相关文档：直接生成答案
-    - 如果没有相关文档：转换查询并进行网络搜索
+    Decision node: determine the next action
 
-    参数:
-        state (dict): 当前图状态
+    This is the key decision point in the CRAG workflow:
+    - If relevant documents were found: generate the answer directly
+    - If no relevant documents were found: transform the query and run a web search
 
-    返回:
-        str: 下一个要执行的节点名称
+    Args:
+        state (dict): the current graph state
+
+    Returns:
+        str: the name of the next node to execute
     """
 
-    print("---评估已评分文档---")
+    print("---ASSESS GRADED DOCUMENTS---")
     state["question"]
-    web_search = state["web_search"]  # 获取是否需要网络搜索的标志
+    web_search = state["web_search"]  # Get the flag for whether a web search is needed
     state["documents"]
 
     if web_search == "Yes":
-        # 所有本地文档都被评为不相关
-        # 需要重写查询并进行网络搜索以获取更好的信息
-        print("---决策: 所有文档与问题都不相关，转换查询---")
+        # All local documents were graded as not relevant
+        # Need to rewrite the query and run a web search for better information
+        print("---DECISION: ALL DOCUMENTS ARE NOT RELEVANT TO QUESTION, TRANSFORM QUERY---")
         return "transform_query"
     else:
-        # 找到了相关文档，可以直接生成答案
-        print("---决策: 生成---")
+        # Relevant documents were found, so the answer can be generated directly
+        print("---DECISION: GENERATE---")
         return "generate"
 
 # ================================
-# 第九部分：构建和编译CRAG工作流图
+# Part 9: Build and compile the CRAG workflow graph
 # ================================
 
-#8 编译图
+#8 Compile the graph
 from langgraph.graph import END, StateGraph, START
 
-# 创建状态图工作流
+# Create the state graph workflow
 workflow = StateGraph(GraphState)
 
-# 添加所有节点到工作流图
-workflow.add_node("retrieve", retrieve)              # 检索节点
-workflow.add_node("grade_documents", grade_documents) # 文档评分节点
-workflow.add_node("generate", generate)              # 答案生成节点
-workflow.add_node("transform_query", transform_query) # 查询转换节点
-workflow.add_node("web_search_node", web_search)     # 网络搜索节点
+# Add all nodes to the workflow graph
+workflow.add_node("retrieve", retrieve)              # Retrieval node
+workflow.add_node("grade_documents", grade_documents) # Document grading node
+workflow.add_node("generate", generate)              # Answer generation node
+workflow.add_node("transform_query", transform_query) # Query transformation node
+workflow.add_node("web_search_node", web_search)     # Web search node
 
-# 构建工作流图的边缘连接
-# 定义节点之间的执行顺序和条件跳转
+# Build the edges connecting the workflow graph
+# Define the execution order and conditional jumps between nodes
 
-# 1. 从开始节点到检索节点
+# 1. From the start node to the retrieve node
 workflow.add_edge(START, "retrieve")
 
-# 2. 从检索到文档评分
+# 2. From retrieve to document grading
 workflow.add_edge("retrieve", "grade_documents")
 
-# 3. 从文档评分到条件分支
-# 根据decide_to_generate函数的返回值选择下一个节点
+# 3. From document grading to a conditional branch
+# Choose the next node based on the return value of decide_to_generate
 workflow.add_conditional_edges(
-    "grade_documents",           # 源节点
-    decide_to_generate,          # 决策函数
+    "grade_documents",           # Source node
+    decide_to_generate,          # Decision function
     {
-        "transform_query": "transform_query",  # 如果需要网络搜索
-        "generate": "generate",                # 如果有相关文档
+        "transform_query": "transform_query",  # If a web search is needed
+        "generate": "generate",                # If relevant documents were found
     },
 )
 
-# 4. 查询转换后进行网络搜索
+# 4. Run a web search after the query transformation
 workflow.add_edge("transform_query", "web_search_node")
 
-# 5. 网络搜索后生成答案
+# 5. Generate the answer after the web search
 workflow.add_edge("web_search_node", "generate")
 
-# 6. 生成答案后结束
+# 6. End after generating the answer
 workflow.add_edge("generate", END)
 
-# 编译工作流图为可执行的应用
+# Compile the workflow graph into an executable app
 app = workflow.compile()
 
 # ================================
-# 第十部分：运行CRAG系统
+# Part 10: Run the CRAG system
 # ================================
 
-#9 使用图回答问题
+#9 Use the graph to answer a question
 
 from pprint import pprint
 
-# 准备输入问题
-# 第一个问题：关于智能体记忆类型（英文）
+# Prepare the input question
+# First question: about the types of agent memory (English)
 inputs = {"question": "What are the types of agent memory?"}
 
-# 第二个问题示例（中文，被注释掉）
-# inputs = {"question": "为何山西省旅游资源丰富?"}
+# Second example question (Chinese, commented out)
+# inputs = {"question": "Why is Shanxi province rich in tourism resources?"}
 
-print("=== CRAG 工作流执行过程 ===")
+print("=== CRAG Workflow Execution ===")
 
-# 流式执行CRAG工作流
-# stream方法允许我们观察每个节点的执行过程
+# Stream the execution of the CRAG workflow
+# The stream method lets us observe the execution of each node
 for output in app.stream(inputs):
     for key, value in output.items():
-        # 打印当前执行的节点名称
-        pprint(f"节点 '{key}':")
-        
-        # 可选：打印每个节点的完整状态信息
-        # 这对调试和理解工作流很有帮助
+        # Print the name of the node currently executing
+        pprint(f"Node '{key}':")
+
+        # Optional: print the full state information for each node
+        # This is helpful for debugging and understanding the workflow
         # pprint(value["keys"], indent=2, width=80, depth=None)
     pprint("\n---\n")
 
-print("=== 最终生成结果 ===")
-# 打印最终生成的答案
+print("=== Final Generation Result ===")
+# Print the final generated answer
 pprint(value["generation"])
 
 """
-CRAG工作流总结：
+CRAG workflow summary:
 
-1. 检索(retrieve): 从向量数据库检索候选文档
-2. 评分(grade_documents): 使用LLM评估文档相关性
-3. 决策(decide_to_generate): 根据评分结果选择路径
-4a. 直接路径: 如果有相关文档 → 生成答案
-4b. 校正路径: 如果无相关文档 → 转换查询 → 网络搜索 → 生成答案
+1. Retrieve: fetch candidate documents from the vector database
+2. Grade (grade_documents): use an LLM to assess document relevance
+3. Decide (decide_to_generate): choose a path based on the grading results
+4a. Direct path: if relevant documents were found -> generate the answer
+4b. Corrective path: if no relevant documents were found -> transform the
+    query -> web search -> generate the answer
 
-这种设计确保了系统能够自动检测和纠正检索错误，
-显著提高了RAG系统的准确性和可靠性。
+This design ensures the system can automatically detect and correct
+retrieval errors, significantly improving the accuracy and reliability of
+the RAG system.
 """
 
 

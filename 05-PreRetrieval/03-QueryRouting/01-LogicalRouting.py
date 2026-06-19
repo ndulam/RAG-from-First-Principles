@@ -3,42 +3,42 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_deepseek import ChatDeepSeek
 
-# 数据模型
+# Data model
 class RouteQuery(BaseModel):
-    """将用户查询路由到最相关的数据源"""
+    """Route the user's query to the most relevant data source"""
     datasource: Literal["python_docs", "js_docs", "golang_docs"] = Field(
         ...,
-        description="根据用户问题，选择最适合回答问题的数据源",
+        description="Given the user's question, choose the data source best suited to answer it",
     )
 
 def create_router():
-    """创建并返回路由模型"""
-    # 带函数调用的大模型
+    """Create and return the routing model"""
+    # LLM with function calling
     llm = ChatDeepSeek(model="deepseek-chat", temperature=0)
     structured_llm = llm.with_structured_output(RouteQuery)
-    
-    # 提示模板
-    system = """你是将用户问题路由到合适数据源的专家。
-根据问题所涉及的编程语言，将其路由到相关的数据源。"""
+
+    # Prompt template
+    system = """You are an expert at routing a user question to the appropriate data source.
+Route it to the relevant data source based on the programming language the question is about."""
     prompt = ChatPromptTemplate.from_messages([
         ("system", system),
         ("human", "{question}"),
     ])
-    
-    # 定义路由器
+
+    # Define the router
     return prompt | structured_llm
 
 def route_question(question: str) -> str:
-    """路由用户问题到合适的数据源"""
+    """Route the user's question to the appropriate data source"""
     router = create_router()
     result = router.invoke({"question": question})
     return result.datasource
 
-# 使用示例
+# Usage example
 if __name__ == "__main__":
-    # 测试问题
-    test_question = "Python中的列表和元组有什么区别？"
+    # Test question
+    test_question = "What's the difference between lists and tuples in Python?"
     result = route_question(test_question)
-    print(f"问题: {test_question}")
-    print(f"路由结果: {result}")
+    print(f"Question: {test_question}")
+    print(f"Routing result: {result}")
 

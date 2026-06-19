@@ -5,53 +5,53 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
-# 加载文档并构建向量数据库
+# Load the documents and build the vector database
 loader = TextLoader("90-Data/BlackMythWukong/BlackMythWukong-Wiki.txt", encoding='utf-8')
 data = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
 splits = text_splitter.split_documents(data)
 
-embed_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-zh") 
+embed_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-zh")
 vectordb = Chroma.from_documents(documents=splits, embedding= embed_model)
-# HyDE文档生成模板
-template = """请撰写一段与以下问题相关的游戏内容：
-问题：{question}
-内容："""
+# HyDE document generation template
+template = """Please write a passage of game content relevant to the following question:
+Question: {question}
+Content:"""
 prompt_hyde = ChatPromptTemplate.from_template(template)
-# 初始化模型
-llm = ChatDeepSeek(model="deepseek-chat") 
-# 创建生成假设文档的链
+# Initialize the model
+llm = ChatDeepSeek(model="deepseek-chat")
+# Create the chain that generates the hypothetical document
 generate_docs_for_retrieval = (
     prompt_hyde | llm | StrOutputParser()
 )
-# 示例问题
-question = "black mythWukong中的主角有哪些主要技能？"
-# 生成假设文档
+# Example question
+question = "What are the main skills of the protagonist in Black Myth: Wukong?"
+# Generate the hypothetical document
 generated_doc = generate_docs_for_retrieval.invoke({"question": question})
-print("\n=== 生成的假设文档 ===")
+print("\n=== Generated hypothetical document ===")
 print(generated_doc)
-# 初始化向量存储检索器
+# Initialize the vector store retriever
 retriever = vectordb.as_retriever()
-# 检索相关文档
+# Retrieve relevant documents
 retrieval_chain = generate_docs_for_retrieval | retriever
 retrieved_docs = retrieval_chain.invoke({"question": question})
-print("\n=== 检索到的相关文档 ===")
+print("\n=== Retrieved relevant documents ===")
 for i, doc in enumerate(retrieved_docs, 1):
-    print(f"\n文档 {i}:")
+    print(f"\nDocument {i}:")
     print(doc.page_content)
-# 最终回答生成模板
-answer_template = """根据以下内容回答问题：
+# Final answer generation template
+answer_template = """Answer the question based on the following content:
 {context}
-问题：{question}
-回答："""
+Question: {question}
+Answer:"""
 answer_prompt = ChatPromptTemplate.from_template(answer_template)
-# 创建最终的问答链
+# Create the final question-answering chain
 final_rag_chain = (
     answer_prompt
     | llm
     | StrOutputParser()
 )
-# 获取最终答案
+# Get the final answer
 final_answer = final_rag_chain.invoke({"context": retrieved_docs, "question": question})
-print("\n=== 最终答案 ===")
+print("\n=== Final answer ===")
 print(final_answer)
