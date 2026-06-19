@@ -1,0 +1,19 @@
+# Dependencies for the 08-Generation chapter scripts.
+# Install with: pip install -r requirements.txt
+
+langchain
+langchain-community
+langchain-core
+langchain-openai
+langchain-deepseek
+langgraph
+pydantic
+openai
+typing_extensions
+transformers
+datasets
+torch
+llama-index-core
+llama-index-program-openai
+faiss-cpu
+python-dotenv

@@ -1,0 +1,23 @@
+# Dependencies for the 10-AdvanceRAG chapter scripts.
+# Install with: pip install -r requirements.txt
+
+weaviate-client
+requests
+openai
+langchain
+langchain-community
+langchain-openai
+langchain-core
+pydantic
+langgraph
+tavily-python
+pymilvus
+milvus-model
+tqdm
+llama-index-core
+llama-index-llms-openai
+llama-index-embeddings-openai
+llama-index-postprocessor-cohere-rerank
+llama-index-retrievers-bm25
+pandas
+python-dotenv

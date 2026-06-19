@@ -1,0 +1,16 @@
+# Dependencies for the 04-VectorDB chapter scripts.
+# Install with: pip install -r requirements.txt
+
+torch
+pymilvus
+milvus-model
+opencv-python
+pillow
+numpy
+tqdm
+scipy
+pandas
+
+# visual_bge (used in the Visual-BGE multimodal retrieval scripts) isn't on PyPI -
+# install from GitHub:
+#   pip install -e "git+https://github.com/FlagOpen/FlagEmbedding.git#egg=visual_bge&subdirectory=research/visual_bge"

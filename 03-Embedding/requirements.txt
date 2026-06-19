@@ -1,0 +1,20 @@
+# Dependencies for the 03-Embedding chapter scripts.
+# Install with: pip install -r requirements.txt
+
+torch
+pillow
+numpy
+FlagEmbedding
+python-dotenv
+langchain-openai
+langchain-core
+langchain-community
+chromadb
+rank-bm25
+pandas
+requests
+scikit-learn
+openai
+
+# visual_bge (used in 05-MultimodalEmbedding.py) isn't on PyPI - install from GitHub:
+#   pip install -e "git+https://github.com/FlagOpen/FlagEmbedding.git#egg=visual_bge&subdirectory=research/visual_bge"

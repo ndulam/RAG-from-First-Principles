@@ -13,7 +13,7 @@ sudo apt-get update && sudo apt-get install -y libreoffice
 """
 from unstructured.partition.ppt import partition_ppt
 # Parse the PPT file
-ppt_elements = partition_ppt(filename="99-EN/black-myth-wukong/black_myth_wukong_slides.pptx")
+ppt_elements = partition_ppt(filename="../../99-EN/black-myth-wukong/black_myth_wukong_slides.pptx")
 print("PPT content:")
 # for element in ppt_elements:
 #     print(element.text)
@@ -22,7 +22,7 @@ from langchain_core.documents import Document
 # Convert to the Documents data structure
 documents = [
 Document(page_content=element.text,
-  	     metadata={"source": "99-EN/black-myth-wukong/black_myth_wukong_slides.pptx"})
+  	     metadata={"source": "../../99-EN/black-myth-wukong/black_myth_wukong_slides.pptx"})
     for element in ppt_elements
 ]
 

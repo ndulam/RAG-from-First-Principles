@@ -1,0 +1,26 @@
+# Dependencies for the 07-PostRetrieval chapter scripts.
+# Install with: pip install -r requirements.txt
+
+langchain
+langchain-community
+langchain-core
+langchain-openai
+langchain-cohere
+langchain-huggingface
+langchain-text-splitters
+langchain-deepseek
+langgraph
+typing_extensions
+chromadb
+faiss-cpu
+rank-bm25
+llmlingua
+llama-index-core
+transformers
+torch
+tavily-python
+python-dotenv
+
+# langchain's RankLLMRerank breaks on rank_llm > 0.12.8
+# (see https://github.com/langchain-ai/langchain/issues/29156)
+rank-llm<=0.12.8

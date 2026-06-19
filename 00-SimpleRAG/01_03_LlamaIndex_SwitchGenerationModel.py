@@ -24,7 +24,7 @@ llm = DeepSeek(
 )
 
 # Load the data
-documents = SimpleDirectoryReader(input_files=["99-EN/black-myth-wukong/black_myth_wukong_setting.txt"]).load_data()
+documents = SimpleDirectoryReader(input_files=["../99-EN/black-myth-wukong/black_myth_wukong_setting.txt"]).load_data()
 
 # Build the index
 index = VectorStoreIndex.from_documents(

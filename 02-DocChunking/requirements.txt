@@ -1,0 +1,11 @@
+# Dependencies for the 02-DocChunking chapter scripts.
+# Install with: pip install -r requirements.txt
+
+langchain-community
+langchain-text-splitters
+llama-index-core
+llama-index-llms-openai
+llama-index-embeddings-openai
+llama-index-readers-file
+pypdf
+python-dotenv

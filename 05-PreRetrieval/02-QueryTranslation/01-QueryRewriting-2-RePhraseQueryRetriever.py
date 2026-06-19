@@ -9,7 +9,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 logging.basicConfig()
 logging.getLogger("langchain.retrievers.re_phraser").setLevel(logging.INFO)
 # Load the game documentation data
-loader = TextLoader("99-EN/black-myth-wukong/black_myth_wukong_setting.txt", encoding='utf-8')
+loader = TextLoader("../../99-EN/black-myth-wukong/black_myth_wukong_setting.txt", encoding='utf-8')
 data = loader.load()
 # Split the text into chunks
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)

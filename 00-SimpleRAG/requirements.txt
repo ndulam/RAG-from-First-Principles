@@ -1,0 +1,28 @@
+# Dependencies for the 00-SimpleRAG chapter scripts.
+# Install with: pip install -r requirements.txt
+
+langchain
+langchain-community
+langchain-core
+langchain-text-splitters
+langchain-openai
+langchain-huggingface
+langchain-deepseek
+langchain-ollama
+langgraph
+llama-index-core
+llama-index-llms-openai
+llama-index-llms-deepseek
+llama-index-llms-ollama
+llama-index-embeddings-openai
+llama-index-embeddings-huggingface
+openai
+anthropic
+ollama
+sentence-transformers
+faiss-cpu
+numpy
+transformers
+torch
+python-dotenv
+typing_extensions

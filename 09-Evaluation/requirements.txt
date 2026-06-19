@@ -1,0 +1,23 @@
+# Dependencies for the 09-Evaluation chapter scripts.
+# Install with: pip install -r requirements.txt
+
+llama-index-core
+llama-index-llms-openai
+llama-index-embeddings-openai
+llama-index-embeddings-huggingface
+nest-asyncio
+numpy
+pandas
+deepeval
+chromadb
+openai
+trulens
+trulens-providers-openai
+datasets
+langchain-openai
+langchain-huggingface
+python-dotenv
+
+# Kept on the 0.2.x API generation: the code uses ragas.llms.LangchainLLMWrapper /
+# ragas.embeddings.LangchainEmbeddingsWrapper, which matches this generation's API.
+ragas<0.3

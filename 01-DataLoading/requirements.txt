@@ -1,0 +1,34 @@
+# Dependencies for the 01-DataLoading chapter scripts.
+# Install with: pip install -r requirements.txt
+#
+# OS-level prerequisites:
+#   - unstructured / pytesseract / pdf2image / textract need poppler and tesseract-ocr installed on the system.
+#   - camelot-py needs Ghostscript installed on the system.
+
+langchain
+langchain-community
+langchain-core
+langchain-openai
+langchain-unstructured
+llama-index-core
+llama-index-llms-openai
+llama-index-embeddings-openai
+llama-index-readers-file
+llama-index-readers-database
+llama-index-postprocessor-flag-embedding-reranker
+llama-parse
+unstructured[all-docs]
+PyMuPDF
+pdf2image
+pytesseract
+pdfplumber
+camelot-py[cv]
+textract
+pandas
+SQLAlchemy
+PyMySQL
+nltk
+beautifulsoup4
+matplotlib
+pillow
+python-dotenv

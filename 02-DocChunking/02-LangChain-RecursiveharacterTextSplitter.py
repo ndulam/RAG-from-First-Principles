@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-loader = TextLoader("99-EN/shanxi-tourism/yungang_grottoes.txt")
+loader = TextLoader("../99-EN/shanxi-tourism/yungang_grottoes.txt")
 documents = loader.load()
 # Define the list of separators, used in priority order
 separators = ["\n\n", ".", "，", " "] # . is period, ， is comma, " " is space

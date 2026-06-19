@@ -22,7 +22,7 @@ model = Visualized_BGE(model_name_bge=model_name, model_weight=model_path)
 model.eval()
 
 # Define the image path (use an absolute path if you run into issues)
-image_path = "99-EN/assets/multimodal/query_image.jpg"
+image_path = "../99-EN/assets/multimodal/query_image.jpg"
 
 # Encode the image
 with torch.no_grad():

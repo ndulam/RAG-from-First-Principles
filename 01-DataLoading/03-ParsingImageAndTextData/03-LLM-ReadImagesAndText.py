@@ -11,7 +11,7 @@ output_dir = "temp_images"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
-images = convert_from_path("99-EN/black-myth-wukong/black_myth_wukong_slides.pdf")
+images = convert_from_path("../../99-EN/black-myth-wukong/black_myth_wukong_slides.pdf")
 image_paths = []
 for i, image in enumerate(images):
     image_path = os.path.join(output_dir, f'page_{i+1}.jpg')
@@ -54,7 +54,7 @@ from langchain_core.documents import Document
 documents = [
     Document(
         page_content=result,
-        metadata={"source": "99-EN/black-myth-wukong/black_myth_wukong_slides.pdf", "page_number": i + 1}
+        metadata={"source": "../../99-EN/black-myth-wukong/black_myth_wukong_slides.pdf", "page_number": i + 1}
     )
     for i, result in enumerate(results)
 ]

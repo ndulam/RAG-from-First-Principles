@@ -1,0 +1,24 @@
+# Dependencies for the 05-PreRetrieval chapter scripts.
+# Install with: pip install -r requirements.txt
+
+langchain
+langchain-core
+langchain-openai
+langchain-deepseek
+langchain-huggingface
+langchain-chroma
+langchain-community
+langchain-text-splitters
+pydantic
+openai
+pymilvus
+SQLAlchemy
+PyYAML
+PyMySQL
+neo4j
+torch
+python-dotenv
+
+# Required by langchain_community.document_loaders.YoutubeLoader
+pytube
+youtube-transcript-api

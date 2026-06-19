@@ -6,10 +6,10 @@ import json
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Load the user_reviews dataset
-df = pd.read_csv("99-EN/journey-of-extinction-husun/user_reviews.csv")
+df = pd.read_csv("../99-EN/journey-of-extinction-husun/user_reviews.csv")
 
 # Load the game_descriptions file
-with open("99-EN/journey-of-extinction-husun/game_guide.json", "r") as f:
+with open("../99-EN/journey-of-extinction-husun/game_guide.json", "r") as f:
     game_descriptions = json.load(f)
 
 # Define a function to get the embedding vector
