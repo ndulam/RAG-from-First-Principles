@@ -1,4 +1,4 @@
-file_path = ("90-Data/Shanxi Cultural Tourism/Yungang Grottoes-en.pdf")
+file_path = ("99-EN/assets/shanxi-tourism/云冈石窟-en.pdf")
 from langchain_unstructured import UnstructuredLoader
 loader = UnstructuredLoader(
     file_path=file_path,

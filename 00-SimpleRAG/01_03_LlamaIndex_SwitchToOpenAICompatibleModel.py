@@ -38,9 +38,9 @@ Settings.embed_model = OpenAIEmbedding(
 # from llama_index.core import VectorStoreIndex, SimpleDirectoryReader (already imported)
 
 # Line 2: load the data
-# Make sure the file path "90-Data/BlackMythWukong/setup.txt" is correct and readable
+# Make sure the file path "99-EN/black-myth-wukong/black_myth_wukong_setting.txt" is correct and readable
 try:
-    documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/setup.txt"]).load_data()
+    documents = SimpleDirectoryReader(input_files=["99-EN/black-myth-wukong/black_myth_wukong_setting.txt"]).load_data()
 except Exception as e:
     print(f"Error loading document: {e}")
     print("Please check the file path and permissions.")

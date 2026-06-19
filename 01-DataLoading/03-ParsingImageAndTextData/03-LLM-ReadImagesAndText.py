@@ -11,7 +11,7 @@ output_dir = "temp_images"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
-images = convert_from_path("90-Data/BlackMythWukong/black mythWukong.pdf")
+images = convert_from_path("99-EN/black-myth-wukong/black_myth_wukong_slides.pdf")
 image_paths = []
 for i, image in enumerate(images):
     image_path = os.path.join(output_dir, f'page_{i+1}.jpg')

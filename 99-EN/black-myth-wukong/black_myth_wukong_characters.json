@@ -1,0 +1,46 @@
+{
+  "gameTitle": "Black Myth: Wukong",
+  "basicInfo": {
+    "engine": "Unreal Engine 5",
+    "releaseDate": "2024-08-20",
+    "genre": "Action RPG",
+    "platforms": ["PC", "PS5", "Xbox Series X/S"],
+    "supportedLanguages": ["Simplified Chinese", "Traditional Chinese", "English", "Japanese", "Korean"]
+  },
+  "mainCharacter": {
+    "name": "Sun Wukong",
+    "role": "Mythic inspiration for the Destined One",
+    "backstory": "Born from a stone that absorbed the vital energy of heaven and earth, Sun Wukong studies under Patriarch Subodhi, masters supernatural skills, and becomes one of the most famous figures in Chinese mythology.",
+    "abilities": ["Seventy-Two Transformations", "Somersault Cloud", "Fiery Golden Eyes", "Indestructible Body"],
+    "weapons": ["Ruyi Jingu Bang", "magical artifacts", "spell talismans"],
+    "combatStyle": "Fast staff combat supported by transformations, spells, and myth-inspired techniques."
+  },
+  "supportCharacters": [
+    {
+      "name": "White Dragon Horse",
+      "identity": "Dragon prince and pilgrim companion",
+      "background": "Originally Ao Lie, the third prince of the West Sea Dragon King, he is transformed into a horse and accompanies the pilgrimage westward.",
+      "abilities": ["water traversal", "cloud riding", "transformation"]
+    },
+    {
+      "name": "Red Boy",
+      "identity": "Boy Sage King",
+      "background": "The son of the Bull Demon King and Princess Iron Fan, trained in fire magic and known for the True Fire of Samadhi.",
+      "abilities": ["True Fire of Samadhi", "fire sight", "battle form"]
+    },
+    {
+      "name": "Six-Eared Macaque",
+      "identity": "Wukong's double",
+      "background": "A being remarkably similar to the Monkey King, with powers that mirror Wukong's own.",
+      "abilities": ["Seventy-Two Transformations", "spellcasting", "cloning"]
+    }
+  ],
+  "gameFeatures": {
+    "worldSetting": "A mythic fantasy world built from Journey to the West and Chinese religious imagination.",
+    "combatSystem": "A transformation-driven action system with demanding encounters.",
+    "progression": "Skill trees unlock new combat techniques and transformation forms.",
+    "exploration": "Explorable maps include side quests, secrets, and hidden story fragments.",
+    "graphics": "Unreal Engine 5 supports high-fidelity rendering and real-time lighting effects."
+  }
+}
+

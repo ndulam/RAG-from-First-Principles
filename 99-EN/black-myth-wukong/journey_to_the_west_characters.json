@@ -1,0 +1,31 @@
+{
+  "gameTitle": "Journey to the West",
+  "basicInfo": {
+    "genre": "Chinese mythological adventure",
+    "source": "Classical Chinese novel",
+    "themes": ["pilgrimage", "discipline", "redemption", "mythic combat"]
+  },
+  "mainCharacter": {
+    "name": "Sun Wukong",
+    "backstory": "A stone-born monkey who studies Daoist arts, rebels against heaven, and later joins the pilgrimage to protect the monk Tang Sanzang.",
+    "abilities": ["Seventy-Two Transformations", "Somersault Cloud", "Fiery Golden Eyes", "Ruyi Jingu Bang"]
+  },
+  "supportCharacters": [
+    {
+      "name": "White Dragon Horse",
+      "identity": "Dragon prince transformed into Tang Sanzang's mount",
+      "abilities": ["water control", "cloud travel", "transformation"]
+    },
+    {
+      "name": "Red Boy",
+      "identity": "Son of the Bull Demon King and Princess Iron Fan",
+      "abilities": ["True Fire of Samadhi", "fire magic", "battle transformation"]
+    },
+    {
+      "name": "Six-Eared Macaque",
+      "identity": "A powerful double of Sun Wukong",
+      "abilities": ["transformation", "spellcasting", "imitation"]
+    }
+  ]
+}
+

@@ -1,0 +1,182 @@
+{
+  "version": "1.0",
+  "game_info": {
+    "title": "Killing God: Hu Sun",
+    "developer": "Kage AI",
+    "genre": ["action adventure", "role-playing"],
+    "based_on": "Journey to the West",
+    "release_status": "in development"
+  },
+  "total_entries": 5,
+  "categories": ["combat", "scene", "story", "ability", "character", "item"],
+  "data": [
+    {
+      "id": "COMBAT_001",
+      "title": "Spirit Monkey Form Combat Showcase",
+      "category": "combat",
+      "description": "Wukong uses the Spirit Monkey transformation, shrinking his body and moving with extreme agility. Golden fur flashes as he slips through openings in a giant boss's attacks and strikes weak points with precision.",
+      "combat_details": {
+        "main_character": "Sun Wukong",
+        "form": "Spirit Monkey Form",
+        "opponent": "Giant Mountain Spirit",
+        "combat_style": ["agile combat", "aerial mobility", "weak-point strikes"],
+        "abilities_used": ["Spirit Monkey Transformation", "Somersault Cloud", "staff technique"],
+        "difficulty": "high"
+      },
+      "scene_info": {
+        "location": "Black Wind Mountain",
+        "time_of_day": "dawn",
+        "weather": "clear",
+        "environment": "mountain",
+        "special_effects": ["golden light", "spiritual aura", "afterimages"]
+      },
+      "visual_elements": {
+        "color_scheme": ["gold", "brown", "green"],
+        "key_visuals": ["golden fur", "nimble silhouette", "rocky mountain terrain"],
+        "particle_effects": ["scattered golden light", "flowing aura", "blurred afterimages"]
+      },
+      "gameplay_tags": ["transformation combat", "boss fight", "special form", "mobility", "combo system"],
+      "related_media": {
+        "image_path": "./images/combat/combat_001.jpg",
+        "video_path": "./videos/combat/combat_001.mp4",
+        "thumbnail_path": "./thumbnails/combat/combat_001.jpg"
+      }
+    },
+    {
+      "id": "COMBAT_002",
+      "title": "Battle with the White Bone Spirit on the Snow Mountain",
+      "category": "combat",
+      "description": "On a snow-covered peak, Wukong faces the White Bone Spirit in a fierce duel. Her figure flickers in the blizzard while ice crystals bend the light. Wukong must keep fighting in the cold and see through her tricks.",
+      "combat_details": {
+        "main_character": "Sun Wukong",
+        "form": "standard form",
+        "opponent": "White Bone Spirit",
+        "combat_style": ["technical combat", "environmental adaptation", "trap detection"],
+        "abilities_used": ["staff techniques", "Fiery Golden Eyes", "cloud movement"],
+        "difficulty": "medium-high"
+      },
+      "scene_info": {
+        "location": "Snow Mountain Summit",
+        "time_of_day": "evening",
+        "weather": "blizzard",
+        "environment": "snowfield",
+        "special_effects": ["snowflakes", "ice crystals", "cold mist"]
+      },
+      "visual_elements": {
+        "color_scheme": ["white", "blue", "gold"],
+        "key_visuals": ["blowing snow", "White Bone Spirit shadow", "staff glow"],
+        "particle_effects": ["drifting snow", "refracted ice light", "swirling cold air"]
+      },
+      "gameplay_tags": ["boss fight", "environmental hazard", "visual deception", "skill combo", "story battle"],
+      "related_media": {
+        "image_path": "./images/combat/combat_002.jpg",
+        "video_path": "./videos/combat/combat_002.mp4",
+        "thumbnail_path": "./thumbnails/combat/combat_002.jpg"
+      }
+    },
+    {
+      "id": "SCENE_001",
+      "title": "Water Curtain Cave Panorama",
+      "category": "scene",
+      "description": "In towering Mount Huaguo, a waterfall pours down like a silver river, partly hiding the Water Curtain Cave. Pines and cypresses surround the entrance, cranes fly overhead, and spirit monkeys play among the branches.",
+      "scene_info": {
+        "location": "Mount Huaguo",
+        "time_of_day": "noon",
+        "weather": "clear",
+        "environment": "mountains and water",
+        "special_effects": ["waterfall", "morning mist", "sunlight"]
+      },
+      "visual_elements": {
+        "color_scheme": ["green", "white", "gold"],
+        "key_visuals": ["waterfall", "spirit monkeys", "cranes"],
+        "particle_effects": ["water mist", "sun scattering", "spiritual aura"]
+      },
+      "gameplay_elements": {
+        "interactive_objects": ["treasures", "artifacts", "mechanisms"],
+        "hidden_secrets": ["secret paths", "treasure map", "training ground"],
+        "npc_locations": ["spirit monkey group", "cranes", "mountain spirits"]
+      },
+      "lore_significance": {
+        "story_connections": ["Wukong's training place", "site of the Great Sage title", "training place for transformations"],
+        "historical_events": ["origin of the Havoc in Heaven", "becoming Monkey King", "learning the Seventy-Two Transformations"]
+      },
+      "related_media": {
+        "image_path": "./images/scenes/scene_001.jpg",
+        "video_path": "./videos/scenes/scene_001.mp4",
+        "thumbnail_path": "./thumbnails/scenes/scene_001.jpg"
+      }
+    },
+    {
+      "id": "ABILITY_001",
+      "title": "Fiery Golden Eyes",
+      "category": "ability",
+      "description": "Wukong's eyes shine with golden fire, allowing him to see through illusions. The skill reveals enemy disguises, hidden treasures, and mechanisms while applying a distinctive visual filter to the scene.",
+      "ability_details": {
+        "type": "passive skill",
+        "activation": "hold R",
+        "cooldown": "30 seconds",
+        "energy_cost": "20 points",
+        "upgrades": ["increased range", "longer duration", "reduced energy cost"]
+      },
+      "gameplay_mechanics": {
+        "primary_use": ["detect disguises", "find treasures", "assist puzzle solving"],
+        "combat_applications": ["avoid illusion traps", "find boss weak points", "predict enemy positions"],
+        "combination_effects": ["combine with transformations", "chain into staff techniques", "break special mechanisms"]
+      },
+      "visual_effects": {
+        "color_scheme": ["gold", "red"],
+        "key_visuals": ["golden light", "flame", "ripples"],
+        "particle_effects": ["golden flashes", "circling flames", "expanding ripples"]
+      },
+      "related_media": {
+        "image_path": "./images/abilities/ability_001.jpg",
+        "video_path": "./videos/abilities/ability_001.mp4",
+        "thumbnail_path": "./thumbnails/abilities/ability_001.jpg"
+      }
+    },
+    {
+      "id": "STORY_001",
+      "title": "First Arrival at Mount Huaguo",
+      "category": "story",
+      "description": "This chapter tells the story of Wukong's first arrival at Mount Huaguo. Born from an immortal stone, he is curious and powerful from the beginning. Through wit and courage, he gradually earns the trust of the monkey clan.",
+      "story_elements": {
+        "chapter": "prologue",
+        "location": ["Mount Huaguo", "Water Curtain Cave"],
+        "key_characters": ["Sun Wukong", "Old Monkey King", "monkey clan"],
+        "themes": ["growth", "leadership", "self-knowledge"]
+      },
+      "narrative_details": {
+        "plot_points": ["the immortal stone breaks open", "meeting the monkey clan", "showing his abilities", "becoming Monkey King"],
+        "character_development": {
+          "main_character": "from innocence to leadership",
+          "supporting_cast": "from doubt to trust"
+        },
+        "emotional_beats": ["wonder at birth", "joy of belonging", "awakening of responsibility"]
+      },
+      "gameplay_integration": {
+        "tutorial_elements": ["basic movement", "jumping", "simple combat"],
+        "collectibles": ["mysterious runes", "ancient books", "Monkey King token"],
+        "challenges": ["cross a gorge", "climb a peak", "defeat a challenger"]
+      },
+      "related_media": {
+        "image_path": "./images/story/story_001.jpg",
+        "video_path": "./videos/story/story_001.mp4",
+        "thumbnail_path": "./thumbnails/story/story_001.jpg"
+      }
+    }
+  ],
+  "metadata": {
+    "creation_date": "2024-12-03",
+    "last_updated": "2024-12-03",
+    "language": "en-US",
+    "tags_count": {
+      "combat": 2,
+      "scene": 1,
+      "story": 1,
+      "ability": 1,
+      "character": 0,
+      "item": 0
+    }
+  }
+}
+

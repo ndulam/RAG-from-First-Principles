@@ -38,7 +38,7 @@ llm = Ollama(
 )
 
 # Line 2: load the data
-documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/setup.txt"]).load_data()
+documents = SimpleDirectoryReader(input_files=["99-EN/black-myth-wukong/black_myth_wukong_setting.txt"]).load_data()
 
 # Line 3: build the index
 index = VectorStoreIndex.from_documents(

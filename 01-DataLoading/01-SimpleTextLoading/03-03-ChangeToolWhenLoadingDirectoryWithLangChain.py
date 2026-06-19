@@ -5,7 +5,7 @@ import os
 script_dir = os.path.dirname(__file__)
 print(f"Directory of the current script: {script_dir}")
 # Build the full path from the relative path
-data_dir = os.path.join(script_dir, '../../90-Data/BlackMythWukong')
+data_dir = os.path.join(script_dir, '../../99-EN/black-myth-wukong/')
 
 # Load every Markdown file in the directory
 loader = DirectoryLoader(data_dir,

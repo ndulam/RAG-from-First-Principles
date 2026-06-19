@@ -1,0 +1,45 @@
+{
+  "gameTitle": "Killing God: Hu Sun",
+  "basicInfo": {
+    "engine": "Unreal Engine 5",
+    "releaseDate": "TBD",
+    "genre": "Action RPG",
+    "platforms": ["PC", "PS5", "Xbox Series X/S"],
+    "supportedLanguages": ["English", "Simplified Chinese", "Traditional Chinese", "Japanese", "Korean"]
+  },
+  "mainCharacter": {
+    "name": "Hu Sun",
+    "backstory": "A stone-born warrior who inherits fragments of an ancient monkey king's power and sets out to uncover the truth behind heaven's forgotten war.",
+    "abilities": ["Seventy-Two Transformations", "Somersault Cloud", "Fiery Golden Eyes", "Indestructible Body"],
+    "weapons": ["Ruyi Jingu Bang", "spirit relics", "mythic talismans"],
+    "combatStyle": "Fast staff combat built around transformations, evasive movement, and mythic skill combinations."
+  },
+  "supportCharacters": [
+    {
+      "name": "White Dragon Horse",
+      "identity": "Dragon prince and traveling companion",
+      "background": "A dragon prince transformed into a horse after violating heavenly law, later becoming an ally on the westward road.",
+      "abilities": ["water traversal", "cloud riding", "transformation"]
+    },
+    {
+      "name": "Red Boy",
+      "identity": "Boy Sage King",
+      "background": "The son of the Bull Demon King and Princess Iron Fan, trained in the True Fire of Samadhi.",
+      "abilities": ["True Fire of Samadhi", "fire sight", "battle form"]
+    },
+    {
+      "name": "Six-Eared Macaque",
+      "identity": "Shadow of the Monkey King",
+      "background": "A mysterious double whose powers resemble those of the legendary Monkey King.",
+      "abilities": ["Seventy-Two Transformations", "spellcasting", "cloning"]
+    }
+  ],
+  "gameFeatures": {
+    "worldSetting": "A fictional mythic world inspired by Journey to the West.",
+    "combatSystem": "Transformation-driven high-difficulty action combat.",
+    "progression": "Skill trees unlock new staff techniques, spells, and transformation forms.",
+    "exploration": "Open-ended maps include side quests, hidden relics, and optional bosses.",
+    "graphics": "High-fidelity environments built with modern rendering technology."
+  }
+}
+
