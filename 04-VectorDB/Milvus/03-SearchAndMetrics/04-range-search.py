@@ -1,24 +1,24 @@
 from pymilvus import MilvusClient, DataType
 import random
 
-# 1. 设置 Milvus 客户端
+# 1. Set up the Milvus client
 client = MilvusClient(uri="http://localhost:19530")
 COLLECTION_NAME = "ann_search_demo"
 
-# 如果集合已存在，则删除
+# Drop the collection if it already exists
 if client.has_collection(COLLECTION_NAME):
     client.drop_collection(COLLECTION_NAME)
 
-# 2. 创建 schema
+# 2. Create the schema
 schema = MilvusClient.create_schema(auto_id=False, enable_dynamic_field=True)
 schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
 schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=128)
 schema.add_field(field_name="color", datatype=DataType.VARCHAR, max_length=100)
 
-# 3. 创建集合
+# 3. Create the collection
 client.create_collection(collection_name=COLLECTION_NAME, schema=schema)
 
-# 4. 插入随机向量数据
+# 4. Insert random vector data
 num_vectors = 1000
 vectors = [[random.random() for _ in range(128)] for _ in range(num_vectors)]
 ids = list(range(num_vectors))
@@ -27,7 +27,7 @@ entities = [{"id": ids[i], "vector": vectors[i], "color": colors[i]} for i in ra
 
 client.insert(collection_name=COLLECTION_NAME, data=entities)
 
-# 5. 创建索引
+# 5. Create the index
 index_params = MilvusClient.prepare_index_params()
 index_params.add_index(
     field_name="vector",
@@ -42,11 +42,11 @@ client.create_index(
     sync=True
 )
 
-# 6. 加载集合
+# 6. Load the collection
 client.load_collection(collection_name=COLLECTION_NAME)
 
-# 7. 单向量搜索示例
-print("\n=== 单向量搜索 ===")
+# 7. Single-vector search example
+print("\n=== Single-Vector Search ===")
 query_vector = [random.random() for _ in range(128)]
 results = client.search(
     collection_name=COLLECTION_NAME,
@@ -56,13 +56,13 @@ results = client.search(
     search_params={"metric_type": "L2"}
 )
 
-print("搜索结果:")
+print("Search results:")
 for hits in results:
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}")
 
-# 8. 批量向量搜索示例
-print("\n=== 批量向量搜索 ===")
+# 8. Batch vector search example
+print("\n=== Batch Vector Search ===")
 query_vectors = [[random.random() for _ in range(128)] for _ in range(2)]
 results = client.search(
     collection_name=COLLECTION_NAME,
@@ -72,14 +72,14 @@ results = client.search(
     search_params={"metric_type": "L2"}
 )
 
-print("批量搜索结果:")
+print("Batch search results:")
 for i, hits in enumerate(results):
-    print(f"\n查询向量 {i+1} 的结果:")
+    print(f"\nResults for query vector {i+1}:")
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}")
 
-# 9. 带输出字段的搜索示例
-print("\n=== 带输出字段的搜索 ===")
+# 9. Search example with output fields
+print("\n=== Search with Output Fields ===")
 results = client.search(
     collection_name=COLLECTION_NAME,
     data=[query_vector],
@@ -89,35 +89,35 @@ results = client.search(
     output_fields=["color"]
 )
 
-print("带输出字段的搜索结果:")
+print("Search results with output fields:")
 for hits in results:
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}, 颜色: {hit['entity']['color']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}, Color: {hit['entity']['color']}")
 
-# 10. 范围搜索示例
-print("\n=== 范围搜索 ===")
-# 使用 L2 距离度量，设置范围搜索参数
-# 注意：对于 L2 距离，range_filter 应该小于 radius
+# 10. Range search example
+print("\n=== Range Search ===")
+# Use the L2 distance metric and set range search parameters
+# Note: for L2 distance, range_filter should be smaller than radius
 results = client.search(
     collection_name=COLLECTION_NAME,
     data=[query_vector],
     anns_field="vector",
-    limit=10,  # 增加限制以显示更多结果
+    limit=10,  # Increase the limit to show more results
     search_params={
         "metric_type": "L2",
         "params": {
-            "radius": 1.0,  # 外圈半径
-            "range_filter": 0.5  # 内圈半径
+            "radius": 1.0,  # Outer radius
+            "range_filter": 0.5  # Inner radius
         }
     },
     output_fields=["color"]
 )
 
-print("范围搜索结果:")
-print(f"搜索范围: 距离在 {0.5} 到 {1.0} 之间的向量")
+print("Range search results:")
+print(f"Search range: vectors with distance between {0.5} and {1.0}")
 for hits in results:
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}, 颜色: {hit['entity']['color']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}, Color: {hit['entity']['color']}")
 
-# 11. 清理
+# 11. Cleanup
 client.release_collection(collection_name=COLLECTION_NAME)

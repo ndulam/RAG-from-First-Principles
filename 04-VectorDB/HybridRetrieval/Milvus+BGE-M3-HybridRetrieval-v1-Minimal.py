@@ -12,32 +12,32 @@ from pymilvus import (
     WeightedRanker
 )
 from pymilvus.exceptions import MilvusException
-import scipy.sparse # 确保已安装 scipy
+import scipy.sparse # make sure scipy is installed
 
-# 0. 配置 (方便修改)
+# 0. Configuration (for easy modification)
 DATA_PATH = "/root/AI-BOX/code/rag/rag-in-action/90-Data/Chronicles of Godslaying/BattleScenes.json"
-COLLECTION_NAME = "wukong_hybrid_v4" # 使用新的集合名以避免旧数据冲突
-MILVUS_URI = "./wukong_v4.db" # 使用新的数据库文件
-BATCH_SIZE = 50 # 可以尝试减小批次大小，例如 10 或 20，进行测试
-DEVICE = "cpu" # 或者 "cuda" 如果有GPU并已正确配置
+COLLECTION_NAME = "wukong_hybrid_v4" # use a new collection name to avoid conflicts with old data
+MILVUS_URI = "./wukong_v4.db" # use a new database file
+BATCH_SIZE = 50 # try reducing the batch size, e.g. 10 or 20, for testing
+DEVICE = "cpu" # or "cuda" if you have a properly configured GPU
 
-print("脚本开始执行...")
+print("Script started...")
 
-# 1. 加载数据
-print(f"1. 正在从 {DATA_PATH} 加载数据...")
+# 1. Load data
+print(f"1. Loading data from {DATA_PATH}...")
 try:
     with open(DATA_PATH, 'r', encoding='utf-8') as f:
         dataset = json.load(f)
 except FileNotFoundError:
-    print(f"错误: 数据文件 {DATA_PATH} 未找到。请检查路径。")
+    print(f"Error: data file {DATA_PATH} not found. Please check the path.")
     exit()
 except json.JSONDecodeError:
-    print(f"错误: 数据文件 {DATA_PATH} JSON 格式错误。")
+    print(f"Error: data file {DATA_PATH} has invalid JSON format.")
     exit()
 
 docs = []
 metadata = []
-for item in dataset.get('data', []): # 使用 .get 避免 'data' 键不存在的错误
+for item in dataset.get('data', []): # use .get to avoid errors if the 'data' key is missing
     text_parts = [item.get('title', ''), item.get('description', '')]
     if 'combat_details' in item and isinstance(item['combat_details'], dict):
         text_parts.extend(item['combat_details'].get('combat_style', []))
@@ -48,56 +48,56 @@ for item in dataset.get('data', []): # 使用 .get 避免 'data' 键不存在的
             item['scene_info'].get('environment', ''),
             item['scene_info'].get('time_of_day', '')
         ])
-    # 过滤掉 None 和空字符串，然后连接
+    # filter out None and empty strings, then join
     docs.append(' '.join(filter(None, [str(part).strip() for part in text_parts if part])))
     metadata.append(item)
 
 if not docs:
-    print("错误: 未能从数据文件中加载任何文档。请检查文件内容和结构。")
+    print("Error: failed to load any documents from the data file. Please check the file content and structure.")
     exit()
-print(f"数据加载完成，共 {len(docs)} 条文档。")
+print(f"Data loading complete, {len(docs)} documents total.")
 
-# 2. 生成向量
-print("2. 正在生成向量...")
+# 2. Generate vectors
+print("2. Generating vectors...")
 try:
     ef = BGEM3EmbeddingFunction(use_fp16=False, device=DEVICE)
     docs_to_embed = docs
-    print(f"将为 {len(docs_to_embed)} 条文档生成向量...")
+    print(f"Generating vectors for {len(docs_to_embed)} documents...")
     docs_embeddings = ef(docs_to_embed)
-    print("向量生成完成。")
-    print(f"  密集向量维度: {ef.dim['dense']}")
+    print("Vector generation complete.")
+    print(f"  Dense vector dimension: {ef.dim['dense']}")
     if "sparse" in docs_embeddings and docs_embeddings["sparse"].shape[0] > 0:
-        print(f"  稀疏向量类型 (整体): {type(docs_embeddings['sparse'])}")
-        #  打印第一个稀疏向量的形状和部分内容以供检查
-        first_sparse_vector_row_obj = docs_embeddings['sparse'][0] # 这会得到一个表示单行的稀疏数组对象
-        print(f"  第一个稀疏向量 (行对象类型): {type(first_sparse_vector_row_obj)}")
-        print(f"  第一个稀疏向量 (行对象形状): {first_sparse_vector_row_obj.shape}")
+        print(f"  Sparse vector type (overall): {type(docs_embeddings['sparse'])}")
+        #  print the shape and partial content of the first sparse vector for inspection
+        first_sparse_vector_row_obj = docs_embeddings['sparse'][0] # this gives a sparse array object representing a single row
+        print(f"  First sparse vector (row object type): {type(first_sparse_vector_row_obj)}")
+        print(f"  First sparse vector (row object shape): {first_sparse_vector_row_obj.shape}")
         if hasattr(first_sparse_vector_row_obj, 'col') and hasattr(first_sparse_vector_row_obj, 'data'):
-            print(f"  第一个稀疏向量 (部分列索引/col): {first_sparse_vector_row_obj.col[:5]}")
-            print(f"  第一个稀疏向量 (部分数据/data): {first_sparse_vector_row_obj.data[:5]}")
+            print(f"  First sparse vector (partial column indices/col): {first_sparse_vector_row_obj.col[:5]}")
+            print(f"  First sparse vector (partial data): {first_sparse_vector_row_obj.data[:5]}")
         elif hasattr(first_sparse_vector_row_obj, 'indices') and hasattr(first_sparse_vector_row_obj, 'data'): # Fallback for other types
-            print(f"  第一个稀疏向量 (部分索引/indices): {first_sparse_vector_row_obj.indices[:5]}")
-            print(f"  第一个稀疏向量 (部分数据/data): {first_sparse_vector_row_obj.data[:5]}")
+            print(f"  First sparse vector (partial indices): {first_sparse_vector_row_obj.indices[:5]}")
+            print(f"  First sparse vector (partial data): {first_sparse_vector_row_obj.data[:5]}")
         else:
-            print("  无法直接获取第一个稀疏向量的列索引和数据属性。")
+            print("  Could not directly retrieve column indices and data attributes of the first sparse vector.")
     else:
-        print("警告: 未生成稀疏向量或稀疏向量为空。")
+        print("Warning: no sparse vectors were generated, or the sparse vector is empty.")
 
 except Exception as e:
-    print(f"生成向量时发生错误: {e}")
+    print(f"Error occurred while generating vectors: {e}")
     exit()
 
-# 3. 连接Milvus
-print(f"3. 正在连接 Milvus (URI: {MILVUS_URI})...")
+# 3. Connect to Milvus
+print(f"3. Connecting to Milvus (URI: {MILVUS_URI})...")
 try:
     connections.connect(uri=MILVUS_URI)
-    print("成功连接到 Milvus。")
+    print("Successfully connected to Milvus.")
 except MilvusException as e:
-    print(f"连接 Milvus 失败: {e}")
+    print(f"Failed to connect to Milvus: {e}")
     exit()
 
-# 4. 创建集合
-print(f"4. 正在准备集合 '{COLLECTION_NAME}'...")
+# 4. Create collection
+print(f"4. Preparing collection '{COLLECTION_NAME}'...")
 fields = [
     FieldSchema(name="pk", dtype=DataType.VARCHAR, is_primary=True, auto_id=True, max_length=100),
     FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535),
@@ -113,60 +113,60 @@ schema = CollectionSchema(fields, description="Wukong Hybrid Search Collection v
 
 try:
     if utility.has_collection(COLLECTION_NAME):
-        print(f"集合 '{COLLECTION_NAME}' 已存在，正在删除...")
+        print(f"Collection '{COLLECTION_NAME}' already exists, dropping it...")
         utility.drop_collection(COLLECTION_NAME)
-        print(f"集合 '{COLLECTION_NAME}' 删除成功。")
+        print(f"Collection '{COLLECTION_NAME}' dropped successfully.")
         time.sleep(1)
 
-    print(f"正在创建集合 '{COLLECTION_NAME}'...")
+    print(f"Creating collection '{COLLECTION_NAME}'...")
     collection = Collection(name=COLLECTION_NAME, schema=schema, consistency_level="Strong")
-    print(f"集合 '{COLLECTION_NAME}' 创建成功。")
+    print(f"Collection '{COLLECTION_NAME}' created successfully.")
 
-    print("正在为 sparse_vector 创建索引 (SPARSE_INVERTED_INDEX, IP)...")
+    print("Creating index for sparse_vector (SPARSE_INVERTED_INDEX, IP)...")
     collection.create_index("sparse_vector", {"index_type": "SPARSE_INVERTED_INDEX", "metric_type": "IP"})
-    print("sparse_vector 索引创建成功。")
+    print("sparse_vector index created successfully.")
     time.sleep(0.5)
 
-    print("正在为 dense_vector 创建索引 (AUTOINDEX, IP)...")
+    print("Creating index for dense_vector (AUTOINDEX, IP)...")
     collection.create_index("dense_vector", {"index_type": "AUTOINDEX", "metric_type": "IP"})
-    print("dense_vector 索引创建成功。")
+    print("dense_vector index created successfully.")
     time.sleep(0.5)
 
-    print(f"正在加载集合 '{COLLECTION_NAME}'...")
+    print(f"Loading collection '{COLLECTION_NAME}'...")
     collection.load()
-    print(f"集合 '{COLLECTION_NAME}' 加载成功。")
+    print(f"Collection '{COLLECTION_NAME}' loaded successfully.")
 
 except MilvusException as e:
-    print(f"创建或加载集合/索引时发生 Milvus 错误: {e}")
+    print(f"Milvus error occurred while creating or loading the collection/index: {e}")
     exit()
 except Exception as e:
-    print(f"创建或加载集合/索引时发生未知错误: {e}")
+    print(f"Unknown error occurred while creating or loading the collection/index: {e}")
     exit()
 
-# 5. 插入数据
-print("5. 正在准备插入数据...")
+# 5. Insert data
+print("5. Preparing to insert data...")
 num_docs_to_insert = len(docs_to_embed)
 try:
     for i in range(0, num_docs_to_insert, BATCH_SIZE):
         end_idx = min(i + BATCH_SIZE, num_docs_to_insert)
         batch_data = []
-        print(f"  正在准备批次 {i // BATCH_SIZE + 1} (索引 {i} 到 {end_idx - 1})...")
+        print(f"  Preparing batch {i // BATCH_SIZE + 1} (index {i} to {end_idx - 1})...")
 
         for j in range(i, end_idx):
             item_metadata = metadata[j]
 
-            # 关键：转换稀疏向量格式
-            # 当从 csr_array 索引一行时，可能得到 coo_array 或其他稀疏格式
+            # Key: convert the sparse vector format
+            # when indexing a row from a csr_array, you may get a coo_array or other sparse format
             sparse_row_obj = docs_embeddings["sparse"][j]
-            # coo_array 使用 .col 和 .data
+            # coo_array uses .col and .data
             if hasattr(sparse_row_obj, 'col') and hasattr(sparse_row_obj, 'data'):
                 milvus_sparse_vector = {int(idx_col): float(val) for idx_col, val in zip(sparse_row_obj.col, sparse_row_obj.data)}
-            # csr_array (如果直接是行 csr_array) 使用 .indices 和 .data
+            # csr_array (if it is directly a row csr_array) uses .indices and .data
             elif hasattr(sparse_row_obj, 'indices') and hasattr(sparse_row_obj, 'data'):
                  milvus_sparse_vector = {int(idx_col): float(val) for idx_col, val in zip(sparse_row_obj.indices, sparse_row_obj.data)}
             else:
-                print(f"警告: 无法识别的稀疏行对象类型 {type(sparse_row_obj)} 在索引 {j}。跳过此条。")
-                continue # 或者引发错误
+                print(f"Warning: unrecognized sparse row object type {type(sparse_row_obj)} at index {j}. Skipping this entry.")
+                continue # or raise an error
 
             doc_text = docs_to_embed[j]
             if len(doc_text) > 65530 : 
@@ -187,53 +187,53 @@ try:
                 "dense_vector": docs_embeddings["dense"][j].tolist() 
             })
         
-        if not batch_data: # 如果批次中所有稀疏向量都无法处理
-            print(f"  批次 {i // BATCH_SIZE + 1} 为空，跳过插入。")
+        if not batch_data: # if all sparse vectors in the batch could not be processed
+            print(f"  Batch {i // BATCH_SIZE + 1} is empty, skipping insertion.")
             continue
 
-        print(f"  正在插入批次 {i // BATCH_SIZE + 1} ({len(batch_data)} 条记录)...")
+        print(f"  Inserting batch {i // BATCH_SIZE + 1} ({len(batch_data)} records)...")
         insert_result = collection.insert(batch_data)
-        print(f"  批次 {i // BATCH_SIZE + 1} 插入成功, 主键: {insert_result.primary_keys[:5]}...")
-        collection.flush() 
-        print(f"  批次 {i // BATCH_SIZE + 1} flush 完成。")
-        time.sleep(0.5) 
+        print(f"  Batch {i // BATCH_SIZE + 1} inserted successfully, primary keys: {insert_result.primary_keys[:5]}...")
+        collection.flush()
+        print(f"  Batch {i // BATCH_SIZE + 1} flush complete.")
+        time.sleep(0.5)
 
-    print(f"所有数据插入完成。总共 {collection.num_entities} 条实体。")
+    print(f"All data inserted. Total of {collection.num_entities} entities.")
 
 except MilvusException as e:
-    print(f"插入数据时发生 Milvus 错误: {e}")
+    print(f"Milvus error occurred while inserting data: {e}")
     if 'batch_data' in locals() and batch_data:
-        print("问题批次的第一条数据（部分）:")
+        print("First record (partial) of the problematic batch:")
         print(f"  Text: {batch_data[0]['text'][:100]}...")
         print(f"  ID: {batch_data[0]['id']}")
         print(f"  Title: {batch_data[0]['title']}")
     exit()
 except Exception as e:
-    print(f"插入数据时发生未知错误: {e}")
+    print(f"Unknown error occurred while inserting data: {e}")
     if 'batch_data' in locals() and batch_data:
-        print("问题批次的第一条数据（部分）:")
+        print("First record (partial) of the problematic batch:")
         print(f"  Text: {batch_data[0]['text'][:100]}...")
     exit()
 
 
-# 6. 混合搜索 (示例)
+# 6. Hybrid search (example)
 def hybrid_search(query, category=None, environment=None, limit=5, weights=None):
     if weights is None:
-        weights = {"sparse": 0.5, "dense": 0.5} 
+        weights = {"sparse": 0.5, "dense": 0.5}
 
-    print(f"\n6. 执行混合搜索: '{query}'")
+    print(f"\n6. Performing hybrid search: '{query}'")
     print(f"   Category: {category}, Environment: {environment}, Limit: {limit}, Weights: {weights}")
-    
+
     try:
         query_embeddings = ef([query])
-        
+
         conditions = []
         if category:
             conditions.append(f'category == "{category}"')
         if environment:
             conditions.append(f'environment == "{environment}"')
         expr = " && ".join(conditions) if conditions else None
-        print(f"   过滤表达式: {expr}")
+        print(f"   Filter expression: {expr}")
         
         search_params_dense = {"metric_type": "IP", "params": {}} 
         search_params_sparse = {"metric_type": "IP", "params": {}}
@@ -249,14 +249,14 @@ def hybrid_search(query, category=None, environment=None, limit=5, weights=None)
             limit=limit
         )
         
-        # 转换查询稀疏向量格式
-        query_sparse_row_obj = query_embeddings["sparse"][0] # 索引返回单行稀疏对象
+        # convert the query sparse vector format
+        query_sparse_row_obj = query_embeddings["sparse"][0] # indexing returns a single-row sparse object
         if hasattr(query_sparse_row_obj, 'col') and hasattr(query_sparse_row_obj, 'data'):
             query_milvus_sparse_vector = {int(idx): float(val) for idx, val in zip(query_sparse_row_obj.col, query_sparse_row_obj.data)}
         elif hasattr(query_sparse_row_obj, 'indices') and hasattr(query_sparse_row_obj, 'data'):
             query_milvus_sparse_vector = {int(idx): float(val) for idx, val in zip(query_sparse_row_obj.indices, query_sparse_row_obj.data)}
         else:
-            print(f"错误: 无法识别的查询稀疏向量类型 {type(query_sparse_row_obj)}。")
+            print(f"Error: unrecognized query sparse vector type {type(query_sparse_row_obj)}.")
             return []
 
 
@@ -268,18 +268,18 @@ def hybrid_search(query, category=None, environment=None, limit=5, weights=None)
         )
         
         rerank = WeightedRanker(weights["sparse"], weights["dense"])
-        
-        print("   发送混合搜索请求到 Milvus...")
+
+        print("   Sending hybrid search request to Milvus...")
         results = collection.hybrid_search(
-            reqs=[sparse_req, dense_req], 
+            reqs=[sparse_req, dense_req],
             rerank=rerank,
             limit=limit,
             output_fields=["text", "id", "title", "category", "location", "environment", "pk"]
         )
-        
-        print("   搜索完成。结果:")
+
+        print("   Search complete. Results:")
         if not results or not results[0]:
-            print("   未找到结果。")
+            print("   No results found.")
             return []
 
         processed_results = []
@@ -297,30 +297,30 @@ def hybrid_search(query, category=None, environment=None, limit=5, weights=None)
         return processed_results
 
     except MilvusException as e:
-        print(f"混合搜索时发生 Milvus 错误: {e}")
+        print(f"Milvus error occurred during hybrid search: {e}")
         return []
     except Exception as e:
-        print(f"混合搜索时发生未知错误: {e}")
+        print(f"Unknown error occurred during hybrid search: {e}")
         return []
 
-# 示例搜索调用
+# Example search calls
 if collection.num_entities > 0:
-    print("\n开始示例搜索...")
-    search_results = hybrid_search("孙Wukong的战斗技巧", category="神魔大战", limit=3)
+    print("\nStarting example search...")
+    search_results = hybrid_search("Wukong's combat techniques", category="War of Gods and Demons", limit=3)
     if search_results:
         for res in search_results:
             print(f"  - PK: {res['pk']}, Title: {res['title']}, Distance: {res['distance']:.4f}")
             print(f"    Category: {res['category']}, Location: {res['location']}")
             print(f"    Preview: {res['text_preview']}\n")
-    
-    search_results_filtered = hybrid_search("火焰山的战斗", environment="火山", limit=2)
+
+    search_results_filtered = hybrid_search("Battle at the Flaming Mountain", environment="Volcano", limit=2)
     if search_results_filtered:
         for res in search_results_filtered:
             print(f"  - PK: {res['pk']}, Title: {res['title']}, Distance: {res['distance']:.4f}")
             print(f"    Category: {res['category']}, Location: {res['location']}, Environment: {res['environment']}")
             print(f"    Preview: {res['text_preview']}\n")
 else:
-    print("\n集合中没有实体，跳过示例搜索。")
+    print("\nNo entities in the collection, skipping example search.")
 
-print("\n脚本执行完毕。")
+print("\nScript execution complete.")
 

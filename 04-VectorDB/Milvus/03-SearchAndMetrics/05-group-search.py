@@ -1,35 +1,35 @@
 from pymilvus import MilvusClient, DataType
 import random
 
-# 1. 设置 Milvus 客户端
+# 1. Set up the Milvus client
 client = MilvusClient(uri="http://localhost:19530")
 COLLECTION_NAME = "group_search_demo"
 
-# 如果集合已存在，则删除
+# Drop the collection if it already exists
 if client.has_collection(COLLECTION_NAME):
     client.drop_collection(COLLECTION_NAME)
 
-# 2. 创建 schema
+# 2. Create the schema
 schema = MilvusClient.create_schema(auto_id=False, enable_dynamic_field=True)
 schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
 schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=128)
 schema.add_field(field_name="docId", datatype=DataType.INT64)
 schema.add_field(field_name="chunk", datatype=DataType.VARCHAR, max_length=100)
 
-# 3. 创建集合
+# 3. Create the collection
 client.create_collection(collection_name=COLLECTION_NAME, schema=schema)
 
-# 4. 插入示例数据
+# 4. Insert sample data
 num_vectors = 1000
 vectors = [[random.random() for _ in range(128)] for _ in range(num_vectors)]
 ids = list(range(num_vectors))
-doc_ids = [random.randint(1, 100) for _ in range(num_vectors)]  # 假设有100个文档
+doc_ids = [random.randint(1, 100) for _ in range(num_vectors)]  # Assume there are 100 documents
 chunks = [f"chunk_{random.randint(1, 1000)}" for _ in range(num_vectors)]
 entities = [{"id": ids[i], "vector": vectors[i], "docId": doc_ids[i], "chunk": chunks[i]} for i in range(num_vectors)]
 
 client.insert(collection_name=COLLECTION_NAME, data=entities)
 
-# 5. 创建索引
+# 5. Create the index
 index_params = MilvusClient.prepare_index_params()
 index_params.add_index(
     field_name="vector",
@@ -44,44 +44,44 @@ client.create_index(
     sync=True
 )
 
-# 6. 加载集合
+# 6. Load the collection
 client.load_collection(collection_name=COLLECTION_NAME)
 
-# 7. 基本分组搜索示例
-print("\n=== 基本分组搜索 ===")
+# 7. Basic group search example
+print("\n=== Basic Group Search ===")
 query_vector = [random.random() for _ in range(128)]
 results = client.search(
     collection_name=COLLECTION_NAME,
     data=[query_vector],
     anns_field="vector",
-    limit=5,  # 返回5个不同的文档组
-    group_by_field="docId",  # 按文档ID分组
+    limit=5,  # Return 5 distinct document groups
+    group_by_field="docId",  # Group by document ID
     output_fields=["docId", "chunk"]
 )
 
-print("基本分组搜索结果:")
+print("Basic group search results:")
 for hits in results:
     for hit in hits:
-        print(f"文档ID: {hit['entity']['docId']}, 块: {hit['entity']['chunk']}, 距离: {hit['distance']}")
+        print(f"Document ID: {hit['entity']['docId']}, Chunk: {hit['entity']['chunk']}, Distance: {hit['distance']}")
 
-# 8. 配置组大小的分组搜索示例
-print("\n=== 配置组大小的分组搜索 ===")
+# 8. Group search example with configured group size
+print("\n=== Group Search with Configured Group Size ===")
 results = client.search(
     collection_name=COLLECTION_NAME,
     data=[query_vector],
     anns_field="vector",
-    limit=3,  # 返回3个不同的文档组
+    limit=3,  # Return 3 distinct document groups
     group_by_field="docId",
-    group_size=2,  # 每个组返回2个最相似的结果
-    strict_group_size=True,  # 严格确保每个组有2个结果
+    group_size=2,  # Return the top 2 most similar results per group
+    strict_group_size=True,  # Strictly ensure each group has 2 results
     output_fields=["docId", "chunk"]
 )
 
-print("配置组大小的分组搜索结果:")
+print("Group search results with configured group size:")
 for hits in results:
-    print(f"\n文档组 {hits[0]['entity']['docId']} 的结果:")
+    print(f"\nResults for document group {hits[0]['entity']['docId']}:")
     for hit in hits:
-        print(f"块: {hit['entity']['chunk']}, 距离: {hit['distance']}")
+        print(f"Chunk: {hit['entity']['chunk']}, Distance: {hit['distance']}")
 
-# 9. 清理
+# 9. Cleanup
 client.release_collection(collection_name=COLLECTION_NAME)

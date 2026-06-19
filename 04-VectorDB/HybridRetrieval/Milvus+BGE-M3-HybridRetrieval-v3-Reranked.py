@@ -1,4 +1,4 @@
-# 1. 加载并预处理数据集
+# 1. Load and preprocess the dataset
 import json
 from typing import Optional, Dict
 with open("90-Data/Chronicles of Godslaying/BattleScenes.json", 'r', encoding='utf-8') as f:
@@ -24,17 +24,17 @@ for item in dataset['data']:
     docs.append(' '.join(filter(None, text_parts)))
     metadata.append(item)
 
-print(f"加载了 {len(docs)} 条数据")
+print(f"Loaded {len(docs)} records")
 
-# 2. 导入并使用 BGE-M3 生成嵌入向量
+# 2. Import and use BGE-M3 to generate embeddings
 from milvus_model.hybrid import BGEM3EmbeddingFunction
 
 ef = BGEM3EmbeddingFunction(use_fp16=False, device="cpu")
-print("开始生成向量嵌入……")
+print("Generating vector embeddings...")
 docs_embeddings = ef(docs)
-print(f"向量生成完成，密集向量维度：{ef.dim['dense']}")
+print(f"Vector generation complete, dense vector dimension: {ef.dim['dense']}")
 
-# 3. 导入 Milvus 并连接服务
+# 3. Import Milvus and connect to the service
 from pymilvus import (
     connections,
     utility,
@@ -47,7 +47,7 @@ from pymilvus import (
 collection_name = "wukong_hybrid"
 connections.connect(uri="./wukong.db")
 
-# 4. 创建 Milvus 集合和索引
+# 4. Create Milvus collection and index
 fields = [
     FieldSchema(name="pk", dtype=DataType.VARCHAR, is_primary=True, auto_id=True, max_length=100),
     FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=2048),
@@ -72,7 +72,7 @@ collection.create_index("dense_vector", {"index_type": "AUTOINDEX", "metric_type
 
 collection.load()
 
-# 5. 插入数据到集合中
+# 5. Insert data into the collection
 batch_size = 50
 for i in range(0, len(docs), batch_size):
     end_idx = min(i + batch_size, len(docs))
@@ -93,30 +93,30 @@ for i in range(0, len(docs), batch_size):
 
     collection.insert(batch_data)
 
-print(f"数据插入完成，总数：{collection.num_entities}")
+print(f"Data insertion complete, total: {collection.num_entities}")
 
-# 6. 定义并执行混合搜索
+# 6. Define and run hybrid search
 from pymilvus import AnnSearchRequest, WeightedRanker, RRFRanker
 
-query = "雪地中的BattleScenes"
+query = "Battle scenes in the snow"
 category = "combat"
-environment = "雪地"
+environment = "snow"
 limit = 5
 search_type = "hybrid"
-rerank_method = "rrf"  # 可选：'weighted' 或 'rrf'
+rerank_method = "rrf"  # options: 'weighted' or 'rrf'
 weights = {"sparse": 0.7, "dense": 1.0}
-rrf_k = 60  # RRF 参数
+rrf_k = 60  # RRF parameter
 
 query_embeddings = ef([query])
 
-# 打印查询向量的详细信息
-print("\n查询向量信息：")
-print(f"密集向量维度：{len(query_embeddings['dense'][0])}")
+# Print detailed information about the query vector
+print("\nQuery vector info:")
+print(f"Dense vector dimension: {len(query_embeddings['dense'][0])}")
 sparse_row = query_embeddings['sparse']._getrow(0)
-print(f"稀疏向量非零元素数量：{sparse_row.nnz}")
-print(f"稀疏向量非零元素示例：{dict(zip(sparse_row.indices[:5], sparse_row.data[:5]))}")
+print(f"Sparse vector non-zero element count: {sparse_row.nnz}")
+print(f"Sparse vector non-zero element sample: {dict(zip(sparse_row.indices[:5], sparse_row.data[:5]))}")
 
-# 构建过滤表达式
+# Build the filter expression
 expr = None
 conditions = []
 if category:
@@ -147,16 +147,16 @@ if search_type == "hybrid":
         limit=limit
     )
     
-    # 根据选择的重排方法创建不同的重排器
+    # Create a different reranker depending on the selected rerank method
     if rerank_method == "weighted":
         rerank = WeightedRanker(weights["sparse"], weights["dense"])
-        print(f"\n使用加权重排，权重：稀疏={weights['sparse']}, 密集={weights['dense']}")
+        print(f"\nUsing weighted reranking, weights: sparse={weights['sparse']}, dense={weights['dense']}")
     else:  # rrf
         rerank = RRFRanker(rrf_k)
-        print(f"\n使用 RRF 重排，k={rrf_k}")
-    
-    # 执行混合搜索前，先分别执行稀疏和密集搜索
-    print("\n执行单独搜索：")
+        print(f"\nUsing RRF reranking, k={rrf_k}")
+
+    # Before running the hybrid search, run the sparse and dense searches separately
+    print("\nRunning individual searches:")
     dense_results = collection.search(
         data=[query_embeddings["dense"][0]],
         anns_field="dense_vector",
@@ -173,15 +173,15 @@ if search_type == "hybrid":
         output_fields=["text", "id", "title", "category", "location", "environment"]
     )[0]
     
-    print("\n密集向量搜索结果：")
+    print("\nDense vector search results:")
     for i, hit in enumerate(dense_results):
-        print(f"{i+1}. {hit.entity.title} (分数: {hit.distance:.4f})")
-    
-    print("\n稀疏向量搜索结果：")
+        print(f"{i+1}. {hit.entity.title} (score: {hit.distance:.4f})")
+
+    print("\nSparse vector search results:")
     for i, hit in enumerate(sparse_results):
-        print(f"{i+1}. {hit.entity.title} (分数: {hit.distance:.4f})")
-    
-    # 执行混合搜索
+        print(f"{i+1}. {hit.entity.title} (score: {hit.distance:.4f})")
+
+    # Run the hybrid search
     results = collection.hybrid_search(
         reqs=[dense_req, sparse_req],
         rerank=rerank,
@@ -199,14 +199,14 @@ else:
         output_fields=["text", "id", "title", "category", "location", "environment"]
     )[0]
 
-# 7. 展示搜索结果
-print(f"\n查询：{query}")
-print("\n混合搜索结果：")
+# 7. Display search results
+print(f"\nQuery: {query}")
+print("\nHybrid search results:")
 for i, hit in enumerate(results):
     print(f"\n{i+1}. {hit.entity.title}")
-    print(f"ID：{hit.entity.id}")
-    print(f"类别：{hit.entity.category}")
-    print(f"位置：{hit.entity.location}")
-    print(f"环境：{hit.entity.environment}")
-    print(f"最终相似度分数：{hit.distance:.4f}")
-    print(f"文本：{hit.entity.text[:200]}...")
+    print(f"ID: {hit.entity.id}")
+    print(f"Category: {hit.entity.category}")
+    print(f"Location: {hit.entity.location}")
+    print(f"Environment: {hit.entity.environment}")
+    print(f"Final similarity score: {hit.distance:.4f}")
+    print(f"Text: {hit.entity.text[:200]}...")

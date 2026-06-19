@@ -1,24 +1,24 @@
 from pymilvus import MilvusClient, DataType
 import random
 
-# 1. 设置 Milvus 客户端
+# 1. Set up the Milvus client
 client = MilvusClient(uri="http://localhost:19530")
 COLLECTION_NAME = "ann_search_demo"
 
-# 如果集合已存在，则删除
+# Drop the collection if it already exists
 if client.has_collection(COLLECTION_NAME):
     client.drop_collection(COLLECTION_NAME)
 
-# 2. 创建 schema
+# 2. Create the schema
 schema = MilvusClient.create_schema(auto_id=False, enable_dynamic_field=True)
 schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
 schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=128)
 schema.add_field(field_name="color", datatype=DataType.VARCHAR, max_length=100)
 
-# 3. 创建集合
+# 3. Create the collection
 client.create_collection(collection_name=COLLECTION_NAME, schema=schema)
 
-# 4. 插入随机向量数据
+# 4. Insert random vector data
 num_vectors = 1000
 vectors = [[random.random() for _ in range(128)] for _ in range(num_vectors)]
 ids = list(range(num_vectors))
@@ -27,7 +27,7 @@ entities = [{"id": ids[i], "vector": vectors[i], "color": colors[i]} for i in ra
 
 client.insert(collection_name=COLLECTION_NAME, data=entities)
 
-# 5. 创建索引
+# 5. Create the index
 index_params = MilvusClient.prepare_index_params()
 index_params.add_index(
     field_name="vector",
@@ -42,11 +42,11 @@ client.create_index(
     sync=True
 )
 
-# 6. 加载集合
+# 6. Load the collection
 client.load_collection(collection_name=COLLECTION_NAME)
 
-# 7. 单向量搜索示例
-print("\n=== 单向量搜索 ===")
+# 7. Single-vector search example
+print("\n=== Single-Vector Search ===")
 query_vector = [random.random() for _ in range(128)]
 results = client.search(
     collection_name=COLLECTION_NAME,
@@ -56,13 +56,13 @@ results = client.search(
     search_params={"metric_type": "L2"}
 )
 
-print("搜索结果:")
+print("Search results:")
 for hits in results:
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}")
 
-# 8. 批量向量搜索示例
-print("\n=== 批量向量搜索 ===")
+# 8. Batch vector search example
+print("\n=== Batch Vector Search ===")
 query_vectors = [[random.random() for _ in range(128)] for _ in range(2)]
 results = client.search(
     collection_name=COLLECTION_NAME,
@@ -72,14 +72,14 @@ results = client.search(
     search_params={"metric_type": "L2"}
 )
 
-print("批量搜索结果:")
+print("Batch search results:")
 for i, hits in enumerate(results):
-    print(f"\n查询向量 {i+1} 的结果:")
+    print(f"\nResults for query vector {i+1}:")
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}")
 
-# 9. 带输出字段的搜索示例
-print("\n=== 带输出字段的搜索 ===")
+# 9. Search example with output fields
+print("\n=== Search with Output Fields ===")
 results = client.search(
     collection_name=COLLECTION_NAME,
     data=[query_vector],
@@ -89,42 +89,42 @@ results = client.search(
     output_fields=["color"]
 )
 
-print("带输出字段的搜索结果:")
+print("Search results with output fields:")
 for hits in results:
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}, 颜色: {hit['entity']['color']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}, Color: {hit['entity']['color']}")
 
-# 10. 元数据查询示例
-print("\n=== 元数据查询示例 ===")
+# 10. Metadata query example
+print("\n=== Metadata Query Example ===")
 
-# 10.1 使用 Get 方法查询指定 ID 的数据
-print("\n=== Get 方法查询 ===")
+# 10.1 Use the Get method to query data by specific IDs
+print("\n=== Get Method Query ===")
 get_results = client.get(
     collection_name=COLLECTION_NAME,
     ids=[0, 1, 2],
     output_fields=["vector", "color"]
 )
-print("Get 查询结果:")
+print("Get query results:")
 for result in get_results:
-    print(f"ID: {result['id']}, 颜色: {result['color']}")
+    print(f"ID: {result['id']}, Color: {result['color']}")
 
-# 10.2 使用 Query 方法进行条件查询
-print("\n=== Query 方法查询 ===")
+# 10.2 Use the Query method for conditional queries
+print("\n=== Query Method Query ===")
 query_results = client.query(
     collection_name=COLLECTION_NAME,
-    filter="color like \"color_1%\"",  # 查询颜色以 color_1 开头的记录
+    filter="color like \"color_1%\"",  # Query records whose color starts with color_1
     output_fields=["id", "color"],
     limit=5
 )
-print("Query 查询结果:")
+print("Query results:")
 for result in query_results:
-    print(f"ID: {result['id']}, 颜色: {result['color']}")
+    print(f"ID: {result['id']}, Color: {result['color']}")
 
-# 10.3 使用 QueryIterator 进行分页查询
-print("\n=== QueryIterator 分页查询 ===")
+# 10.3 Use QueryIterator for paginated queries
+print("\n=== QueryIterator Paginated Query ===")
 from pymilvus import connections, Collection
 
-# 重新连接以使用 Collection 类
+# Reconnect to use the Collection class
 connections.connect(uri="http://localhost:19530")
 collection = Collection(COLLECTION_NAME)
 
@@ -134,15 +134,15 @@ iterator = collection.query_iterator(
     output_fields=["id", "color"]
 )
 
-print("QueryIterator 查询结果:")
+print("QueryIterator results:")
 while True:
     result = iterator.next()
     if not result:
         iterator.close()
         break
     for item in result:
-        print(f"ID: {item['id']}, 颜色: {item['color']}")
+        print(f"ID: {item['id']}, Color: {item['color']}")
 
-# 11. 清理
+# 11. Cleanup
 client.release_collection(collection_name=COLLECTION_NAME)
 connections.disconnect("default")

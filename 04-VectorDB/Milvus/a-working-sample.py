@@ -1,38 +1,38 @@
-# 准备示例数据集
+# Prepare the example dataset
 import pandas as pd
 data_records = [
     {
         "monster_id": "BM001",
-        "monster_name": "虎先锋",
-        "location": "竹林关隘",
+        "monster_name": "Tiger Vanguard",
+        "location": "Bamboo Pass",
         "difficulty": "High",
-        "synonyms": "猛虎妖, 虎妖",
-        "description": "在竹林关卡中出现的猛虎型妖怪，力量强大。"
+        "synonyms": "Fierce Tiger Demon, Tiger Demon",
+        "description": "A powerful tiger-type demon that appears at the bamboo pass."
     },
     {
         "monster_id": "BM002",
-        "monster_name": "火猿",
-        "location": "火山洞窟",
+        "monster_name": "Fire Ape",
+        "location": "Volcanic Cavern",
         "difficulty": "Low",
-        "synonyms": "烈焰猿, 炎猿",
-        "description": "生活在火山洞窟的猿类妖怪，只是插科打诨的小兵。"
+        "synonyms": "Flaming Ape, Blaze Ape",
+        "description": "An ape-type demon living in the volcanic cavern, just a minor comic-relief mob."
     },]
 df = pd.DataFrame(data_records)
 
-# 建立/连接Milvus
+# Set up / connect to Milvus
 from pymilvus import MilvusClient, DataType, FieldSchema, CollectionSchema
 from pymilvus import model
 db_path = "./wukong.db"
 client = MilvusClient(db_path)
 collection_name = "Wukong_Monsters"
 
-# 获取嵌入模型的向量维度
-from pymilvus.model.dense import SentenceTransformerEmbeddingFunction 
+# Get the embedding model's vector dimension
+from pymilvus.model.dense import SentenceTransformerEmbeddingFunction
 embedding_function = SentenceTransformerEmbeddingFunction(model_name='BAAI/bge-large-zh')
-sample_embedding = embedding_function(["示例文本"])[0]
+sample_embedding = embedding_function(["sample text"])[0]
 vector_dim = len(sample_embedding)
 
-# 定义集合模式并创建集合
+# Define the collection schema and create the collection
 fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
     FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=vector_dim),
@@ -47,7 +47,7 @@ schema = CollectionSchema(fields, description=" Wukong Monsters", enable_dynamic
 if not client.has_collection(collection_name):
     client.create_collection(collection_name=collection_name, schema=schema)
 
-# 创建索引
+# Create the index
 index_params = client.prepare_index_params()
 index_params.add_index(
     field_name="vector",
@@ -60,20 +60,20 @@ client.create_index(
     index_params=index_params
 )
 
-# 批量插入数据
+# Bulk insert data
 from tqdm import tqdm
-for start_idx in tqdm(range(0, len(df)), desc="插入数据"):
-    row = df.iloc[start_idx]    
-    # 准备向量文本
+for start_idx in tqdm(range(0, len(df)), desc="Inserting data"):
+    row = df.iloc[start_idx]
+    # Prepare the text to embed
     doc_parts = [str(row['monster_name'])]
     if row['synonyms']:
-        doc_parts.append(f"(别名：{row['synonyms']})")
+        doc_parts.append(f"(aka: {row['synonyms']})")
     if row['location']:
-        doc_parts.append(f"场景：{row['location']}")
+        doc_parts.append(f"Scene: {row['location']}")
     if row['description']:
-        doc_parts.append(f"描述：{row['description']}")
-    doc_text = "；".join(doc_parts)    
-    # 生成向量并插入数据
+        doc_parts.append(f"Description: {row['description']}")
+    doc_text = "; ".join(doc_parts)
+    # Generate the vector and insert the data
     embedding = embedding_function([doc_text])[0]
     data_to_insert = [{
         "vector": embedding,
@@ -86,8 +86,8 @@ for start_idx in tqdm(range(0, len(df)), desc="插入数据"):
     }]    
     client.insert(collection_name=collection_name, data=data_to_insert)
 
-# 测试搜索
-search_query = "高难度妖怪"
+# Test search
+search_query = "high-difficulty demon"
 search_embedding = embedding_function([search_query])[0]
 search_result = client.search(
     collection_name=collection_name,
@@ -95,12 +95,12 @@ search_result = client.search(
     limit=3,
     output_fields=["monster_name", "location", "difficulty", "synonyms"]
 )
-print(f"搜索结果 '{search_query}':", search_result)
+print(f"Search results for '{search_query}':", search_result)
 
-# 测试条件查询
+# Test conditional query
 query_result = client.query(
     collection_name=collection_name,
     filter="difficulty == 'Low'",
     output_fields=["monster_name", "location", "difficulty", "synonyms"]
 )
-print(f"难度为Low的妖怪：", query_result)
+print(f"Demons with difficulty Low:", query_result)

@@ -1,40 +1,40 @@
 from pymilvus import MilvusClient, DataType
 import random
 
-# 1. 设置 Milvus 客户端
+# 1. Set up the Milvus client
 client = MilvusClient(uri="http://localhost:19530")
 COLLECTION_NAME = "flat_index_demo"
 
-# 如果集合已存在，则删除
+# Drop the collection if it already exists
 if client.has_collection(COLLECTION_NAME):
     client.drop_collection(COLLECTION_NAME)
 
-# 2. 创建 schema
+# 2. Create the schema
 schema = MilvusClient.create_schema(auto_id=False, enable_dynamic_field=True)
 schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
 schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=128)
 
-# 3. 创建集合
+# 3. Create the collection
 client.create_collection(collection_name=COLLECTION_NAME, schema=schema)
 
-# 4. 插入随机向量数据
+# 4. Insert random vector data
 num_vectors = 1000
 vectors = [[random.random() for _ in range(128)] for _ in range(num_vectors)]
 ids = list(range(num_vectors))
 entities = [{"id": ids[i], "vector": vectors[i]} for i in range(num_vectors)]
 
 client.insert(collection_name=COLLECTION_NAME, data=entities)
-# flush 保证数据落盘
+# flush ensures the data is persisted to disk
 # client.flush([COLLECTION_NAME])
 
-# 5. 创建索引（此时集合中已有数据）
+# 5. Create the index (the collection already has data at this point)
 index_params = MilvusClient.prepare_index_params()
 index_params.add_index(
     field_name="vector",
     metric_type="L2",
     index_type="FLAT",
     index_name="vector_index",
-    params={}  # FLAT 不需要额外参数
+    params={}  # FLAT requires no extra parameters
 )
 client.create_index(
     collection_name=COLLECTION_NAME,
@@ -42,14 +42,14 @@ client.create_index(
     sync=True
 )
 
-# 验证索引
-print("索引列表:", client.list_indexes(collection_name=COLLECTION_NAME))
-print("索引详情:", client.describe_index(
+# Verify the index
+print("Index list:", client.list_indexes(collection_name=COLLECTION_NAME))
+print("Index details:", client.describe_index(
     collection_name=COLLECTION_NAME,
     index_name="vector_index"
 ))
 
-# 6. load 后再搜索
+# 6. Load the collection before searching
 client.load_collection(collection_name=COLLECTION_NAME)
 search_vectors = [[random.random() for _ in range(128)]]
 results = client.search(
@@ -60,12 +60,12 @@ results = client.search(
     output_fields=["id"]
 )
 
-print("\n搜索结果:")
+print("\nSearch results:")
 for hits in results:
     for hit in hits:
-        # 注意用 dict 方式访问
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}")
+        # Note: access fields via dict-style indexing
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}")
 
-# 清理
+# Clean up
 client.release_collection(collection_name=COLLECTION_NAME)
 # client.disconnect()

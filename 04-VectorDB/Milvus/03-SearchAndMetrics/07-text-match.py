@@ -1,41 +1,41 @@
 from pymilvus import MilvusClient, DataType
 import random
 
-# 1. 设置 Milvus 客户端
+# 1. Set up the Milvus client
 client = MilvusClient(uri="http://localhost:19530")
 COLLECTION_NAME = "ann_search_demo"
 
-# 如果集合已存在，则删除
+# Drop the collection if it already exists
 if client.has_collection(COLLECTION_NAME):
     client.drop_collection(COLLECTION_NAME)
 
-# 2. 创建 schema
+# 2. Create the schema
 schema = MilvusClient.create_schema(auto_id=False, enable_dynamic_field=True)
 schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
 schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=128)
 schema.add_field(field_name="color", datatype=DataType.VARCHAR, max_length=100)
 schema.add_field(
-    field_name='text', 
-    datatype=DataType.VARCHAR, 
-    max_length=1000, 
-    enable_analyzer=True,  # 启用文本分析
-    enable_match=True      # 启用文本匹配
+    field_name='text',
+    datatype=DataType.VARCHAR,
+    max_length=1000,
+    enable_analyzer=True,  # Enable text analysis
+    enable_match=True      # Enable text matching
 )
 
-# 3. 创建集合
+# 3. Create the collection
 client.create_collection(collection_name=COLLECTION_NAME, schema=schema)
 
-# 4. 插入随机向量数据
+# 4. Insert random vector data
 num_vectors = 1000
 vectors = [[random.random() for _ in range(128)] for _ in range(num_vectors)]
 ids = list(range(num_vectors))
 colors = [f"color_{random.randint(1, 1000)}" for _ in range(num_vectors)]
-texts = [f"text_{random.randint(1, 1000)}" for _ in range(num_vectors)]  # 添加随机文本
+texts = [f"text_{random.randint(1, 1000)}" for _ in range(num_vectors)]  # Add random text
 entities = [{"id": ids[i], "vector": vectors[i], "color": colors[i], "text": texts[i]} for i in range(num_vectors)]
 
 client.insert(collection_name=COLLECTION_NAME, data=entities)
 
-# 5. 创建索引
+# 5. Create the index
 index_params = MilvusClient.prepare_index_params()
 index_params.add_index(
     field_name="vector",
@@ -50,11 +50,11 @@ client.create_index(
     sync=True
 )
 
-# 6. 加载集合
+# 6. Load the collection
 client.load_collection(collection_name=COLLECTION_NAME)
 
-# 7. 单向量搜索示例
-print("\n=== 单向量搜索 ===")
+# 7. Single-vector search example
+print("\n=== Single-Vector Search ===")
 query_vector = [random.random() for _ in range(128)]
 results = client.search(
     collection_name=COLLECTION_NAME,
@@ -64,13 +64,13 @@ results = client.search(
     search_params={"metric_type": "L2"}
 )
 
-print("搜索结果:")
+print("Search results:")
 for hits in results:
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}")
 
-# 8. 批量向量搜索示例
-print("\n=== 批量向量搜索 ===")
+# 8. Batch vector search example
+print("\n=== Batch Vector Search ===")
 query_vectors = [[random.random() for _ in range(128)] for _ in range(2)]
 results = client.search(
     collection_name=COLLECTION_NAME,
@@ -80,31 +80,31 @@ results = client.search(
     search_params={"metric_type": "L2"}
 )
 
-print("批量搜索结果:")
+print("Batch search results:")
 for i, hits in enumerate(results):
-    print(f"\n查询向量 {i+1} 的结果:")
+    print(f"\nResults for query vector {i+1}:")
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}")
 
-# 9. 带输出字段的搜索示例
-print("\n=== 带输出字段的搜索 ===")
+# 9. Search example with output fields
+print("\n=== Search with Output Fields ===")
 results = client.search(
     collection_name=COLLECTION_NAME,
     data=[query_vector],
     anns_field="vector",
     limit=3,
     search_params={"metric_type": "L2"},
-    output_fields=["color", "text"]  # 添加text字段到输出
+    output_fields=["color", "text"]  # Add the text field to the output
 )
 
-print("带输出字段的搜索结果:")
+print("Search results with output fields:")
 for hits in results:
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}, 颜色: {hit['entity']['color']}, 文本: {hit['entity']['text']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}, Color: {hit['entity']['color']}, Text: {hit['entity']['text']}")
 
-# 10. 文本匹配搜索示例
-print("\n=== 文本匹配搜索 ===")
-filter = "TEXT_MATCH(text, 'text_1 text_2')"  # 搜索包含text_1或text_2的文档
+# 10. Text match search example
+print("\n=== Text Match Search ===")
+filter = "TEXT_MATCH(text, 'text_1 text_2')"  # Search for documents containing text_1 or text_2
 results = client.search(
     collection_name=COLLECTION_NAME,
     data=[query_vector],
@@ -115,10 +115,10 @@ results = client.search(
     output_fields=["text"]
 )
 
-print("文本匹配搜索结果:")
+print("Text match search results:")
 for hits in results:
     for hit in hits:
-        print(f"ID: {hit['id']}, 距离: {hit['distance']}, 文本: {hit['entity']['text']}")
+        print(f"ID: {hit['id']}, Distance: {hit['distance']}, Text: {hit['entity']['text']}")
 
-# 11. 清理
+# 11. Cleanup
 client.release_collection(collection_name=COLLECTION_NAME)
