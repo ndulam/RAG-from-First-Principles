@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 
-# 定义一个用户模型
+# Define a user model
 class User(BaseModel):
     id: int
     username: str = Field(min_length=3, max_length=20)
@@ -11,7 +11,7 @@ class User(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     tags: List[str] = Field(default_factory=list)
 
-# 创建一个用户实例
+# Create a user instance
 user_data = {
     "id": 1,
     "username": "testuser",
@@ -20,23 +20,23 @@ user_data = {
     "tags": ["python", "developer"]
 }
 
-# 验证数据
+# Validate data
 try:
     user = User(**user_data)
-    print("用户数据验证成功！")
-    print(f"用户名: {user.username}")
-    print(f"邮箱: {user.email}")
-    print(f"年龄: {user.age}")
-    print(f"创建时间: {user.created_at}")
-    print(f"标签: {user.tags}")
+    print("User data validation successful!")
+    print(f"Username: {user.username}")
+    print(f"Email: {user.email}")
+    print(f"Age: {user.age}")
+    print(f"Created At: {user.created_at}")
+    print(f"Tags: {user.tags}")
     
-    # 转换为字典
-    print("\n转换为字典:")
+    # Convert to dictionary
+    print("\nConvert to dictionary:")
     print(user.model_dump())
     
-    # 转换为JSON
-    print("\n转换为JSON:")
+    # Convert to JSON
+    print("\nConvert to JSON:")
     print(user.model_dump_json())
     
 except Exception as e:
-    print(f"数据验证失败: {e}") 
+    print(f"Data validation failed: {e}")

@@ -1,21 +1,21 @@
 from deepeval.metrics import ContextualPrecisionMetric, AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 
-# 定义测试案例
+# Define test case
 test_case = LLMTestCase(
-    input="如果这双鞋不合脚怎么办？",
-    actual_output="我们提供30天无理由全额退款服务。",
-    expected_output="顾客可以在30天内退货并获得全额退款。",
-    retrieval_context=["所有顾客都有资格享受30天无理由全额退款服务。"]
+    input="What if these shoes don't fit?",
+    actual_output="We offer a 30-day no-questions-asked full refund service.",
+    expected_output="Customers can return the goods within 30 days and get a full refund.",
+    retrieval_context=["All customers are eligible for a 30-day no-questions-asked full refund service."]
 )
 
-# 定义评估指标
+# Define evaluation metrics
 contextual_precision = ContextualPrecisionMetric()
 answer_relevancy = AnswerRelevancyMetric()
 
-# 运行评估
+# Run evaluation
 contextual_precision.measure(test_case)
 answer_relevancy.measure(test_case)
 
-print("上下文精确度得分: ", contextual_precision.score)
-print("答案相关性得分: ", answer_relevancy.score)
+print("Contextual Precision Score: ", contextual_precision.score)
+print("Answer Relevancy Score: ", answer_relevancy.score)

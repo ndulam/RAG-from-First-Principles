@@ -1,12 +1,12 @@
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_deepseek import ChatDeepSeek
 from langchain.prompts import PromptTemplate
-# 定义输出格式
+# Define output format
 parser = JsonOutputParser()
-prompt = PromptTemplate.from_template("请返回JSON格式的用户信息：{query}")
-# 调用大模型并解析
+prompt = PromptTemplate.from_template("Please return user information in JSON format: {query}")
+# Call LLM and parse
 llm = ChatDeepSeek(model="deepseek-chat")
-output = llm(prompt.format(query="用户ID 123"))
-# 从 AIMessage 中提取内容
+output = llm(prompt.format(query="User ID 123"))
+# Extract content from AIMessage
 parsed_output = parser.parse(output.content)
 print(parsed_output)

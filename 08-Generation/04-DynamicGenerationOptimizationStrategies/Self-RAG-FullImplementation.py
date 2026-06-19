@@ -5,24 +5,24 @@ from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv
 load_dotenv()   
 
-# 定义要加载的URL列表
+# Define the list of URLs to load
 urls = [
     "https://lilianweng.github.io/posts/2023-06-23-agent/",
     "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",
     "https://lilianweng.github.io/posts/2023-10-25-adv-attack-llm/",
 ]
 
-# 加载文档
+# Load documents
 docs = [WebBaseLoader(url).load() for url in urls]
 docs_list = [item for sublist in docs for item in sublist]
 
-# 创建文本分割器
+# Create text splitter
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size=250, chunk_overlap=0
 )
 doc_splits = text_splitter.split_documents(docs_list)
 
-# 添加到向量数据库
+# Add to vector database
 vectorstore = Chroma.from_documents(
     documents=doc_splits,
     collection_name="rag-chroma",
@@ -30,134 +30,134 @@ vectorstore = Chroma.from_documents(
 )
 retriever = vectorstore.as_retriever()
 
-### 检索评分器 ###
+### Retrieval Grader ###
 
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 # from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI
 
-# 数据模型
+# Data model
 class GradeDocuments(BaseModel):
-    """对检索文档进行相关性评分的二元评分模型"""
+    """Binary score model for grading the relevance of retrieved documents"""
 
     binary_score: str = Field(
-        description="文档是否与问题相关，'是'或'否'"
+        description="Whether the document is relevant to the question, 'yes' or 'no'"
     )
 
-# 配置LLM和函数调用
+# Configure LLM and function calling
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeDocuments)
 
-# 提示词
-system = """你是一个评估检索文档与用户问题相关性的评分器。\n 
-    这不需要是一个严格的测试。目标是过滤掉错误的检索结果。\n
-    如果文档包含与用户问题相关的关键词或语义含义，则将其评为相关。\n
-    给出'是'或'否'的二元评分，以表明文档是否与问题相关。"""
+# Prompt
+system = """You are a grader that evaluates the relevance of retrieved documents to a user question.\n 
+    This does not need to be a strict test. The goal is to filter out irrelevant retrieval results.\n
+    If the document contains keywords or semantic meaning related to the user question, grade it as relevant.\n
+    Give a binary score of 'yes' or 'no' to indicate whether the document is relevant to the question."""
 grade_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system),
-        ("human", "检索到的文档: \n\n {document} \n\n 用户问题: {question}"),
+        ("human", "Retrieved document: \n\n {document} \n\n User question: {question}"),
     ]
 )
 
-# 检索评分器及简单测试
+# Retrieval grader and simple test
 retrieval_grader = grade_prompt | structured_llm_grader
 question = "agent memory"
 docs = retriever.invoke(question)
 doc_txt = docs[1].page_content
 print(retrieval_grader.invoke({"question": question, "document": doc_txt}))
 
-### 生成器 ###
+### Generator ###
 
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
 
-# 提示词
+# Prompt
 prompt = hub.pull("rlm/rag-prompt")
 
-# LLM配置
+# LLM configuration
 llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
 
-# 后处理
+# Post-processing
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
-# 构建RAG链
+# Build RAG chain
 rag_chain = prompt | llm | StrOutputParser()
 
-# 运行
+# Run
 generation = rag_chain.invoke({"context": docs, "question": question})
 print(generation)
 
-### 幻觉评分器 ###
+### Hallucination Grader ###
 
-# 数据模型
+# Data model
 class GradeHallucinations(BaseModel):
-    """对生成答案中是否存在幻觉进行二元评分"""
+    """Binary score for hallucination in generated answers"""
 
     binary_score: str = Field(
-        description="答案是否基于事实，'是'或'否'"
+        description="Whether the answer is based on facts, 'yes' or 'no'"
     )
 
-# LLM配置
+# LLM configuration
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeHallucinations)
 
-# 提示词
-system = """你是一个评估LLM生成内容是否基于检索事实的评分器。\n 
-     给出'是'或'否'的二元评分。'是'表示答案是基于/由事实支持的。"""
+# Prompt
+system = """You are a grader that evaluates whether the LLM generation is based on retrieved facts.\n 
+     Give a binary score of 'yes' or 'no'. 'yes' means the answer is based on/supported by facts."""
 hallucination_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system),
-        ("human", "事实集合: \n\n {documents} \n\n LLM生成内容: {generation}"),
+        ("human", "Set of facts: \n\n {documents} \n\n LLM generation: {generation}"),
     ]
 )
 
 hallucination_grader = hallucination_prompt | structured_llm_grader
 hallucination_grader.invoke({"documents": docs, "generation": generation})
 
-### 答案评分器 ###
+### Answer Grader ###
 
-# 数据模型
+# Data model
 class GradeAnswer(BaseModel):
-    """评估答案是否解决问题的二元评分"""
+    """Binary score for evaluating whether the answer solves the problem"""
 
     binary_score: str = Field(
-        description="答案是否解决问题，'是'或'否'"
+        description="Whether the answer solves the problem, 'yes' or 'no'"
     )
 
-# LLM配置
+# LLM configuration
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 structured_llm_grader = llm.with_structured_output(GradeAnswer)
 
-# 提示词
-system = """你是一个评估答案是否解决/回答问题的评分器。\n 
-     给出'是'或'否'的二元评分。'是'表示答案解决了问题。"""
+# Prompt
+system = """You are a grader that evaluates whether the answer solves/answers the question.\n 
+     Give a binary score of 'yes' or 'no'. 'yes' means the answer solves the question."""
 answer_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system),
-        ("human", "用户问题: \n\n {question} \n\n LLM生成内容: {generation}"),
+        ("human", "User question: \n\n {question} \n\n LLM generation: {generation}"),
     ]
 )
 
 answer_grader = answer_prompt | structured_llm_grader
 answer_grader.invoke({"question": question, "generation": generation})
 
-### 问题重写器 ###
+### Question Rewriter ###
 
-# LLM配置
+# LLM configuration
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
 
-# 提示词
-system = """你是一个问题重写器，将输入问题转换为更适合向量存储检索的更好版本。\n 
-     查看输入并尝试理解潜在的语义意图/含义。"""
+# Prompt
+system = """You are a question rewriter that converts the input question into a better version more suitable for vector store retrieval.\n 
+     Review the input and try to understand the underlying semantic intent/meaning."""
 re_write_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system),
         (
             "human",
-            "这是初始问题: \n\n {question} \n 请提出一个改进的问题。",
+            "Here is the initial question: \n\n {question} \n Please formulate an improved question.",
         ),
     ]
 )
@@ -170,139 +170,139 @@ from typing_extensions import TypedDict
 
 class GraphState(TypedDict):
     """
-    表示图的状态。
+    Represents the state of the graph.
 
-    属性:
-        question: 问题
-        generation: LLM生成内容
-        documents: 文档列表
+    Attributes:
+        question: The question
+        generation: LLM generated content
+        documents: List of documents
     """
 
     question: str
     generation: str
     documents: List[str]
 
-### 节点定义 ###
+### Node Definitions ###
 
 def retrieve(state):
     """
-    检索文档
+    Retrieves documents
 
-    参数:
-        state (dict): 当前图状态
+    Parameters:
+        state (dict): Current graph state
 
-    返回:
-        state (dict): 添加了检索文档的新状态
+    Returns:
+        state (dict): New state with retrieved documents
     """
-    print("---检索文档---")
+    print("---Retrieving Documents---")
     question = state["question"]
 
-    # 使用新的 invoke 方法
+    # Use the new invoke method
     documents = retriever.invoke(question)
     return {"documents": documents, "question": question}
 
 def generate(state):
     """
-    生成答案
+    Generates an answer
 
-    参数:
-        state (dict): 当前图状态
+    Parameters:
+        state (dict): Current graph state
 
-    返回:
-        state (dict): 添加了LLM生成内容的新状态
+    Returns:
+        state (dict): New state with LLM generated content
     """
-    print("---生成答案---")
+    print("---Generating Answer---")
     question = state["question"]
     documents = state["documents"]
 
-    # RAG生成
+    # RAG generation
     generation = rag_chain.invoke({"context": documents, "question": question})
     return {"documents": documents, "question": question, "generation": generation}
 
 def grade_documents(state):
     """
-    判断检索到的文档是否与问题相关。
+    Determines if retrieved documents are relevant to the question.
 
-    参数:
-        state (dict): 当前图状态
+    Parameters:
+        state (dict): Current graph state
 
-    返回:
-        state (dict): 更新后的文档列表，只包含相关文档
+    Returns:
+        state (dict): Updated list of documents, containing only relevant ones
     """
-    print("---检查文档与问题的相关性---")
+    print("---Checking Document Relevance to Question---")
     question = state["question"]
     documents = state["documents"]
 
-    # 评分每个文档
+    # Grade each document
     filtered_docs = []
     for d in documents:
         score = retrieval_grader.invoke(
             {"question": question, "document": d.page_content}
         )
         grade = score.binary_score
-        if grade == "是":
-            print("---评分: 文档相关---")
+        if grade == "yes":
+            print("---Grade: Document Relevant---")
             filtered_docs.append(d)
         else:
-            print("---评分: 文档不相关---")
+            print("---Grade: Document Irrelevant---")
             continue
     return {"documents": filtered_docs, "question": question}
 
 def transform_query(state):
     """
-    转换查询以产生更好的问题。
+    Transforms the query to produce a better question.
 
-    参数:
-        state (dict): 当前图状态
+    Parameters:
+        state (dict): Current graph state
 
-    返回:
-        state (dict): 更新后的问题
+    Returns:
+        state (dict): Updated question
     """
-    print("---转换查询---")
+    print("---Transforming Query---")
     question = state["question"]
     documents = state["documents"]
 
-    # 重写问题
+    # Rewrite question
     better_question = question_rewriter.invoke({"question": question})
     return {"documents": documents, "question": better_question}
 
-### 边定义 ###
+### Edge Definitions ###
 
 def decide_to_generate(state):
     """
-    决定是生成答案还是重新生成问题。
+    Decides whether to generate an answer or regenerate the question.
 
-    参数:
-        state (dict): 当前图状态
+    Parameters:
+        state (dict): Current graph state
 
-    返回:
-        str: 下一个节点的二元决策
+    Returns:
+        str: Binary decision for the next node
     """
-    print("---评估已评分的文档---")
+    print("---Evaluating Graded Documents---")
     state["question"]
     filtered_documents = state["documents"]
 
     if not filtered_documents:
-        # 所有文档都已被过滤检查相关性
-        # 我们将重新生成一个新的查询
-        print("---决策: 所有文档都与问题不相关，转换查询---")
+        # All documents have been filtered for relevance
+        # We will regenerate a new query
+        print("---Decision: All documents irrelevant to question, transforming query---")
         return "transform_query"
     else:
-        # 我们有相关文档，所以生成答案
-        print("---决策: 生成答案---")
+        # We have relevant documents, so generate an answer
+        print("---Decision: Generating Answer---")
         return "generate"
 
 def grade_generation_v_documents_and_question(state):
     """
-    判断生成内容是否基于文档并回答问题。
+    Determines if the generated content is based on documents and answers the question.
 
-    参数:
-        state (dict): 当前图状态
+    Parameters:
+        state (dict): Current graph state
 
-    返回:
-        str: 下一个节点的决策
+    Returns:
+        str: Decision for the next node
     """
-    print("---检查幻觉---")
+    print("---Checking for Hallucinations---")
     question = state["question"]
     documents = state["documents"]
     generation = state["generation"]
@@ -312,35 +312,35 @@ def grade_generation_v_documents_and_question(state):
     )
     grade = score.binary_score
 
-    # 检查幻觉
-    if grade == "是":
-        print("---决策: 生成内容基于文档---")
-        # 检查问答
-        print("---评估生成内容与问题---")
+    # Check for hallucinations
+    if grade == "yes":
+        print("---Decision: Generated content based on documents---")
+        # Check Q&A
+        print("---Evaluating Generated Content vs. Question---")
         score = answer_grader.invoke({"question": question, "generation": generation})
         grade = score.binary_score
-        if grade == "是":
-            print("---决策: 生成内容回答了问题---")
+        if grade == "yes":
+            print("---Decision: Generated content answers the question---")
             return "useful"
         else:
-            print("---决策: 生成内容未回答问题---")
+            print("---Decision: Generated content does not answer the question---")
             return "not useful"
     else:
-        print("---决策: 生成内容未基于文档，重试---")
+        print("---Decision: Generated content not based on documents, retrying---")
         return "not supported"
 
 from langgraph.graph import END, StateGraph, START
 
-# 创建工作流图
+# Create workflow graph
 workflow = StateGraph(GraphState)
 
-# 定义节点
-workflow.add_node("retrieve", retrieve)  # 检索
-workflow.add_node("grade_documents", grade_documents)  # 评分文档
-workflow.add_node("generate", generate)  # 生成
-workflow.add_node("transform_query", transform_query)  # 转换查询
+# Define nodes
+workflow.add_node("retrieve", retrieve)  # Retrieve
+workflow.add_node("grade_documents", grade_documents)  # Grade documents
+workflow.add_node("generate", generate)  # Generate
+workflow.add_node("transform_query", transform_query)  # Transform query
 
-# 构建图
+# Build graph
 workflow.add_edge(START, "retrieve")
 workflow.add_edge("retrieve", "grade_documents")
 workflow.add_conditional_edges(
@@ -362,40 +362,40 @@ workflow.add_conditional_edges(
     },
 )
 
-# 编译
+# Compile
 app = workflow.compile()
 # try:
-#     # 先获取 PNG 二进制数据
+#     # First get PNG binary data
 #     png_data = app.get_graph(xray=True).draw_mermaid_png()
 
-#     # 将二进制数据保存到当前目录下的 graph.png
-#     with open("08-响应生成-Generation/04-动态生成优化策略/graph.png", "wb") as f:
+#     # Save binary data to graph.png in the current directory
+#     with open("08-Response Generation-Generation/04-Dynamic Generation Optimization Strategies/graph.png", "wb") as f:
 #         f.write(png_data)
 
-#     print("已保存为：graph.png")
+#     print("Saved as: graph.png")
 # except Exception as e:
-#     print(f"保存图片时出错: {e}")
+#     print(f"Error saving image: {e}")
 
 # from pprint import pprint
 
-# # 运行示例1
-# inputs = {"question": "解释不同类型的智能体记忆是如何工作的？"}
+# # Run example 1
+# inputs = {"question": "Explain how different types of agent memory work?"}
 # for output in app.stream(inputs):
 #     for key, value in output.items():
-#         # 节点
-#         pprint(f"节点 '{key}':")
+#         # Node
+#         pprint(f"Node '{key}':")
 #     pprint("\n---\n")
 
-# # 最终生成
+# # Final generation
 # pprint(value["generation"])
 
-# # 运行示例2
-# inputs = {"question": "解释思维链提示是如何工作的？"}
+# # Run example 2
+# inputs = {"question": "Explain how chain-of-thought prompting works?"}
 # for output in app.stream(inputs):
 #     for key, value in output.items():
-#         # 节点
-#         pprint(f"节点 '{key}':")
+#         # Node
+#         pprint(f"Node '{key}':")
 #     pprint("\n---\n")
 
-# # 最终生成
+# # Final generation
 # pprint(value["generation"])

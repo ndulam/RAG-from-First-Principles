@@ -10,18 +10,18 @@ import torch
 import os
 
 def prepare_dataset(tokenizer):
-    # 加载测试数据集（这里使用一个简单的问答数据集作为示例）
-    dataset = load_dataset("squad", split="train[:100]")  # 使用前100条数据作为示例
+    # Load a test dataset (using a simple Q&A dataset as an example)
+    dataset = load_dataset("squad", split="train[:100]")  # Use the first 100 data points as an example
     
     def format_prompt(example):
-        # 将SQuAD数据集格式化为对话格式
-        prompt = f"问题：{example['question']}\n上下文：{example['context']}\n回答：{example['answers']['text'][0]}"
+        # Format the SQuAD dataset into a conversational format
+        prompt = f"Question: {example['question']}\nContext: {example['context']}\nAnswer: {example['answers']['text'][0]}"
         return {"text": prompt}
     
-    # 格式化数据集
+    # Format the dataset
     dataset = dataset.map(format_prompt)
     
-    # 对数据集进行tokenize
+    # Tokenize the dataset
     def tokenize_function(examples):
         return tokenizer(
             examples["text"],
@@ -40,11 +40,11 @@ def prepare_dataset(tokenizer):
     return tokenized_dataset
 
 def main():
-    # 设置模型名称和输出目录
+    # Set model name and output directory
     model_name = "Qwen/Qwen3-0.6B"
     output_dir = "./qwen3_finetuned"
     
-    print("正在加载模型和tokenizer...")
+    print("Loading model and tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
@@ -52,31 +52,31 @@ def main():
         trust_remote_code=True
     )
     
-    # 准备数据集
-    print("正在准备数据集...")
+    # Prepare dataset
+    print("Preparing dataset...")
     dataset = prepare_dataset(tokenizer)
     
-    # 设置训练参数
+    # Set training arguments
     training_args = TrainingArguments(
         output_dir=output_dir,
-        num_train_epochs=1,  # 训练轮数
-        per_device_train_batch_size=4,  # 每个设备的batch大小
-        gradient_accumulation_steps=4,  # 梯度累积步数
-        learning_rate=2e-5,  # 学习率
-        weight_decay=0.01,  # 权重衰减
-        warmup_steps=100,  # 预热步数
-        logging_steps=10,  # 日志记录步数
-        save_steps=100,  # 保存检查点的步数
-        fp16=True,  # 使用混合精度训练
+        num_train_epochs=1,  # Number of training epochs
+        per_device_train_batch_size=4,  # Batch size per device
+        gradient_accumulation_steps=4,  # Gradient accumulation steps
+        learning_rate=2e-5,  # Learning rate
+        weight_decay=0.01,  # Weight decay
+        warmup_steps=100,  # Warmup steps
+        logging_steps=10,  # Logging steps
+        save_steps=100,  # Steps to save checkpoints
+        fp16=True,  # Use mixed precision training
     )
     
-    # 创建数据整理器
+    # Create data collator
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer,
-        mlm=False  # 不使用掩码语言模型
+        mlm=False  # Do not use masked language modeling
     )
     
-    # 创建训练器
+    # Create trainer
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -84,18 +84,18 @@ def main():
         data_collator=data_collator,
     )
     
-    # 开始训练
-    print("开始训练...")
+    # Start training
+    print("Starting training...")
     trainer.train()
     
-    # 保存模型
-    print(f"训练完成，保存模型到 {output_dir}")
+    # Save model
+    print(f"Training complete, saving model to {output_dir}")
     trainer.save_model()
     tokenizer.save_pretrained(output_dir)
     
-    # 测试微调后的模型
-    print("\n测试微调后的模型...")
-    test_prompt = "问题：什么是人工智能？\n回答："
+    # Test the fine-tuned model
+    print("\nTesting the fine-tuned model...")
+    test_prompt = "Question: What is artificial intelligence?\nAnswer:"
     inputs = tokenizer(test_prompt, return_tensors="pt").to(model.device)
     outputs = model.generate(
         **inputs,
@@ -106,7 +106,7 @@ def main():
     )
     
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    print("\n模型回答:", response)
+    print("\nModel response:", response)
 
 if __name__ == "__main__":
     main()

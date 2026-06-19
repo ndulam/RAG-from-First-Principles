@@ -5,21 +5,21 @@ load_dotenv()
 
 def get_code_snippet() -> str:
     """
-    获取需要分析的代码片段。    
-    返回:
-        str: 包含代码片段的字符串
+    Retrieves the code snippet to be analyzed.
+    Returns:
+        str: A string containing the code snippet.
     """
     return """
             def handle_request(request):
-                # 检查请求头中是否包含token
+                # Check if token is included in request headers
                 if 'token' not in request.headers:
                     return {'status': 401, 'message': 'Unauthorized'}, 401
                 
                 try:
-                    # 检查用户权限
+                    # Check user permissions
                     check_permission(request.headers['token'])
                     
-                    # 处理请求逻辑
+                    # Process request logic
                     return process_request(request)
                     
                 except AccessDenied:
@@ -34,15 +34,15 @@ client = OpenAI(base_url="https://api.deepseek.com",
 retrieved_content = get_code_snippet()
 
 question = f"""
-请基于以下代码片段描述可能的错误处理机制：
+Please describe the possible error handling mechanisms based on the following code snippet:
 {retrieved_content}
-注意：请提供多个不同的分析视角，涵盖输入异常、权限控制、调用链等方面。
+Note: Please provide multiple different analytical perspectives, covering input exceptions, permission control, call chain, etc.
 """
 
 response = client.chat.completions.create(
     model="deepseek-chat",
     messages=[
-        {"role": "system", "content": "你是一个有帮助的代码分析助手"},
+        {"role": "system", "content": "You are a helpful code analysis assistant"},
         {"role": "user", "content": question}
     ],
     temperature=0.5,
@@ -51,4 +51,4 @@ response = client.chat.completions.create(
 )
 
 for i, choice in enumerate(response.choices):
-    print(f"候选分析 {i+1}:{choice.message.content.strip()}\n")
+    print(f"Candidate Analysis {i+1}:{choice.message.content.strip()}\n")

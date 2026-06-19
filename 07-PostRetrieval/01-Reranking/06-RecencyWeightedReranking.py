@@ -211,4 +211,3 @@ print("- 📈 Applicable scenarios: news retrieval, knowledge base maintenance, 
 print("- 🔧 Parameter tuning: adjust the decay rate and number of returned documents based on the application")
 print("- ⚠️  Caveats: time metadata needs to be set sensibly")
 print("- 💡 Best practice: combine with other retrieval methods to form a multi-stage retrieval pipeline")
-

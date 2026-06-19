@@ -341,7 +341,7 @@ def transform_query(state):
     # Use the query rewriter to produce an improved question
     # The rewritten question is usually more specific and better suited for search
     better_question = question_rewriter.invoke({"question": question})
-    return {"documents": documents, "question": better_question}
+    return {"documents": documents, "question": question}
 
 def web_search(state):
     """
@@ -506,5 +506,3 @@ This design ensures the system can automatically detect and correct
 retrieval errors, significantly improving the accuracy and reliability of
 the RAG system.
 """
-
-

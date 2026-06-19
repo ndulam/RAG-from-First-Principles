@@ -1,6 +1,6 @@
-# 文件名: contextual_retrieval.py
-# 描述: 本文件演示了如何使用LlamaIndex实现上下文检索，并进行了错误处理优化
-# 原文档链接: https://docs.llamaindex.ai/en/stable/examples/cookbooks/contextual_retrieval/
+# Filename: contextual_retrieval.py
+# Description: This file demonstrates how to implement contextual retrieval using LlamaIndex, with optimized error handling.
+# Original document link: https://docs.llamaindex.ai/en/stable/examples/cookbooks/contextual_retrieval/
 
 import os
 import pandas as pd
@@ -20,19 +20,19 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv()
 
-# --- 安装必要的库 ---
+# --- Install necessary libraries ---
 # !pip install llama-index llama-index-llms-openai llama-index-embeddings-openai llama-index-postprocessor-cohere-rerank llama-index-retrievers-bm25 pandas
 
-# --- 设置API密钥 ---
-# 请确保环境变量中设置了OPENAI_API_KEY和COHERE_API_KEY
+# --- Set API Keys ---
+# Please ensure OPENAI_API_KEY and COHERE_API_KEY are set in environment variables
 # os.environ["OPENAI_API_KEY"] = "your-openai-api-key"
 # os.environ["COHERE_API_KEY"] = "your-cohere-api-key"
 
-# --- 设置LLM和Embedding模型 ---
-llm = OpenAI(model="gpt-3.5-turbo")  # 可以替换为gpt-4以获得更好的效果
+# --- Set LLM and Embedding models ---
+llm = OpenAI(model="gpt-3.5-turbo")  # Can be replaced with gpt-4 for better results
 embed_model = OpenAIEmbedding(model="text-embedding-ada-002")
 
-# --- 示例文本数据 ---
+# --- Sample text data ---
 paul_graham_essay_text = """
 What I Worked On
 February 2021
@@ -41,55 +41,55 @@ I wanted to study philosophy in college, but my father, who was paying, said I c
 I went to grad school in philosophy at Cornell, but after a year I left to study computer science at Harvard, which seemed more exciting. After the first year I started working on what would become Common Lisp. That led to me working with some people starting a company called Lucid. I didn't officially join Lucid, but I spent a lot of time there. In the meantime I also worked on On Lisp. After college I'd occasionally written short essays. In grad school I wrote more of them, and started to publish them on the web, and after that I started to get invited to give talks. In the summer of 1995 I was invited to give a talk at a conference on programming language design. I couldn't take time off because I was running a small consulting business. So I decided to write an essay instead.
 """
 
-# --- 为每个块创建上下文的提示模板 ---
+# --- Prompt template for creating context for each chunk ---
 CONTEXT_PROMPT_TEMPLATE = """
-以下是文档中的一段文本:
+Here is a text segment from a document:
 "{context_str}"
 
-请根据这段文本，创建一个简洁的句子来描述这段文本的内容。
-这将用于回答有关文档的问题。
-上下文: """
+Based on this text, create a concise sentence describing the content of this text.
+This will be used to answer questions about the document.
+Context: """
 
-# --- 工具函数 ---
+# --- Utility functions ---
 
-# 创建基于Embedding的检索器
+# Create Embedding-based retriever
 def create_embedding_retriever(nodes, similarity_top_k=3):
-    """创建基于向量嵌入的检索器"""
-    # 确保similarity_top_k不超过节点数
+    """Creates an embedding-based retriever"""
+    # Ensure similarity_top_k does not exceed the number of nodes
     adjusted_top_k = min(similarity_top_k, len(nodes))
     if adjusted_top_k < similarity_top_k:
-        print(f"警告：由于节点数量限制，将similarity_top_k从{similarity_top_k}调整为{adjusted_top_k}")
+        print(f"Warning: similarity_top_k adjusted from {similarity_top_k} to {adjusted_top_k} due to node count limit")
     
-    # 确保至少为1
+    # Ensure at least 1
     adjusted_top_k = max(1, adjusted_top_k)
     
     index = VectorStoreIndex(nodes, embed_model=embed_model)
     return index.as_retriever(similarity_top_k=adjusted_top_k)
 
-# 创建基于BM25的检索器
+# Create BM25-based retriever
 def create_bm25_retriever(nodes, similarity_top_k=3):
-    """创建基于BM25算法的检索器"""
-    # 将节点转换为TextNode
+    """Creates a retriever based on the BM25 algorithm"""
+    # Convert nodes to TextNode
     text_nodes = [TextNode(text=node.get_content(), id_=node.node_id) for node in nodes if hasattr(node, 'get_content')]
     
-    # 检查是否有有效节点
+    # Check for valid nodes
     if not text_nodes:
-        print("警告：没有有效的TextNode用于BM25检索器")
-        text_nodes = [TextNode(text="样本文本", id_="sample_id")]
+        print("Warning: No valid TextNodes for BM25 retriever")
+        text_nodes = [TextNode(text="Sample Text", id_="sample_id")]
     
-    # 调整top_k，确保不超过语料库大小
+    # Adjust top_k to not exceed corpus size
     adjusted_top_k = min(similarity_top_k, len(text_nodes))
     if adjusted_top_k < similarity_top_k:
-        print(f"警告：由于语料库大小限制，将similarity_top_k从{similarity_top_k}调整为{adjusted_top_k}")
+        print(f"Warning: similarity_top_k adjusted from {similarity_top_k} to {adjusted_top_k} due to corpus size limit")
     
-    # 确保至少为1
+    # Ensure at least 1
     adjusted_top_k = max(1, adjusted_top_k)
     
     return BM25Retriever.from_defaults(nodes=text_nodes, similarity_top_k=adjusted_top_k)
 
-# 混合检索器（Embedding + BM25 + Reranker）
+# Hybrid Retriever (Embedding + BM25 + Reranker)
 class EmbeddingBM25RerankerRetriever(BaseRetriever):
-    """将向量检索、BM25检索和重排序器结合的混合检索器"""
+    """Hybrid retriever combining vector retrieval, BM25 retrieval, and a reranker"""
     def __init__(self, embedding_retriever, bm25_retriever, reranker):
         self._embedding_retriever = embedding_retriever
         self._bm25_retriever = bm25_retriever
@@ -97,20 +97,20 @@ class EmbeddingBM25RerankerRetriever(BaseRetriever):
         super().__init__()
 
     def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
-        # 获取两种检索器的结果
+        # Get results from both retrievers
         embedding_nodes = self._embedding_retriever.retrieve(query_bundle)
         bm25_nodes = self._bm25_retriever.retrieve(query_bundle)
 
-        # 合并并去重
+        # Merge and deduplicate
         all_nodes = {node.node.node_id: node for node in embedding_nodes}
         for node in bm25_nodes:
             if node.node.node_id not in all_nodes:
                 all_nodes[node.node.node_id] = node
         
-        # 准备用于重排序的节点
+        # Prepare nodes for reranking
         nodes_for_rerank = list(all_nodes.values())
         
-        # 使用重排序器处理节点
+        # Process nodes with reranker
         if self._reranker and nodes_for_rerank:
             reranked_nodes = self._reranker.postprocess_nodes(
                 nodes_for_rerank, query_bundle=query_bundle
@@ -118,9 +118,9 @@ class EmbeddingBM25RerankerRetriever(BaseRetriever):
             return reranked_nodes
         return nodes_for_rerank
 
-# 评估函数
+# Evaluation function
 async def retrieval_results(retriever, qa_dataset):
-    """评估检索器的性能"""
+    """Evaluates the performance of the retriever"""
     try:
         retriever_evaluator = RetrieverEvaluator.from_metric_names(
             ["mrr", "hit_rate"], retriever=retriever
@@ -128,20 +128,20 @@ async def retrieval_results(retriever, qa_dataset):
         eval_results = await retriever_evaluator.aevaluate_dataset(qa_dataset)
         return eval_results
     except Exception as e:
-        print(f"评估过程中出错: {str(e)}")
-        # 返回空结果避免中断执行
+        print(f"Error during evaluation: {str(e)}")
+        # Return empty result to avoid interrupting execution
         return []
 
-# 显示结果
+# Display results
 def display_results(name, eval_results):
-    """显示评估结果"""
+    """Displays evaluation results"""
     if not eval_results:
-        # 处理空结果情况
+        # Handle empty results case
         return pd.DataFrame({
             "retrievers": [name], 
             "hit_rate": [0.0], 
             "mrr": [0.0], 
-            "note": ["评估失败"]
+            "note": ["Evaluation Failed"]
         })
     
     metric_dicts = []
@@ -154,7 +154,7 @@ def display_results(name, eval_results):
             "retrievers": [name], 
             "hit_rate": [0.0], 
             "mrr": [0.0], 
-            "note": ["无评估数据"]
+            "note": ["No Evaluation Data"]
         })
     
     full_df = pd.DataFrame(metric_dicts)
@@ -162,7 +162,7 @@ def display_results(name, eval_results):
     hit_rate = full_df["hit_rate"].mean() if "hit_rate" in full_df else 0.0
     mrr = full_df["mrr"].mean() if "mrr" in full_df else 0.0
     
-    # 计算其他指标(如果存在)
+    # Calculate other metrics (if they exist)
     metrics = {"retrievers": [name], "hit_rate": [hit_rate], "mrr": [mrr]}
     for metric in ["precision", "recall", "ap", "ndcg"]:
         if metric in full_df:
@@ -170,39 +170,39 @@ def display_results(name, eval_results):
     
     return pd.DataFrame(metrics)
 
-# --- 主函数 ---
+# --- Main function ---
 async def main():
-    print("开始上下文检索实验")
+    print("Starting contextual retrieval experiment")
     
-    # 1. 将文档转换为Document对象
+    # 1. Convert document to Document object
     documents = [Document(text=paul_graham_essay_text)]
-    print("文档加载完成")
+    print("Document loaded")
     
-    # 2. 分割文档为节点（块）
-    # 使用更大的块大小，确保生成足够的节点用于实验
+    # 2. Split document into nodes (chunks)
+    # Use a larger chunk size to ensure enough nodes are generated for the experiment
     splitter = SentenceSplitter(chunk_size=256, chunk_overlap=50)
     nodes = splitter.get_nodes_from_documents(documents)
-    print(f"创建了 {len(nodes)} 个节点")
+    print(f"Created {len(nodes)} nodes")
     
-    # 调试：显示节点数量，如果太少可能会导致BM25检索器问题
+    # Debug: Display number of nodes, too few might cause BM25 retriever issues
     if len(nodes) < 3:
-        print("警告：节点数量少于3，可能导致检索器评估问题")
-        # 如果节点太少，我们创建额外的样本节点
+        print("Warning: Number of nodes is less than 3, which may cause retriever evaluation problems")
+        # If too few nodes, we create additional sample nodes
         while len(nodes) < 3:
-            sample_text = f"样本文本 {len(nodes)+1}：这是一个用于测试的额外文本节点。"
+            sample_text = f"Sample text {len(nodes)+1}: This is an additional text node for testing."
             sample_node = TextNode(text=sample_text, id_=f"sample_node_{len(nodes)}")
             nodes.append(sample_node)
-        print(f"已添加样本节点，现在共有 {len(nodes)} 个节点")
+        print(f"Sample nodes added, now {len(nodes)} nodes in total")
     
-    # 3. 为每个节点生成上下文描述
+    # 3. Generate context description for each node
     nodes_contextual = []
     for node in nodes:
-        # 模拟LLM生成的上下文
-        simulated_context = f"本段内容讨论了: {node.get_content()[:50]}..."
+        # Simulate LLM generated context
+        simulated_context = f"This section discusses: {node.get_content()[:50]}..."
         new_metadata = node.metadata.copy() if hasattr(node, 'metadata') else {}
         new_metadata["generated_context"] = simulated_context
         
-        # 创建带有生成上下文的新节点
+        # Create new node with generated context
         contextual_node = TextNode(
             text=node.get_content(),
             metadata=new_metadata,
@@ -210,24 +210,24 @@ async def main():
         )
         nodes_contextual.append(contextual_node)
     
-    # 4. 设置检索参数 - 确保不超过节点数量
+    # 4. Set retrieval parameters - ensure not to exceed the number of nodes
     similarity_top_k = min(3, len(nodes))
-    print(f"检索参数 similarity_top_k 设置为 {similarity_top_k}")
+    print(f"Retrieval parameter similarity_top_k set to {similarity_top_k}")
     
-    # 5. 设置Cohere重排序器
+    # 5. Set Cohere reranker
     try:
         cohere_rerank = CohereRerank(
             api_key=os.environ.get("COHERE_API_KEY", "your-api-key"), 
             model="rerank-english-v3.0",
             top_n=similarity_top_k
         )
-        print("Cohere重排序器设置完成")
+        print("Cohere reranker setup complete")
     except Exception as e:
-        print(f"设置Cohere重排序器时出错: {str(e)}")
+        print(f"Error setting up Cohere reranker: {str(e)}")
         cohere_rerank = None
     
-    # 6. 创建各种检索器
-    print("创建标准检索器...")
+    # 6. Create various retrievers
+    print("Creating standard retrievers...")
     embedding_retriever = create_embedding_retriever(
         nodes, similarity_top_k=similarity_top_k
     )
@@ -238,7 +238,7 @@ async def main():
         embedding_retriever, bm25_retriever, reranker=cohere_rerank
     )
     
-    print("创建上下文检索器...")
+    print("Creating contextual retrievers...")
     contextual_embedding_retriever = create_embedding_retriever(
         nodes_contextual, similarity_top_k=similarity_top_k
     )
@@ -251,37 +251,37 @@ async def main():
         reranker=cohere_rerank,
     )
     
-    # 7. 创建评估数据集
-    print("创建评估数据集...")
+    # 7. Create evaluation dataset
+    print("Creating evaluation dataset...")
     from llama_index.core.evaluation import EmbeddingQAFinetuneDataset
     
     fixed_queries = {
-        "q1": "作者在大学前做了什么工作？",
-        "q2": "作者在大学里选择了什么专业？",
-        "q3": "作者在毕业后做了什么工作？"
+        "q1": "What did the author work on before college?",
+        "q2": "What did the author major in during college?",
+        "q3": "What did the author do after graduation?"
     }
     
-    # 设置相关文档映射
+    # Set relevant document mapping
     relevant_docs_mapping = {}
     if nodes:
         for i, query_id in enumerate(fixed_queries.keys()):
-            node_index = min(i, len(nodes)-1)  # 确保索引不超出范围
+            node_index = min(i, len(nodes)-1)  # Ensure index is within bounds
             relevant_docs_mapping[query_id] = [nodes[node_index].node_id]
     
-    # 构建语料库
+    # Build corpus
     corpus_data = {}
     if nodes:
         corpus_data = {node.node_id: node.get_content() for node in nodes}
     
-    # 创建评估数据集
+    # Create evaluation dataset
     qa_dataset = EmbeddingQAFinetuneDataset(
         queries=fixed_queries,
         corpus=corpus_data,
         relevant_docs=relevant_docs_mapping
     )
     
-    # 8. 评估检索器性能
-    print("\n--- 评估标准检索器 ---")
+    # 8. Evaluate retriever performance
+    print("\n--- Evaluating Standard Retrievers ---")
     embedding_retriever_results = await retrieval_results(
         embedding_retriever, qa_dataset
     )
@@ -292,8 +292,8 @@ async def main():
         embedding_bm25_retriever_rerank, qa_dataset
     )
     
-    # 9. 评估上下文检索器
-    print("\n--- 评估上下文检索器 ---")
+    # 9. Evaluate Contextual Retrievers
+    print("\n--- Evaluating Contextual Retrievers ---")
     contextual_embedding_retriever_results = await retrieval_results(
         contextual_embedding_retriever, qa_dataset
     )
@@ -304,14 +304,14 @@ async def main():
         contextual_embedding_bm25_retriever_rerank, qa_dataset
     )
     
-    # 10. 显示结果
-    print("\n--- 不带上下文的检索结果 ---")
+    # 10. Display Results
+    print("\n--- Retrieval Results without Context ---")
     standard_results = pd.concat(
         [
-            display_results("Embedding检索器", embedding_retriever_results),
-            display_results("BM25检索器", bm25_retriever_results),
+            display_results("Embedding Retriever", embedding_retriever_results),
+            display_results("BM25 Retriever", bm25_retriever_results),
             display_results(
-                "Embedding + BM25 + 重排序检索器",
+                "Embedding + BM25 + Reranker Retriever",
                 embedding_bm25_retriever_rerank_results,
             ),
         ],
@@ -320,19 +320,19 @@ async def main():
     )
     print(standard_results)
     
-    print("\n--- 带上下文的检索结果 ---")
+    print("\n--- Retrieval Results with Context ---")
     contextual_results = pd.concat(
         [
             display_results(
-                "上下文Embedding检索器",
+                "Contextual Embedding Retriever",
                 contextual_embedding_retriever_results,
             ),
             display_results(
-                "上下文BM25检索器", 
+                "Contextual BM25 Retriever", 
                 contextual_bm25_retriever_results
             ),
             display_results(
-                "上下文Embedding + 上下文BM25 + 重排序检索器",
+                "Contextual Embedding + Contextual BM25 + Reranker Retriever",
                 contextual_embedding_bm25_retriever_rerank_results,
             ),
         ],
@@ -343,4 +343,3 @@ async def main():
     
 if __name__ == "__main__":
     asyncio.run(main())
-

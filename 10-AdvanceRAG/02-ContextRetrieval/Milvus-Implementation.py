@@ -2,145 +2,145 @@
 # -*- coding: utf-8 -*-
 
 """
-上下文检索（Contextual Retrieval）与Milvus实现
-基于Anthropic提出的方法，解决传统RAG中语义隔离问题
+Contextual Retrieval and Milvus Implementation
+Based on the method proposed by Anthropic, addressing semantic isolation in traditional RAG
 
-核心概念：
-1. 传统RAG问题：文档被分割成独立的块，丢失了上下文信息
-2. 上下文检索解决方案：为每个块添加文档上下文，使其语义更完整
-3. 深度评估（Deep Evaluation）：多维度评估检索系统的性能
+Core Concepts:
+1. Traditional RAG Problem: Documents are split into independent chunks, losing contextual information.
+2. Contextual Retrieval Solution: Add document context to each chunk to make its semantics more complete.
+3. Deep Evaluation: Multi-dimensional evaluation of retrieval system performance.
 
-技术栈：
-- Milvus: 向量数据库，支持密集向量和稀疏向量
-- SentenceTransformer: 生成文本的向量表示
-- OpenAI GPT: 用于生成上下文化的文本块（替代Claude）
-- Cohere Reranker: 重排序模型，优化检索结果
+Technology Stack:
+- Milvus: Vector database, supporting dense and sparse vectors.
+- SentenceTransformer: Generates vector representations of text.
+- OpenAI GPT: Used for generating contextualized text chunks (replacing Claude).
+- Cohere Reranker: Reranking model, optimizing retrieval results.
 
-API变更说明：
-- 原版本使用Anthropic Claude API进行上下文增强
-- 当前版本改用OpenAI GPT API，提供更好的可用性和性能
-- Claude相关代码已注释，可根据需要切换回来
+API Change Notes:
+- The original version used Anthropic Claude API for context enhancement.
+- The current version uses OpenAI GPT API, providing better availability and performance.
+- Claude-related code has been commented out and can be switched back if needed.
 
 ===============================================================================
-📋 代码结构分析 (Code Structure Analysis)
+📋 Code Structure Analysis
 ===============================================================================
 
-🏗️ 整体架构设计:
+🏗️ Overall Architecture Design:
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        RAG上下文检索系统架构                          │
+│                        RAG Contextual Retrieval System Architecture │
 ├─────────────────────────────────────────────────────────────────────┤
-│  输入层: 原始文档 → 文档分块 → 上下文增强 → 向量化 → 存储           │
-│  检索层: 查询向量化 → 相似度搜索 → 重排序 → 结果返回              │
-│  评估层: 黄金标准对比 → 性能指标计算 → 结果分析                    │
+│  Input Layer: Raw Documents → Document Chunking → Context Enhancement → Vectorization → Storage │
+│  Retrieval Layer: Query Vectorization → Similarity Search → Reranking → Result Return │
+│  Evaluation Layer: Golden Standard Comparison → Performance Metric Calculation → Result Analysis │
 └─────────────────────────────────────────────────────────────────────┘
 
-🔧 模块职责划分:
-1. MilvusContextualRetriever (核心检索器)
-   - 负责向量数据库的操作
-   - 实现多种检索策略
-   - 管理上下文化和重排序流程
+🔧 Module Responsibility Division:
+1. MilvusContextualRetriever (Core Retriever)
+   - Responsible for vector database operations.
+   - Implements various retrieval strategies.
+   - Manages contextualization and reranking processes.
 
-2. 评估模块 (Performance Evaluation)
-   - evaluate_retrieval(): 核心评估逻辑
-   - evaluate_db(): 数据库性能评估
-   - retrieve_base(): 基础检索接口
+2. Evaluation Module (Performance Evaluation)
+   - evaluate_retrieval(): Core evaluation logic.
+   - evaluate_db(): Database performance evaluation.
+   - retrieve_base(): Basic retrieval interface.
 
-3. 数据处理模块 (Data Processing)
-   - download_data(): 数据下载
-   - load_jsonl(): 数据加载
-   - 数据格式标准化
+3. Data Processing Module (Data Processing)
+   - download_data(): Data download.
+   - load_jsonl(): Data loading.
+   - Data format standardization.
 
-4. 实验控制模块 (Experiment Control)
-   - main(): 实验流程控制
-   - 三种检索策略对比
-   - 性能指标统计
+4. Experiment Control Module (Experiment Control)
+   - main(): Experiment flow control.
+   - Comparison of three retrieval strategies.
+   - Performance metric statistics.
 
 ===============================================================================
-🔄 数据流程分析 (Data Flow Analysis)
+🔄 Data Flow Analysis
 ===============================================================================
 
-📊 数据处理流程:
-原始文档 → 文档分块 → [可选]上下文增强 → 向量化 → Milvus存储
+📊 Data Processing Flow:
+Raw Documents → Document Chunking → [Optional] Context Enhancement → Vectorization → Milvus Storage
     ↓
-查询输入 → 查询向量化 → 相似度搜索 → [重排序] → 结果输出
+Query Input → Query Vectorization → Similarity Search → [Reranking] → Result Output
     ↓
-评估对比 → 性能指标 → 结果分析
+Evaluation Comparison → Performance Metrics → Result Analysis
 
-🎯 检索策略对比:
+🎯 Retrieval Strategy Comparison:
 ┌──────────────┬──────────────┬──────────────┬──────────────┐
-│   策略类型    │   数据预处理  │   检索方法    │   后处理     │
+│   Strategy Type │   Data Preprocessing │   Retrieval Method │   Post-processing │
 ├──────────────┼──────────────┼──────────────┼──────────────┤
-│ 标准检索     │ 原始文本块   │ 密集向量搜索 │ 无           │
-│ 上下文检索   │ LLM增强块    │ 密集向量搜索 │ 无           │
-│ 重排序检索   │ LLM增强块    │ 密集向量搜索 │ Cohere重排序 │
+│ Standard Retrieval │ Original Text Chunks │ Dense Vector Search │ None           │
+│ Contextual Retrieval │ LLM Enhanced Chunks │ Dense Vector Search │ None           │
+│ Reranking Retrieval │ LLM Enhanced Chunks │ Dense Vector Search │ Cohere Reranking │
 └──────────────┴──────────────┴──────────────┴──────────────┘
 
-🔍 评估体系:
-输入: 查询 + 黄金标准答案
-处理: 检索 → 匹配 → 计分
-输出: Pass@K分数、平均分数、召回率
+🔍 Evaluation System:
+Input: Query + Golden Standard Answer
+Process: Retrieval → Matching → Scoring
+Output: Pass@K score, average score, recall rate
 
 ===============================================================================
-⚡ 执行流程分析 (Execution Flow Analysis)
+⚡ Execution Flow Analysis
 ===============================================================================
 
-🚀 主要执行步骤:
-1️⃣ 环境初始化
-   - 加载API密钥和配置
-   - 初始化嵌入模型和重排序模型
-   - 下载示例数据
+🚀 Main Execution Steps:
+1️⃣ Environment Initialization
+   - Load API keys and configuration.
+   - Initialize embedding and reranking models.
+   - Download sample data.
 
-2️⃣ 数据准备
-   - 加载文档数据集
-   - 创建评估查询集
-   - 数据格式验证
+2️⃣ Data Preparation
+   - Load document dataset.
+   - Create evaluation query set.
+   - Data format validation.
 
-3️⃣ 实验一: 标准检索基线
-   - 创建标准Milvus集合
-   - 插入原始文本块
-   - 执行检索评估
+3️⃣ Experiment 1: Standard Retrieval Baseline
+   - Create standard Milvus collection.
+   - Insert original text chunks.
+   - Perform retrieval evaluation.
 
-4️⃣ 实验二: 上下文检索
-   - 创建上下文Milvus集合
-   - LLM增强文本块
-   - 插入增强后的文本块
-   - 执行检索评估
+4️⃣ Experiment 2: Contextual Retrieval
+   - Create contextual Milvus collection.
+   - LLM enhance text chunks.
+   - Insert enhanced text chunks.
+   - Perform retrieval evaluation.
 
-5️⃣ 实验三: 重排序检索
-   - 使用上下文检索器
-   - 启用Cohere重排序
-   - 执行检索评估
+5️⃣ Experiment 3: Reranking Retrieval
+   - Use contextual retriever.
+   - Enable Cohere reranking.
+   - Perform retrieval evaluation.
 
-6️⃣ 结果分析
-   - 对比三种策略性能
-   - 计算性能提升幅度
-   - 生成分析报告
+6️⃣ Result Analysis
+   - Compare performance of three strategies.
+   - Calculate performance improvement.
+   - Generate analysis report.
 
 ===============================================================================
-🎛️ 关键参数配置 (Key Parameters)
+🎛️ Key Parameter Configuration
 ===============================================================================
 
-📋 向量数据库配置:
-- 集合名称: 区分不同实验的数据集合
-- 向量维度: 由嵌入模型决定（如BGE-large-zh为1024维）
-- 索引类型: FLAT（精确搜索）+ SPARSE_INVERTED_INDEX（稀疏向量）
-- 距离度量: 内积（IP）
+📋 Vector Database Configuration:
+- Collection Name: Differentiates data collections for different experiments.
+- Vector Dimension: Determined by the embedding model (e.g., 1024 dimensions for BGE-large-zh).
+- Index Type: FLAT (exact search) + SPARSE_INVERTED_INDEX (sparse vectors).
+- Distance Metric: Inner Product (IP).
 
-🤖 LLM配置:
-- 模型: gpt-3.5-turbo（快速经济型）或gpt-4（高质量）
-- 最大tokens: 1000
-- 温度: 0（确保一致性）
-- API: OpenAI ChatGPT API
+🤖 LLM Configuration:
+- Model: gpt-3.5-turbo (fast and economical) or gpt-4 (high quality).
+- Max Tokens: 1000.
+- Temperature: 0 (ensures consistency).
+- API: OpenAI ChatGPT API.
 
-🔄 检索配置:
-- 检索数量K: 默认5（Pass@5评估）
-- 搜索参数: nprobe=10
-- 重排序: Cohere Rerank API
+🔄 Retrieval Configuration:
+- Retrieval Count K: Default 5 (Pass@5 evaluation).
+- Search Parameters: nprobe=10.
+- Reranking: Cohere Rerank API.
 
 ===============================================================================
 """
 
-# 导入必要的库
+# Import necessary libraries
 from pymilvus.model.dense import SentenceTransformerEmbeddingFunction
 from pymilvus.model.hybrid import BGEM3EmbeddingFunction
 from pymilvus.model.reranker import CohereRerankFunction
@@ -155,37 +155,37 @@ from pymilvus import (
 )
 from tqdm import tqdm
 import json
-# import anthropic  # 注释掉Claude API，改用OpenAI
-import openai  # 新增OpenAI API支持
+# import anthropic  # Comment out Claude API, switch to OpenAI
+import openai  # Add OpenAI API support
 import os
 import dotenv
 dotenv.load_dotenv()
 
 class MilvusContextualRetriever:
     """
-    Milvus上下文检索器类
+    Milvus Contextual Retriever Class
     
-    🏛️ 架构设计:
-    这个类是整个检索系统的核心，采用模块化设计，支持多种检索策略的灵活组合。
+    🏛️ Architecture Design:
+    This class is the core of the entire retrieval system, adopting a modular design that supports flexible combinations of multiple retrieval strategies.
     
-    📦 功能模块:
-    1. 标准检索：基于原始文本块的向量检索
-    2. 混合检索：结合密集向量和稀疏向量的检索
-    3. 上下文检索：使用LLM丰富文本块的上下文信息后进行检索
-    4. 重排序检索：在检索结果基础上使用专门的重排序模型优化结果
+    📦 Functional Modules:
+    1. Standard Retrieval: Vector retrieval based on original text chunks.
+    2. Hybrid Retrieval: Combines dense and sparse vector retrieval.
+    3. Contextual Retrieval: Uses LLM to enrich text chunk context before retrieval.
+    4. Reranking Retrieval: Optimizes results using a specialized reranking model based on initial retrieval.
     
-    🔄 数据流向:
-    文本输入 → [上下文增强] → 向量化 → Milvus存储
+    🔄 Data Flow:
+    Text Input → [Context Enhancement] → Vectorization → Milvus Storage
            ↓
-    查询输入 → 向量化 → 相似度搜索 → [重排序] → 结果输出
+    Query Input → Vectorization → Similarity Search → [Reranking] → Result Output
     
-    🎯 设计原则:
-    - 单一职责：每个方法负责一个特定功能
-    - 开放封闭：支持扩展新的检索策略
-    - 依赖注入：通过构造函数注入依赖组件
-    - 配置驱动：通过参数控制不同功能的启用
+    🎯 Design Principles:
+    - Single Responsibility: Each method is responsible for a specific function.
+    - Open/Closed Principle: Supports extending with new retrieval strategies.
+    - Dependency Injection: Injects dependent components through the constructor.
+    - Configuration Driven: Controls the enabling of different functions through parameters.
     
-    支持标准检索、混合检索、上下文检索和重排序功能
+    Supports standard retrieval, hybrid retrieval, contextual retrieval, and reranking.
     """
     
     def __init__(
@@ -196,49 +196,49 @@ class MilvusContextualRetriever:
         use_sparse=False,
         sparse_embedding_function=None,
         use_contextualize_embedding=False,
-        llm_client=None,  # 改用通用LLM客户端名称（支持OpenAI）
+        llm_client=None,  # Use generic LLM client name (supports OpenAI)
         use_reranker=False,
         rerank_function=None,
     ):
         """
-        初始化检索器
+        Initializes the retriever
         
-        🔧 初始化流程:
-        1. 设置Milvus连接参数
-        2. 配置嵌入函数（密集+稀疏）
-        3. 设置LLM客户端（用于上下文增强）
-        4. 配置重排序功能
-        5. 参数验证和错误处理
+        🔧 Initialization Process:
+        1. Set Milvus connection parameters.
+        2. Configure embedding functions (dense + sparse).
+        3. Set LLM client (for context enhancement).
+        4. Configure reranking function.
+        5. Parameter validation and error handling.
         
-        参数说明：
-            uri: Milvus服务地址
-                - 本地文件模式：如 "./milvus.db"（Milvus Lite）
-                - 服务器模式：如 "http://localhost:19530"（独立Milvus服务）
-                - 云服务模式：Zilliz Cloud的连接地址
-            collection_name: 集合名称，类似于数据库中的表名
-            dense_embedding_function: 密集向量嵌入函数
-                - 用于将文本转换为高维稠密向量（如768维、1024维等）
-                - 通常使用预训练的语言模型如BGE、SentenceTransformer等
-            use_sparse: 是否使用稀疏向量
-                - 稀疏向量类似于TF-IDF，主要捕获关键词匹配信息
-                - 与密集向量结合可以提高检索的准确性
-            sparse_embedding_function: 稀疏向量嵌入函数
-            use_contextualize_embedding: 是否使用上下文嵌入
-                - 这是核心功能：使用LLM为每个文本块添加文档上下文
-                - 解决传统RAG中文本块缺乏上下文的问题
-            llm_client: LLM客户端（支持OpenAI GPT或Claude）
-                - 用于生成上下文化的文本块
-                - 当前版本主要支持OpenAI GPT-3.5/GPT-4
-                - 原Claude API代码已注释保留
-            use_reranker: 是否使用重排序
-                - 在初步检索结果基础上，使用专门的重排序模型优化结果排序
-            rerank_function: 重排序函数（如Cohere Rerank）
+        Parameters:
+            uri: Milvus service address
+                - Local file mode: e.g., "./milvus.db" (Milvus Lite)
+                - Server mode: e.g., "http://localhost:19530" (standalone Milvus service)
+                - Cloud service mode: Zilliz Cloud connection address
+            collection_name: Collection name, similar to a table name in a database.
+            dense_embedding_function: Dense vector embedding function
+                - Used to convert text into high-dimensional dense vectors (e.g., 768, 1024 dimensions).
+                - Typically uses pre-trained language models like BGE, SentenceTransformer, etc.
+            use_sparse: Whether to use sparse vectors
+                - Sparse vectors are similar to TF-IDF, primarily capturing keyword matching information.
+                - Combining with dense vectors can improve retrieval accuracy.
+            sparse_embedding_function: Sparse vector embedding function.
+            use_contextualize_embedding: Whether to use contextual embedding
+                - This is the core function: uses LLM to add document context to each text chunk.
+                - Solves the problem of text chunks lacking context in traditional RAG.
+            llm_client: LLM client (supports OpenAI GPT or Claude)
+                - Used to generate contextualized text chunks.
+                - Current version primarily supports OpenAI GPT-3.5/GPT-4.
+                - Original Claude API code is commented out.
+            use_reranker: Whether to use reranking
+                - Optimizes the ranking of retrieval results using a specialized reranking model.
+            rerank_function: Reranking function (e.g., Cohere Rerank).
         """
         self.collection_name = collection_name
 
-        # 对于Milvus-lite，uri是本地路径，如"./milvus.db"
-        # 对于Milvus独立服务，uri类似"http://localhost:19530"
-        # 对于Zilliz Cloud，请设置`uri`和`token`
+        # For Milvus-lite, uri is a local path, e.g., "./milvus.db"
+        # For standalone Milvus service, uri is like "http://localhost:19530"
+        # For Zilliz Cloud, please set `uri` and `token`
         self.client = MilvusClient(uri)
 
         self.embedding_function = dense_embedding_function
@@ -247,91 +247,91 @@ class MilvusContextualRetriever:
         self.sparse_embedding_function = None
 
         self.use_contextualize_embedding = use_contextualize_embedding
-        # self.anthropic_client = anthropic_client  # 注释掉Claude客户端
-        self.llm_client = llm_client  # 改用通用LLM客户端
+        # self.anthropic_client = anthropic_client  # Comment out Claude client
+        self.llm_client = llm_client  # Use generic LLM client
 
         self.use_reranker = use_reranker
         self.rerank_function = rerank_function
 
-        # 参数验证：如果启用稀疏向量，必须提供稀疏嵌入函数
+        # Parameter validation: If sparse vectors are enabled, a sparse embedding function must be provided.
         if use_sparse is True and sparse_embedding_function:
             self.sparse_embedding_function = sparse_embedding_function
         elif use_sparse is True and sparse_embedding_function is None:
             raise ValueError(
-                "稀疏嵌入函数不能为空，如果use_sparse为True"
+                "Sparse embedding function cannot be None if use_sparse is True"
             )
         else:
             pass
 
     def build_collection(self):
         """
-        构建Milvus集合
+        Builds the Milvus collection
         
-        🏗️ 集合设计原理:
-        1. Schema设计：定义数据结构和字段类型
-        2. 索引策略：选择合适的索引类型以优化搜索性能
-        3. 动态字段：支持灵活的元数据存储
-        4. 向量字段：支持密集和稀疏向量的混合存储
+        🏗️ Collection Design Principles:
+        1. Schema Design: Defines data structure and field types.
+        2. Indexing Strategy: Selects appropriate index types to optimize search performance.
+        3. Dynamic Fields: Supports flexible metadata storage.
+        4. Vector Fields: Supports hybrid storage of dense and sparse vectors.
         
-        📊 存储结构:
+        📊 Storage Structure:
         ┌─────────────┬──────────────┬─────────────────┬──────────────┐
-        │    字段     │    类型      │      用途       │    索引类型   │
+        │    Field    │    Type      │      Purpose    │    Index Type │
         ├─────────────┼──────────────┼─────────────────┼──────────────┤
-        │ pk          │ INT64        │ 主键ID         │ 自动          │
-        │ dense_vector│ FLOAT_VECTOR │ 语义向量       │ FLAT/IP      │
-        │ sparse_vector│ SPARSE_VECTOR│ 关键词向量     │ INVERTED/IP  │
-        │ content     │ VARCHAR      │ 原始内容       │ 动态字段     │
-        │ metadata    │ JSON         │ 元数据信息     │ 动态字段     │
+        │ pk          │ INT64        │ Primary Key ID  │ Auto          │
+        │ dense_vector│ FLOAT_VECTOR │ Semantic Vector │ FLAT/IP      │
+        │ sparse_vector│ SPARSE_VECTOR│ Keyword Vector  │ INVERTED/IP  │
+        │ content     │ VARCHAR      │ Original Content│ Dynamic Field │
+        │ metadata    │ JSON         │ Metadata Info   │ Dynamic Field │
         └─────────────┴──────────────┴─────────────────┴──────────────┘
         
-        集合设计说明：
-        1. 使用动态Schema，支持灵活的字段添加
-        2. 主键自动生成，确保每条记录的唯一性
-        3. 密集向量字段：存储文本的语义向量表示
-        4. 稀疏向量字段（可选）：存储关键词相关的稀疏向量
-        5. 索引策略：密集向量使用FLAT索引，稀疏向量使用倒排索引
+        Collection design notes:
+        1. Uses dynamic Schema, supporting flexible field addition.
+        2. Primary key is auto-generated, ensuring uniqueness of each record.
+        3. Dense vector field: Stores semantic vector representation of text.
+        4. Sparse vector field (optional): Stores keyword-related sparse vectors.
+        5. Indexing strategy: Dense vectors use FLAT index, sparse vectors use inverted index.
         """
-        # 创建集合的Schema定义
+        # Create Schema definition for the collection
         schema = self.client.create_schema(
-            auto_id=True,  # 自动生成主键ID
-            enable_dynamic_field=True,  # 允许动态添加字段，提高灵活性
+            auto_id=True,  # Auto-generate primary key ID
+            enable_dynamic_field=True,  # Allow dynamic field addition for flexibility
         )
         
-        # 添加主键字段
+        # Add primary key field
         schema.add_field(field_name="pk", datatype=DataType.INT64, is_primary=True)
         
-        # 添加密集向量字段 - 存储文本的语义向量表示
+        # Add dense vector field - stores semantic vector representation of text
         schema.add_field(
             field_name="dense_vector",
             datatype=DataType.FLOAT_VECTOR,
-            dim=self.embedding_function.dim,  # 向量维度由嵌入函数决定
+            dim=self.embedding_function.dim,  # Vector dimension determined by embedding function
         )
         
-        # 如果启用稀疏向量，添加稀疏向量字段
+        # If sparse vectors are enabled, add sparse vector field
         if self.use_sparse is True:
             schema.add_field(
                 field_name="sparse_vector", datatype=DataType.SPARSE_FLOAT_VECTOR
             )
 
-        # 准备索引参数 - 索引用于加速向量搜索
+        # Prepare index parameters - indexes are used to accelerate vector search
         index_params = self.client.prepare_index_params()
         
-        # 为密集向量添加索引
-        # FLAT索引：精确搜索，适合小到中等规模数据集
-        # IP（内积）距离：适合归一化后的向量
+        # Add index for dense vectors
+        # FLAT index: Exact search, suitable for small to medium-sized datasets
+        # IP (Inner Product) distance: Suitable for normalized vectors
         index_params.add_index(
             field_name="dense_vector", index_type="FLAT", metric_type="IP"
         )
         
-        # 为稀疏向量添加倒排索引
+        # Add inverted index for sparse vectors
         if self.use_sparse is True:
             index_params.add_index(
                 field_name="sparse_vector",
-                index_type="SPARSE_INVERTED_INDEX",  # 稀疏向量专用的倒排索引
+                index_type="SPARSE_INVERTED_INDEX",  # Inverted index specifically for sparse vectors
                 metric_type="IP",
             )
 
-        # 创建集合
+        # Create collection
         self.client.create_collection(
             collection_name=self.collection_name,
             schema=schema,
@@ -341,47 +341,47 @@ class MilvusContextualRetriever:
 
     def insert_data(self, chunk, metadata):
         """
-        插入标准数据到Milvus
+        Inserts standard data into Milvus
         
-        📥 标准数据插入流程:
-        这是基础的数据插入方法，实现最简单的文本块存储策略
+        📥 Standard Data Insertion Process:
+        This is the basic data insertion method, implementing the simplest text chunk storage strategy.
         
-        🔄 处理流程:
-        1. 文本输入验证
-        2. 密集向量生成（语义表示）
-        3. 稀疏向量生成（可选，关键词表示）
-        4. 数据结构组装
-        5. Milvus批量插入
+        🔄 Processing Flow:
+        1. Text input validation.
+        2. Dense vector generation (semantic representation).
+        3. Sparse vector generation (optional, keyword representation).
+        4. Data structure assembly.
+        5. Milvus batch insertion.
         
-        📊 数据流向:
-        原始文本块 → Embedding模型 → 向量表示 → Milvus存储
+        📊 Data Flow:
+        Original Text Chunk → Embedding Model → Vector Representation → Milvus Storage
                                    ↓
-        元数据信息 → 字段映射 → 动态字段存储
+        Metadata Info → Field Mapping → Dynamic Field Storage
         
-        参数:
-            chunk: 文本块内容（原始文本，未经过上下文增强）
-            metadata: 元数据（包含文档ID、块ID、原始内容等信息）
+        Parameters:
+            chunk: Content of the text chunk (original text, not contextually enhanced).
+            metadata: Metadata (including document ID, chunk ID, original content, etc.).
         
-        存储内容：
-        1. 密集向量：文本块的语义向量表示
-        2. 稀疏向量（可选）：文本块的关键词向量表示
-        3. 元数据：文档和块的标识信息
+        Stored content:
+        1. Dense vector: Semantic vector representation of the text chunk.
+        2. Sparse vector (optional): Keyword vector representation of the text chunk.
+        3. Metadata: Identification information for documents and chunks.
         """
-        # 生成文本块的密集向量表示
+        # Generate dense vector representation for the text chunk
         dense_vec = self.embedding_function([chunk])[0]
         
-        # 构建要插入的数据
+        # Build data to be inserted
         data = {
             "dense_vector": dense_vec,
-            **metadata  # 展开元数据字段
+            **metadata  # Expand metadata fields
         }
         
-        # 如果启用稀疏向量，生成并添加稀疏向量
+        # If sparse vectors are enabled, generate and add sparse vectors
         if self.use_sparse is True:
             sparse_vec = self.sparse_embedding_function([chunk])[0]
             data["sparse_vector"] = sparse_vec
             
-        # 插入数据到Milvus集合
+        # Insert data into Milvus collection
         self.client.insert(
             collection_name=self.collection_name,
             data=[data]
@@ -389,102 +389,102 @@ class MilvusContextualRetriever:
 
     def insert_contextualized_data(self, doc_content, chunk_content, metadata):
         """
-        插入上下文化的数据
+        Inserts contextualized data
         
-        🧠 上下文增强核心流程:
-        这是实现上下文检索的关键方法，解决传统RAG的语义隔离问题
+        🧠 Core Process of Context Enhancement:
+        This is the key method for implementing contextual retrieval, solving the semantic isolation problem of traditional RAG.
         
-                 🔄 上下文化处理流程:
-         1. 文档上下文准备
-         2. LLM提示词构建
-         3. OpenAI GPT API调用（上下文增强）
-         4. 增强文本向量化
-         5. 向量数据存储
+                 🔄 Contextualization Processing Flow:
+         1. Document context preparation.
+         2. LLM prompt construction.
+         3. OpenAI GPT API call (context enhancement).
+         4. Enhanced text vectorization.
+         5. Vector data storage.
         
-                 📊 数据增强流程:
-         原始文档 ──┐
-                   ├─→ LLM提示词 → OpenAI GPT API → 上下文增强文本
-         文本块 ───┘                                  ↓
-                                             Embedding → 增强向量 → Milvus
+                 📊 Data Enhancement Flow:
+         Original Document ──┐
+                           ├─→ LLM Prompt → OpenAI GPT API → Contextually Enhanced Text
+         Text Chunk ───┘                                  ↓
+                                             Embedding → Enhanced Vector → Milvus
         
-        🎯 核心创新点:
-        这是上下文检索的核心功能：
-        1. 使用整个文档内容作为上下文
-        2. 通过LLM（OpenAI GPT）丰富单个文本块的语义信息
-        3. 使用增强后的文本生成向量并存储
+        🎯 Core Innovation:
+        This is the core function of contextual retrieval:
+        1. Uses the entire document content as context.
+        2. Enriches the semantic information of a single text chunk through LLM (OpenAI GPT).
+        3. Generates and stores vectors using the enhanced text.
         
-        ✨ 上下文化的优势：
-        - 解决文本块孤立的问题
-        - 保留跨块的语义连贯性
-        - 提高检索的准确性，特别是对于需要上下文理解的查询
-        - 减少语义歧义和误解
+        ✨ Advantages of Contextualization:
+        - Solves the problem of isolated text chunks.
+        - Preserves semantic coherence across chunks.
+        - Improves retrieval accuracy, especially for queries requiring contextual understanding.
+        - Reduces semantic ambiguity and misunderstanding.
         
-        参数:
-            doc_content: 整个文档内容（作为上下文背景）
-            chunk_content: 当前文本块内容（需要被增强的部分）
-            metadata: 元数据
+        Parameters:
+            doc_content: Entire document content (as contextual background).
+            chunk_content: Current text chunk content (the part to be enhanced).
+            metadata: Metadata.
         """
-        # 构建LLM提示词，要求为文本块添加文档上下文
+        # Construct LLM prompt, asking to enrich the text chunk with document context
         prompt = f"""
-        <文档>
+        <document>
         {doc_content}
-        </文档>
-        <块>
+        </document>
+        <chunk>
         {chunk_content}
-        </块>
+        </chunk>
         
-        我需要你对上述<块>进行丰富，使用<文档>中的内容提供背景和上下文信息。
-        你的回答应该包含<块>的完整内容，并确保语义连贯。只返回丰富后的文本内容，不要添加任何说明或解释。
+        I need you to enrich the above <chunk> using the content from <document> to provide background and contextual information.
+        Your answer should include the complete content of the <chunk> and ensure semantic coherence. Only return the enriched text content, do not add any explanations or interpretations.
         
-        目标：
-        1. 保持原始块的核心信息不变
-        2. 添加必要的背景上下文，使块的含义更加清晰
-        3. 确保增强后的文本在语义上是连贯和完整的
+        Goals:
+        1. Keep the core information of the original chunk unchanged.
+        2. Add necessary background context to make the meaning of the chunk clearer.
+        3. Ensure the enriched text is semantically coherent and complete.
         """
         
-        # === OpenAI GPT API调用（新版本） ===
-        # 调用OpenAI GPT API生成上下文化的文本块
+        # === OpenAI GPT API call (new version) ===
+        # Call OpenAI GPT API to generate contextualized text chunks
         response = self.llm_client.chat.completions.create(
-            model="gpt-3.5-turbo",  # 使用GPT-3.5-turbo，经济高效
-            # model="gpt-4",        # 可选择GPT-4获得更好效果
-            max_tokens=1000,        # 限制输出长度
-            temperature=0,          # 确保输出的一致性和可重复性
+            model="gpt-3.5-turbo",  # Use GPT-3.5-turbo, cost-effective
+            # model="gpt-4",        # Can choose GPT-4 for better results
+            max_tokens=1000,        # Limit output length
+            temperature=0,          # Ensure consistency and reproducibility of output
             messages=[
                 {"role": "user", "content": prompt}
             ]
         )
         
-        # 提取OpenAI生成的上下文化文本
+        # Extract OpenAI generated contextualized text
         contextualized_chunk = response.choices[0].message.content.strip()
         
-        # === Claude API调用（原版本，已注释） ===
-        # # 调用Claude API生成上下文化的文本块
+        # === Claude API call (original version, commented out) ===
+        # # Call Claude API to generate contextualized text chunks
         # message = self.anthropic_client.messages.create( 
-        #     model="claude-3-haiku-20240307",  # 使用快速、经济的Haiku模型
-        #     max_tokens=1000,  # 限制输出长度
-        #     temperature=0,    # 确保输出的一致性和可重复性
+        #     model="claude-3-haiku-20240307",  # Use fast, economical Haiku model
+        #     max_tokens=1000,  # Limit output length
+        #     temperature=0,    # Ensure consistency and reproducibility of output
         #     messages=[
         #         {"role": "user", "content": prompt}
         #     ]
         # )
         # 
-        # # 提取LLM生成的上下文化文本
+        # # Extract LLM generated contextualized text
         # contextualized_chunk = message.content[0].text.strip()
         
-        # 使用上下文化后的内容生成嵌入向量并插入
+        # Use contextualized content to generate embedding vectors and insert
         dense_vec = self.embedding_function([contextualized_chunk])[0]
         data = {
             "dense_vector": dense_vec,
-            "contextualized_content": contextualized_chunk,  # 保存增强后的内容
+            "contextualized_content": contextualized_chunk,  # Save enhanced content
             **metadata
         }
         
-        # 如果启用稀疏向量，也使用上下文化内容生成稀疏向量
+        # If sparse vectors are enabled, also generate sparse vectors using contextualized content
         if self.use_sparse is True:
             sparse_vec = self.sparse_embedding_function([contextualized_chunk])[0]
             data["sparse_vector"] = sparse_vec
             
-        # 插入上下文化数据到Milvus
+        # Insert contextualized data into Milvus
         self.client.insert(
             collection_name=self.collection_name,
             data=[data]
@@ -492,72 +492,72 @@ class MilvusContextualRetriever:
 
     def search(self, query, k=5):
         """
-        搜索相关内容
+        Searches for relevant content
         
-        🔍 智能检索执行流程:
-        这是检索系统的核心入口，支持多种检索策略的统一调用
+        🔍 Intelligent Retrieval Execution Flow:
+        This is the core entry point of the retrieval system, supporting unified calls for multiple retrieval strategies.
         
-        🎯 检索策略选择:
+        🎯 Retrieval Strategy Selection:
         ┌─────────────────┬──────────────────┬──────────────────┐
-        │    检索阶段     │      处理方式    │      输出结果    │
+        │    Retrieval Stage │      Processing Method   │      Output Result     │
         ├─────────────────┼──────────────────┼──────────────────┤
-        │ 1. 查询向量化   │ Embedding模型    │ 查询向量表示     │
-        │ 2. 相似度搜索   │ Milvus向量搜索   │ Top-K候选结果    │
-        │ 3. 结果重排序   │ Cohere Rerank    │ 优化排序结果     │
+        │ 1. Query Vectorization │ Embedding Model  │ Query Vector Representation │
+        │ 2. Similarity Search   │ Milvus Vector Search │ Top-K Candidate Results │
+        │ 3. Result Reranking    │ Cohere Rerank    │ Optimized Ranked Results │
         └─────────────────┴──────────────────┴──────────────────┘
         
-        🔄 详细搜索流程：
-        1. 查询预处理与向量化
-        2. Milvus向量相似度搜索
-        3. 初步结果获取与过滤
-        4. 可选重排序优化
-        5. 结果后处理与返回
+        🔄 Detailed Search Flow:
+        1. Query preprocessing and vectorization.
+        2. Milvus vector similarity search.
+        3. Initial result acquisition and filtering.
+        4. Optional reranking optimization.
+        5. Result post-processing and return.
         
-        📊 搜索优化策略:
-        查询文本 → 向量化 → 相似度搜索 → 候选结果
+        📊 Search Optimization Strategy:
+        Query Text → Vectorization → Similarity Search → Candidate Results
                                             ↓
-        最终结果 ← 重排序优化 ← 语义匹配 ← 结果集
+        Final Results ← Reranking Optimization ← Semantic Matching ← Result Set
         
-        参数:
-            query: 查询文本
-            k: 返回结果数量
+        Parameters:
+            query: Query text.
+            k: Number of results to return.
         
-        返回:
-            搜索结果列表，按相关性排序
+        Returns:
+            List of search results, sorted by relevance.
         """
-        # 设置搜索参数
+        # Set search parameters
         search_params = {"metric_type": "IP", "params": {"nprobe": 10}}
         
-        # 生成查询的嵌入向量
+        # Generate embedding vector for the query
         dense_vec = self.embedding_function([query])[0]
         
-        # 执行标准密集向量搜索
-        # 这里使用内积（IP）作为相似度度量
+        # Perform standard dense vector search
+        # Inner Product (IP) is used here as the similarity metric
         res = self.client.search(
             collection_name=self.collection_name,
             data=[dense_vec],
             limit=k,
-            output_fields=["content", "contextualized_content"],  # 返回原始内容和上下文化内容
+            output_fields=["content", "contextualized_content"],  # Return original and contextualized content
             search_params=search_params,
         )
         
-        # 使用重排序器进一步优化结果
-        # 重排序的作用：基于查询和文档的深层语义关系重新排序结果
+        # Use reranker to further optimize results
+        # Role of reranking: Reorder results based on deep semantic relationship between query and documents
         if self.use_reranker:
-            # 提取文档内容用于重排序
+            # Extract document content for reranking
             docs = []
             for hit in res[0]:
-                # 优先使用上下文化内容（如果存在），否则使用原始内容
+                # Prioritize contextualized content (if available), otherwise use original content
                 content = hit["entity"].get("contextualized_content", hit["entity"].get("content", ""))
                 docs.append(content)
             
-            # 应用重排序：计算查询与每个文档的深层相关性分数
+            # Apply reranking: Calculate deep relevance score between query and each document
             rerank_results = self.rerank_function(query, docs)
             
-            # 根据重排序结果重新排序原始结果
+            # Reorder original results based on reranking results
             reranked_results = []
             for result in rerank_results:
-                idx = result.index  # 使用 .index 属性获取原始索引
+                idx = result.index  # Use .index attribute to get original index
                 reranked_results.append(res[0][idx])
             
             res = [reranked_results]
@@ -567,69 +567,69 @@ class MilvusContextualRetriever:
 
 def evaluate_retrieval(eval_data, retrieval_function, db, k=5):
     """
-    评估检索性能 - 深度评估系统的核心函数
+    Evaluates retrieval performance - core function of the deep evaluation system.
     
-    📊 深度评估系统设计:
-    这是一个全面的检索性能评估框架，采用多维度评估策略
+    📊 Deep Evaluation System Design:
+    This is a comprehensive retrieval performance evaluation framework, adopting a multi-dimensional evaluation strategy.
     
-    🔬 深度评估（Deep Evaluation）的概念：
-    1. 不仅仅评估检索的数量，更关注检索的质量
-    2. 使用多维度指标评估检索系统性能
-    3. 通过黄金标准数据集进行客观评估
-    4. 支持不同检索策略的公平对比
+    🔬 Concept of Deep Evaluation:
+    1. Not just evaluating the quantity of retrieval, but more importantly, the quality.
+    2. Uses multi-dimensional metrics to evaluate retrieval system performance.
+    3. Objectively evaluates using a golden standard dataset.
+    4. Supports fair comparison of different retrieval strategies.
     
-    🎯 评估流程设计:
+    🎯 Evaluation Process Design:
     ┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
-    │   评估阶段      │    输入数据     │    处理方式     │    输出结果     │
+    │   Evaluation Stage │    Input Data   │    Processing Method │    Output Result    │
     ├─────────────────┼─────────────────┼─────────────────┼─────────────────┤
-    │ 1. 数据准备     │ 评估查询集      │ 格式验证       │ 标准化数据     │
-    │ 2. 检索执行     │ 单个查询       │ 检索函数调用    │ 候选结果列表   │
-    │ 3. 结果匹配     │ 检索结果       │ 精确文本匹配    │ 匹配成功计数   │
-    │ 4. 性能计算     │ 匹配统计       │ 指标计算       │ 评估分数      │
+    │ 1. Data Preparation │ Evaluation Query Set │ Format Validation │ Standardized Data   │
+    │ 2. Retrieval Execution │ Single Query    │ Retrieval Function Call │ Candidate Result List │
+    │ 3. Result Matching   │ Retrieval Results │ Exact Text Matching │ Match Success Count │
+    │ 4. Performance Calculation │ Match Statistics │ Metric Calculation │ Evaluation Score    │
     └─────────────────┴─────────────────┴─────────────────┴─────────────────┘
     
-    📈 评估指标说明：
-    - Pass@K: 在前K个检索结果中包含正确答案的查询比例
-      * 计算公式: (包含正确答案的查询数 / 总查询数) × 100%
-      * 反映系统的整体检索成功率
-    - 平均分数: 每个查询检索到的正确文档块占总正确块的比例
-      * 计算公式: Σ(查询检索到的正确块数 / 查询的总正确块数) / 总查询数
-      * 反映系统的细粒度检索精度
-    - 召回率: 评估系统找到相关文档的能力
-      * 衡量系统在不遗漏重要信息方面的表现
+    📈 Evaluation Metric Description:
+    - Pass@K: Proportion of queries where the correct answer is included in the top K retrieval results.
+      * Calculation formula: (Number of queries with correct answers / Total number of queries) × 100%
+      * Reflects the overall retrieval success rate of the system.
+    - Average Score: Proportion of correct document chunks retrieved for each query out of the total correct chunks.
+      * Calculation formula: Σ(Number of correct chunks retrieved for query / Total correct chunks for query) / Total number of queries
+      * Reflects the fine-grained retrieval accuracy of the system.
+    - Recall: Evaluates the system's ability to find relevant documents.
+      * Measures the system's performance in not missing important information.
     
-    🔄 评估执行流程:
-    评估数据 → 查询解析 → 黄金标准提取 → 检索执行 → 结果对比 → 指标计算
+    🔄 Evaluation Execution Flow:
+    Evaluation Data → Query Parsing → Golden Standard Extraction → Retrieval Execution → Result Comparison → Metric Calculation
         ↓
-    性能报告 ← 统计分析 ← 分数汇总 ← 匹配验证 ← 精确匹配
+    Performance Report ← Statistical Analysis ← Score Aggregation ← Match Verification ← Exact Match
     
-    参数:
-        eval_data: 评估数据集
-            - 包含查询和对应的黄金标准答案
-            - 每个查询都有明确的正确文档块标识
-        retrieval_function: 检索函数
-            - 接受查询和数据库，返回检索结果
-        db: 数据库实例
-        k: 评估的top-k结果数
+    Parameters:
+        eval_data: Evaluation dataset
+            - Contains queries and corresponding golden standard answers.
+            - Each query has clear identifiers for correct document chunks.
+        retrieval_function: Retrieval function
+            - Accepts query and database, returns retrieval results.
+        db: Database instance.
+        k: Number of top-k results for evaluation.
         
-    返回:
-        评估结果字典，包含Pass@K分数、平均分数等指标
+    Returns:
+        Evaluation result dictionary, including Pass@K score, average score, etc.
     """
-    total_score = 0      # 累计分数
-    total_queries = 0    # 总查询数
+    total_score = 0      # Accumulated score
+    total_queries = 0    # Total number of queries
     
-    # 遍历每个评估查询
+    # Iterate through each evaluation query
     for item in tqdm(eval_data, desc="Evaluating retrieval"):
         total_queries += 1
         query = item["query"]
         
-        # 获取当前查询的黄金标准内容（正确答案）
+        # Get golden standard content (correct answer) for the current query
         golden_contents = []
         for ref in item["references"]:
-            doc_uuid = ref["doc_uuid"]      # 文档的唯一标识
-            chunk_index = ref["chunk_index"] # 文档块的索引
+            doc_uuid = ref["doc_uuid"]      # Unique identifier of the document
+            chunk_index = ref["chunk_index"] # Index of the document chunk
             
-            # 在数据集中查找对应的原始文档
+            # Find the corresponding original document in the dataset
             golden_doc = next(
                 (
                     doc
@@ -639,10 +639,10 @@ def evaluate_retrieval(eval_data, retrieval_function, db, k=5):
                 None,
             )
             if not golden_doc:
-                print(f"警告：未找到UUID为{doc_uuid}的黄金文档")
+                print(f"Warning: Golden document with UUID {doc_uuid} not found")
                 continue
                 
-            # 在文档中查找对应的文档块
+            # Find the corresponding document chunk in the document
             golden_chunk = next(
                 (
                     chunk
@@ -652,64 +652,64 @@ def evaluate_retrieval(eval_data, retrieval_function, db, k=5):
                 None,
             )
             if not golden_chunk:
-                print(f"警告：在文档{doc_uuid}中未找到索引为{chunk_index}的黄金块")
+                print(f"Warning: Golden chunk with index {chunk_index} not found in document {doc_uuid}")
                 continue
                 
             golden_contents.append(golden_chunk["content"].strip())
             
         if not golden_contents:
-            print(f"警告：未找到查询的黄金内容：{query}")
+            print(f"Warning: Golden content not found for query: {query}")
             continue
             
-        # 使用检索函数获取检索结果
+        # Use retrieval function to get retrieval results
         retrieved_docs = retrieval_function(query, db, k=k)
         
-        # 计算有多少黄金块在top-k检索文档中被找到
-        # 这是评估检索准确性的核心逻辑
+        # Calculate how many golden chunks are found in the top-k retrieved documents
+        # This is the core logic for evaluating retrieval accuracy
         chunks_found = 0
         for golden_content in golden_contents:
-            for doc in retrieved_docs[0][:k]:  # 只检查前k个结果
+            for doc in retrieved_docs[0][:k]:  # Only check the first k results
                 content_field = "content"
                 if "contextualized_content" in doc["entity"]:
-                    # 评估时使用原始内容进行比较，确保公平性
+                    # Use original content for comparison during evaluation to ensure fairness
                     content_field = "content"
                 retrieved_content = doc["entity"][content_field].strip()
                 
-                # 精确匹配检查
+                # Exact match check
                 if retrieved_content == golden_content:
                     chunks_found += 1
-                    break  # 找到匹配就跳出内层循环
+                    break  # Break inner loop if a match is found
                     
-        # 计算当前查询的分数：找到的正确块数 / 总的正确块数
+        # Calculate score for the current query: (number of correct chunks found) / (total number of correct chunks)
         query_score = chunks_found / len(golden_contents)
         total_score += query_score
         
-    # 计算整体评估指标
+    # Calculate overall evaluation metrics
     average_score = total_score / total_queries
-    pass_at_n = average_score * 100  # 转换为百分比
+    pass_at_n = average_score * 100  # Convert to percentage
     
     return {
-        "pass_at_n": pass_at_n,           # Pass@K分数（百分比）
-        "average_score": average_score,    # 平均分数（0-1之间）
-        "total_queries": total_queries,    # 总查询数
+        "pass_at_n": pass_at_n,           # Pass@K score (percentage)
+        "average_score": average_score,    # Average score (between 0-1)
+        "total_queries": total_queries,    # Total number of queries
     }
 
 
 def retrieve_base(query: str, db, k: int = 20) -> List[Dict[str, Any]]:
     """
-    基础检索函数
+    Basic retrieval function
     
-    这是一个简单的包装函数，调用数据库的搜索方法
-    用于评估系统中的统一接口
+    This is a simple wrapper function that calls the database's search method.
+    Used as a unified interface in the evaluation system.
     """
     return db.search(query, k=k)
 
 
 def load_jsonl(file_path: str) -> List[Dict[str, Any]]:
     """
-    加载JSONL文件并返回字典列表
+    Loads a JSONL file and returns a list of dictionaries.
     
-    JSONL格式：每行一个JSON对象，适合存储结构化的评估数据
+    JSONL format: One JSON object per line, suitable for storing structured evaluation data.
     """
     with open(file_path, "r") as file:
         return [json.loads(line) for line in file]
@@ -717,154 +717,154 @@ def load_jsonl(file_path: str) -> List[Dict[str, Any]]:
 
 def evaluate_db(db, original_jsonl_path: str, k):
     """
-    评估数据库的检索性能
+    Evaluates the retrieval performance of the database.
     
-    这是评估流程的主入口函数：
-    1. 加载评估数据集
-    2. 运行检索评估
-    3. 输出性能指标
+    This is the main entry function for the evaluation process:
+    1. Loads the evaluation dataset.
+    2. Runs retrieval evaluation.
+    3. Outputs performance metrics.
     
-    参数:
-        db: 要评估的数据库实例
-        original_jsonl_path: 评估数据集文件路径
-        k: 评估的top-k参数
+    Parameters:
+        db: Database instance to be evaluated.
+        original_jsonl_path: File path of the evaluation dataset.
+        k: Top-k parameter for evaluation.
     
-    返回:
-        评估结果字典
+    Returns:
+        Evaluation results dictionary.
     """
-    # 加载原始JSONL数据作为查询和真实标签
+    # Load original JSONL data as queries and ground truth labels
     original_data = load_jsonl(original_jsonl_path)
     
-    # 评估检索性能
+    # Evaluate retrieval performance
     results = evaluate_retrieval(original_data, retrieve_base, db, k)
     
-    # 输出评估结果
+    # Output evaluation results
     print(f"Pass@{k}: {results['pass_at_n']:.2f}%")
-    print(f"总分: {results['average_score']}")
-    print(f"总查询数: {results['total_queries']}")
+    print(f"Average Score: {results['average_score']}")
+    print(f"Total Queries: {results['total_queries']}")
     
     return results
 
 
 def download_data():
     """
-    下载示例数据
+    Downloads sample data.
     
-    从Anthropic的GitHub仓库下载演示数据：
-    1. codebase_chunks.json: 代码库的文档块数据
-    2. evaluation_set.jsonl: 评估查询和标准答案
+    Downloads demonstration data from Anthropic's GitHub repository:
+    1. codebase_chunks.json: Document chunk data for the codebase.
+    2. evaluation_set.jsonl: Evaluation queries and golden standard answers.
     """
     import urllib.request
     
-    # 检查文件是否已存在，避免重复下载
+    # Check if file already exists to avoid re-downloading
     if not os.path.exists("codebase_chunks.json"):
-        print("下载codebase_chunks.json...")
+        print("Downloading codebase_chunks.json...")
         urllib.request.urlretrieve(
             "https://raw.githubusercontent.com/anthropics/anthropic-cookbook/refs/heads/main/skills/contextual-embeddings/data/codebase_chunks.json",
             "codebase_chunks.json"
         )
     
     if not os.path.exists("evaluation_set.jsonl"):
-        print("下载evaluation_set.jsonl...")
+        print("Downloading evaluation_set.jsonl...")
         urllib.request.urlretrieve(
             "https://raw.githubusercontent.com/anthropics/anthropic-cookbook/refs/heads/main/skills/contextual-embeddings/data/evaluation_set.jsonl",
             "evaluation_set.jsonl"
         )
     
-    print("数据下载完成！")
+    print("Data download complete!")
 
 
 def main():
     """
-    主函数 - 运行所有实验
+    Main function - runs all experiments.
     
-    🧪 实验设计框架:
-    这是一个完整的对比实验系统，采用控制变量法验证不同检索策略的效果
+    🧪 Experiment Design Framework:
+    This is a complete comparative experiment system, using controlled variables to verify the effectiveness of different retrieval strategies.
     
-    🎯 实验目标:
-    - 验证上下文检索相对于标准检索的性能提升
-    - 量化重排序技术的额外收益
-    - 建立检索技术的性能基准
-    - 为实际应用提供技术选择指导
+    🎯 Experiment Goals:
+    - Verify the performance improvement of contextual retrieval relative to standard retrieval.
+    - Quantify the additional benefits of reranking technology.
+    - Establish performance benchmarks for retrieval technologies.
+    - Provide technical selection guidance for practical applications.
     
-    📊 实验设计矩阵:
+    📊 Experiment Design Matrix:
     ┌─────────────────┬────────────┬────────────┬────────────┬──────────────┐
-    │     实验组      │ 文本预处理 │ 向量检索   │ 结果重排序 │  预期性能    │
+    │     Experiment Group     │ Text Preprocessing │ Vector Retrieval │ Result Reranking │  Expected Performance │
     ├─────────────────┼────────────┼────────────┼────────────┼──────────────┤
-    │ 标准检索(基线)  │ 原始文本块 │ 密集向量   │ 无        │ 基准性能     │
-    │ 上下文检索      │ LLM增强块  │ 密集向量   │ 无        │ 中等提升     │
-    │ 重排序检索      │ LLM增强块  │ 密集向量   │ Cohere    │ 最佳性能     │
+    │ Standard Retrieval (Baseline) │ Original Text Chunks │ Dense Vector │ None        │ Baseline Performance │
+    │ Contextual Retrieval      │ LLM Enhanced Chunks │ Dense Vector │ None        │ Moderate Improvement │
+    │ Reranking Retrieval       │ LLM Enhanced Chunks │ Dense Vector │ Cohere      │ Best Performance     │
     └─────────────────┴────────────┴────────────┴────────────┴──────────────┘
     
-    🔬 实验控制变量:
-    - 相同的数据集（codebase_chunks.json）
-    - 相同的评估查询（evaluation_set.jsonl）
-    - 相同的嵌入模型（BGE-large-zh）
-    - 相同的评估指标（Pass@5）
-    - 相同的向量数据库配置
+    🔬 Experiment Control Variables:
+    - Same dataset (codebase_chunks.json).
+    - Same evaluation queries (evaluation_set.jsonl).
+    - Same embedding model (BGE-large-zh).
+    - Same evaluation metric (Pass@5).
+    - Same vector database configuration.
     
-    🚀 实验执行流程:
-    1️⃣ 环境准备阶段:
-       - API密钥配置验证
-       - 模型初始化和测试
-       - 数据下载和验证
+    🚀 Experiment Execution Flow:
+    1️⃣ Environment Preparation Phase:
+       - API key configuration verification.
+       - Model initialization and testing.
+       - Data download and verification.
     
-    2️⃣ 数据预处理阶段:
-       - 文档数据加载和解析
-       - 评估查询集构建
-       - 数据格式标准化
+    2️⃣ Data Preprocessing Phase:
+       - Document data loading and parsing.
+       - Evaluation query set construction.
+       - Data format standardization.
     
-    3️⃣ 实验执行阶段:
-       - 标准检索实验（基线）
-       - 上下文检索实验（核心创新）
-       - 重排序检索实验（性能优化）
+    3️⃣ Experiment Execution Phase:
+       - Standard retrieval experiment (baseline).
+       - Contextual retrieval experiment (core innovation).
+       - Reranking retrieval experiment (performance optimization).
     
-    4️⃣ 结果分析阶段:
-       - 性能指标统计
-       - 改进幅度计算
-       - 实验结论总结
+    4️⃣ Result Analysis Phase:
+       - Performance metric statistics.
+       - Improvement margin calculation.
+       - Experiment conclusion summary.
     
-    🎯 核心实验假设:
-    这个函数运行三个对比实验，展示不同检索策略的性能差异：
+    🎯 Core Experiment Hypothesis:
+    This function runs three comparative experiments, demonstrating the performance differences of various retrieval strategies:
     
-    1. 标准检索：基线方法，直接使用原始文本块
-    2. 上下文检索：使用LLM增强文本块的上下文信息
-    3. 带重排序的上下文检索：在上下文检索基础上加入重排序优化
+    1. Standard Retrieval: Baseline method, directly uses original text chunks.
+    2. Contextual Retrieval: Uses LLM to enhance the contextual information of text chunks.
+    3. Contextual Retrieval with Reranking: Adds reranking optimization on top of contextual retrieval.
     
-    ⚖️ 实验公平性保证:
-    每个实验都使用相同的评估数据集，确保比较的公平性
+    ⚖️ Experiment Fairness Guarantee:
+    Each experiment uses the same evaluation dataset to ensure fairness of comparison.
     """
-    # 替换这些为你的实际API密钥
-    cohere_api_key = os.getenv("COHERE_API_KEY")      # Cohere重排序API密钥
-    # anthropic_api_key = os.getenv("CLAUDE_API_KEY")   # Claude API密钥（已注释）
-    openai_api_key = os.getenv("OPENAI_API_KEY")      # OpenAI API密钥（新增）
+    # Replace these with your actual API keys
+    cohere_api_key = os.getenv("COHERE_API_KEY")      # Cohere Reranking API Key
+    # anthropic_api_key = os.getenv("CLAUDE_API_KEY")   # Claude API Key (commented out)
+    openai_api_key = os.getenv("OPENAI_API_KEY")      # OpenAI API Key (added)
     
-    # 下载示例数据
+    # Download sample data
     download_data()
     
-    # 加载数据集
+    # Load dataset
     global dataset
     with open("codebase_chunks.json", "r") as f:
         dataset = json.load(f)
     
-    # 只使用前5个文档进行测试（减少API调用成本和运行时间）
+    # Use only the first 5 documents for testing (to reduce API call cost and runtime)
     dataset = dataset[:5]
     
-    # 初始化各种模型和函数
-    dense_ef = SentenceTransformerEmbeddingFunction(model_name='BAAI/bge-large-zh')  # 使用中文优化的BGE模型
-    cohere_rf = CohereRerankFunction(api_key=cohere_api_key)  # Cohere重排序函数
+    # Initialize various models and functions
+    dense_ef = SentenceTransformerEmbeddingFunction(model_name='BAAI/bge-large-zh')  # Use Chinese-optimized BGE model
+    cohere_rf = CohereRerankFunction(api_key=cohere_api_key)  # Cohere Reranking function
     
-    # === OpenAI客户端初始化（新版本） ===
-    openai_client = openai.OpenAI(api_key=openai_api_key)  # OpenAI客户端
+    # === OpenAI client initialization (new version) ===
+    openai_client = openai.OpenAI(api_key=openai_api_key)  # OpenAI client
     
-    # === Claude客户端初始化（原版本，已注释） ===
-    # anthropic_client = anthropic.Anthropic(api_key=anthropic_api_key)  # Claude客户端
+    # === Claude client initialization (original version, commented out) ===
+    # anthropic_client = anthropic.Anthropic(api_key=anthropic_api_key)  # Claude client
     
     # ===============================
-    # 实验一：标准检索（基线方法）
+    # Experiment 1: Standard Retrieval (Baseline Method)
     # ===============================
-    print("\n===== 实验一：标准检索 =====")
-    print("这是基线实验，使用原始文本块进行检索，没有任何增强")
+    print("\n===== Experiment 1: Standard Retrieval =====")
+    print("This is the baseline experiment, using original text chunks for retrieval, without any enhancement.")
     
     standard_retriever = MilvusContextualRetriever(
         uri="standard.db", 
@@ -872,9 +872,9 @@ def main():
         dense_embedding_function=dense_ef
     )
     
-    # 构建集合并插入标准数据
+    # Build collection and insert standard data
     standard_retriever.build_collection()
-    for doc in tqdm(dataset, desc="插入标准检索数据"):
+    for doc in tqdm(dataset, desc="Inserting standard retrieval data"):
         doc_content = doc["content"]
         for chunk in doc["chunks"]:
             metadata = {
@@ -887,45 +887,45 @@ def main():
             chunk_content = chunk["content"]
             standard_retriever.insert_data(chunk_content, metadata)
     
-    # 创建简化的评估数据（用于演示）
-    # 在实际应用中，应该使用专门设计的评估数据集
+    # Create simplified evaluation data (for demonstration)
+    # In actual applications, a specially designed evaluation dataset should be used
     eval_data = []
-    for doc in dataset[:2]:  # 只使用前2个文档进行评估
-        for chunk in doc["chunks"][:2]:  # 每个文档只取前2个块
+    for doc in dataset[:2]:  # Use only the first 2 documents for evaluation
+        for chunk in doc["chunks"][:2]:  # Take only the first 2 chunks from each document
             eval_data.append({
-                "query": chunk["content"][:50],  # 使用块内容的前50个字符作为查询
+                "query": chunk["content"][:50],  # Use the first 50 characters of chunk content as query
                 "references": [{
                     "doc_uuid": doc["original_uuid"],
                     "chunk_index": chunk["original_index"]
                 }]
             })
     
-    # 保存评估数据
+    # Save evaluation data
     with open("evaluation_set.jsonl", "w") as f:
         for item in eval_data:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
     
-    # 评估标准检索性能
+    # Evaluate standard retrieval performance
     standard_results = evaluate_db(standard_retriever, "evaluation_set.jsonl", 5)
     
     # ===============================
-    # 实验二：上下文检索
+    # Experiment 2: Contextual Retrieval
     # ===============================
-    print("\n===== 实验二：上下文检索 =====")
-    print("使用OpenAI GPT为每个文本块添加文档上下文，解决语义隔离问题")
+    print("\n===== Experiment 2: Contextual Retrieval =====")
+    print("Uses OpenAI GPT to add document context to each text chunk, solving the semantic isolation problem.")
     
     contextual_retriever = MilvusContextualRetriever(
         uri="contextual.db",
         collection_name="contextual",
         dense_embedding_function=dense_ef,
-        use_contextualize_embedding=True,  # 启用上下文化
-        llm_client=openai_client,  # 使用OpenAI客户端
-        # anthropic_client=anthropic_client,  # 原Claude客户端（已注释）
+        use_contextualize_embedding=True,  # Enable contextualization
+        llm_client=openai_client,  # Use OpenAI client
+        # anthropic_client=anthropic_client,  # Original Claude client (commented out)
     )
     
-    # 构建集合并插入上下文化数据
+    # Build collection and insert contextualized data
     contextual_retriever.build_collection()
-    for doc in tqdm(dataset, desc="插入上下文检索数据"):
+    for doc in tqdm(dataset, desc="Inserting contextual retrieval data"):
         doc_content = doc["content"]
         for chunk in doc["chunks"]:
             metadata = {
@@ -936,44 +936,44 @@ def main():
                 "content": chunk["content"],
             }
             chunk_content = chunk["content"]
-            # 使用上下文化插入方法
+            # Use contextualized insertion method
             contextual_retriever.insert_contextualized_data(
                 doc_content, chunk_content, metadata
             )
     
-    # 评估上下文检索性能
+    # Evaluate contextual retrieval performance
     contextual_results = evaluate_db(contextual_retriever, "evaluation_set.jsonl", 5)
     
     # ===============================
-    # 实验三：带重排序的上下文检索
+    # Experiment 3: Contextual Retrieval with Reranking
     # ===============================
-    print("\n===== 实验三：带重排序的上下文检索 =====")
-    print("在上下文检索基础上，使用Cohere重排序模型进一步优化结果")
+    print("\n===== Experiment 3: Contextual Retrieval with Reranking =====")
+    print("Further optimizes results by using the Cohere reranking model on top of contextual retrieval.")
     
-    # 启用重排序功能
+    # Enable reranking
     contextual_retriever.use_reranker = True
     contextual_retriever.rerank_function = cohere_rf
     
-    # 评估带重排序的检索性能
+    # Evaluate retrieval performance with reranking
     reranker_results = evaluate_db(contextual_retriever, "evaluation_set.jsonl", 5)
     
     # ===============================
-    # 结果对比分析
+    # Result Comparison and Analysis
     # ===============================
-    print("\n===== 所有实验结果比较 =====")
-    print("性能提升分析：")
-    print(f"标准检索 Pass@5: {standard_results['pass_at_n']:.2f}%")
-    print(f"上下文检索 Pass@5: {contextual_results['pass_at_n']:.2f}%")
-    print(f"带重排序的上下文检索 Pass@5: {reranker_results['pass_at_n']:.2f}%")
+    print("\n===== Comparison of All Experiment Results =====")
+    print("Performance Improvement Analysis:")
+    print(f"Standard Retrieval Pass@5: {standard_results['pass_at_n']:.2f}%")
+    print(f"Contextual Retrieval Pass@5: {contextual_results['pass_at_n']:.2f}%")
+    print(f"Contextual Retrieval with Reranking Pass@5: {reranker_results['pass_at_n']:.2f}%")
     
-    # 计算改进幅度
+    # Calculate improvement margin
     context_improvement = contextual_results['pass_at_n'] - standard_results['pass_at_n']
     rerank_improvement = reranker_results['pass_at_n'] - standard_results['pass_at_n']
     
-    print(f"\n性能改进分析：")
-    print(f"上下文检索相比标准检索提升: {context_improvement:.2f}个百分点")
-    print(f"重排序进一步提升: {rerank_improvement:.2f}个百分点")
-    print(f"总体提升: {rerank_improvement:.2f}个百分点")
+    print(f"\nPerformance Improvement Analysis:")
+    print(f"Contextual retrieval improved by: {context_improvement:.2f} percentage points compared to standard retrieval.")
+    print(f"Reranking further improved by: {rerank_improvement:.2f} percentage points.")
+    print(f"Overall improvement: {rerank_improvement:.2f} percentage points.")
 
 
 if __name__ == "__main__":

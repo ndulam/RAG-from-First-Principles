@@ -5,49 +5,49 @@ from llama_index.core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from typing import List
 
-# 定义游戏信息结构
+# Define game information structure
 class GameInfo(BaseModel):
-    title: str = Field(description="游戏名称")
-    developer: str = Field(description="开发商")
-    release_date: str = Field(description="发行日期")
-    platforms: List[str] = Field(description="支持平台")
-    main_features: List[str] = Field(description="主要特点")
-    story_summary: str = Field(description="故事概要")
-    reception: str = Field(description="市场反响")
+    title: str = Field(description="Game Title")
+    developer: str = Field(description="Developer")
+    release_date: str = Field(description="Release Date")
+    platforms: List[str] = Field(description="Supported Platforms")
+    main_features: List[str] = Field(description="Main Features")
+    story_summary: str = Field(description="Story Summary")
+    reception: str = Field(description="Market Reception")
 
-# 载入数据
+# Load data
 documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/BlackMythWukong-Wiki.txt"], encoding="utf-8").load_data()
 index = VectorStoreIndex.from_documents(documents)
 
-# 1. 基础解析模式 - 使用COMPACT模式
-print("=== 基础解析模式 ===")
+# 1. Basic Parsing Mode - Using COMPACT mode
+print("=== Basic Parsing Mode ===")
 synthesizer = get_response_synthesizer(
     response_mode=ResponseMode.COMPACT,
-    verbose=True    # 显示详细信息
+    verbose=True    # Show detailed information
 )
 query_engine = index.as_query_engine(response_synthesizer=synthesizer)
-response = query_engine.query("请总结《black myth：Wukong》这款游戏的主要内容")
+response = query_engine.query("Please summarize the main content of 'Black Myth: Wukong'")
 print(response)
 
-# 2. 结构化解析模式 - 使用REFINE模式
-print("\n=== 结构化解析模式 ===")
+# 2. Structured Parsing Mode - Using REFINE mode
+print("\n=== Structured Parsing Mode ===")
 synthesizer = get_response_synthesizer(
     response_mode=ResponseMode.REFINE,
-    output_cls=GameInfo,  # 指定输出类
+    output_cls=GameInfo,  # Specify output class
     verbose=True
 )
 query_engine = index.as_query_engine(response_synthesizer=synthesizer)
-response = query_engine.query("请提取《black myth：Wukong》的关键信息")
-# 安全地处理响应
+response = query_engine.query("Please extract key information about 'Black Myth: Wukong'")
+# Safely handle response
 if hasattr(response, 'response'):
     print(response.response)
 else:
     print(response)
 
-# 3. 表格格式解析 - 使用TREE_SUMMARIZE模式
-print("\n=== 游戏特点表格解析 ===")
+# 3. Table Format Parsing - Using TREE_SUMMARIZE mode
+print("\n=== Game Features Table Parsing ===")
 table_prompt = PromptTemplate(
-    template="请将以下游戏特点以表格形式展示：\n{query_str}\n格式要求：\n| 类别 | 内容 |\n|------|------|\n"
+    template="Please display the following game features in a table format:\n{query_str}\nFormat requirements:\n| Category | Content |\n|------|------|\n"
 )
 synthesizer = get_response_synthesizer(
     response_mode=ResponseMode.TREE_SUMMARIZE,
@@ -55,28 +55,28 @@ synthesizer = get_response_synthesizer(
     verbose=True
 )
 query_engine = index.as_query_engine(response_synthesizer=synthesizer)
-response = query_engine.query("请用表格形式总结《black myth：Wukong》的主要特点")
+response = query_engine.query("Please summarize the main features of 'Black Myth: Wukong' in a table format")
 print(response)
 
-# 4. 分点解析模式 - 使用COMPACT_ACCUMULATE模式
-print("\n=== 游戏亮点分点解析 ===")
+# 4. Bullet Point Parsing Mode - Using COMPACT_ACCUMULATE mode
+print("\n=== Game Highlights Bullet Point Parsing ===")
 bullet_prompt = PromptTemplate(
-    template="请将以下游戏亮点以分点形式展示：\n{query_str}\n格式要求：\n1. \n2. \n3. "
+    template="Please display the following game highlights in bullet points:\n{query_str}\nFormat requirements:\n1. \n2. \n3. "
 )
 synthesizer = get_response_synthesizer(
     response_mode=ResponseMode.COMPACT_ACCUMULATE,
     text_qa_template=bullet_prompt,
     verbose=True,
-    use_async=True  # 启用异步处理
+    use_async=True  # Enable asynchronous processing
 )
 query_engine = index.as_query_engine(response_synthesizer=synthesizer)
-response = query_engine.query("请用分点形式总结《black myth：Wukong》的亮点")
+response = query_engine.query("Please summarize the highlights of 'Black Myth: Wukong' in bullet points")
 print(response)
 
-# 5. 故事线解析 - 使用SIMPLE_SUMMARIZE模式
-print("\n=== 游戏故事线解析 ===")
+# 5. Storyline Parsing - Using SIMPLE_SUMMARIZE mode
+print("\n=== Game Storyline Parsing ===")
 story_prompt = PromptTemplate(
-    template="请将以下游戏故事以时间线形式展示：\n{query_str}\n格式要求：\n- 时间点：事件\n"
+    template="Please display the following game story in a timeline format:\n{query_str}\nFormat requirements:\n- Time point: Event\n"
 )
 synthesizer = get_response_synthesizer(
     response_mode=ResponseMode.SIMPLE_SUMMARIZE,
@@ -84,5 +84,5 @@ synthesizer = get_response_synthesizer(
     verbose=True
 )
 query_engine = index.as_query_engine(response_synthesizer=synthesizer)
-response = query_engine.query("请用时间线形式总结《black myth：Wukong》的故事发展")
+response = query_engine.query("Please summarize the story development of 'Black Myth: Wukong' in a timeline format")
 print(response)

@@ -1,25 +1,25 @@
 from langchain_deepseek import ChatDeepSeek 
 from pydantic import BaseModel, Field
 
-# 定义工具模式
+# Define tool schema
 class get_weather(BaseModel):
-    """获取天气信息"""
-    location: str = Field(..., description="城市名称")
-    temperature: float = Field(..., description="温度")
+    """Get weather information"""
+    location: str = Field(..., description="City name")
+    temperature: float = Field(..., description="Temperature")
 
-# 初始化大模型
+# Initialize LLM
 llm = ChatDeepSeek(model="deepseek-chat")
 
-# 绑定工具
+# Bind tools
 llm_with_tools = llm.bind_tools([get_weather])
 
-# 发送请求
-response = llm_with_tools.invoke("请告诉我上海的天气")
+# Send request
+response = llm_with_tools.invoke("Please tell me the weather in Shanghai")
 
-# 解析输出
+# Parse output
 if response.tool_calls:
     for tool_call in response.tool_calls:
-        print(f"工具名称: {tool_call['name']}")
-        print(f"参数: {tool_call['args']}")
+        print(f"Tool Name: {tool_call['name']}")
+        print(f"Arguments: {tool_call['args']}")
 else:
-    print("没有工具调用")
+    print("No tool calls")

@@ -179,4 +179,3 @@ print("- ✅ Scalability: suitable for retrieval over large-scale document colle
 print("- ✅ Balanced performance: achieves a good balance between precision and efficiency")
 print("- 💡 Full implementation: it is recommended to use a model fine-tuned specifically for ColBERT")
 print("- 🔧 Optimization tip: in practical applications, use the MaxSim operation instead of simplified mean pooling")
-

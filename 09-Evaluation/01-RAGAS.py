@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-load_dotenv() # 加载.env文件中的环境变量
+load_dotenv() # Load environment variables from .env file
 import numpy as np
 from datasets import Dataset
 from ragas.metrics import Faithfulness, AnswerRelevancy
@@ -10,12 +10,12 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_huggingface import HuggingFaceEmbeddings
 from ragas import evaluate
 
-# 准备评估用的LLM（使用GPT-3.5）
-# 使用Ragas的LangchainLLMWrapper包装器来包装LangChain的ChatOpenAI模型
+# Prepare LLM for evaluation (using GPT-3.5)
+# Use Ragas's LangchainLLMWrapper to wrap LangChain's ChatOpenAI model
 llm = LangchainLLMWrapper(ChatOpenAI(model_name="gpt-3.5-turbo"))
 
-# 准备数据集
-# 这个数据集包含了问题、生成的答案以及相关的上下文信息
+# Prepare dataset
+# This dataset contains questions, generated answers, and relevant context information
 data = {
     "question": [
         "Who is the main character in Black Myth: Wukong?",
@@ -43,101 +43,101 @@ data = {
     ]
 }
 
-# 将字典转换为Hugging Face的Dataset对象，方便Ragas处理
+# Convert the dictionary to a Hugging Face Dataset object for Ragas processing
 dataset = Dataset.from_dict(data)
 
-print("\n=== Ragas评估指标说明 ===")
-print("\n1. Faithfulness（忠实度）")
-print("- 评估生成的答案是否忠实于上下文内容")
-print("- 通过将答案分解为简单陈述，然后验证每个陈述是否可以从上下文中推断得出")
-print("- 该指标仅依赖LLM，不需要embedding模型")
+print("\n=== Ragas Evaluation Metrics Description ===")
+print("\n1. Faithfulness")
+print("- Evaluates whether the generated answer is faithful to the context content")
+print("- By breaking down the answer into simple statements and verifying if each statement can be inferred from the context")
+print("- This metric only relies on LLM and does not require an embedding model")
 
-# 评估Faithfulness
-# 创建Faithfulness评估指标，它只需要一个LLM来进行评估
-faithfulness_metric = [Faithfulness(llm=llm)] # 只需要提供生成模型
-print("\n正在评估忠实度...")
-# 使用evaluate函数对数据集进行评估
+# Evaluate Faithfulness
+# Create Faithfulness evaluation metric, which only requires an LLM for evaluation
+faithfulness_metric = [Faithfulness(llm=llm)] # Only need to provide the generation model
+print("\nEvaluating Faithfulness...")
+# Use the evaluate function to evaluate the dataset
 faithfulness_result = evaluate(dataset, faithfulness_metric)
-# 提取忠实度分数
+# Extract faithfulness score
 scores = faithfulness_result['faithfulness']
-# 计算平均分
+# Calculate average score
 mean_score = np.mean(scores) if isinstance(scores, (list, np.ndarray)) else scores
-print(f"忠实度评分: {mean_score:.4f}")
+print(f"Faithfulness Score: {mean_score:.4f}")
 
-print("\n2. AnswerRelevancy（答案相关性）")
-print("- 评估生成的答案与问题的相关程度")
-print("- 使用embedding模型计算语义相似度")
-print("- 我们将比较开源embedding模型和OpenAI的embedding模型")
+print("\n2. AnswerRelevancy")
+print("- Evaluates the relevance of the generated answer to the question")
+print("- Uses an embedding model to calculate semantic similarity")
+print("- We will compare open-source embedding models and OpenAI's embedding models")
 
-# 设置两种embedding模型
-# 使用Ragas的LangchainEmbeddingsWrapper来包装LangChain的嵌入模型
-# 1. 开源的 all-MiniLM-L6-v2 模型
+# Set up two embedding models
+# Use Ragas's LangchainEmbeddingsWrapper to wrap LangChain's embedding models
+# 1. Open-source all-MiniLM-L6-v2 model
 opensource_embedding = LangchainEmbeddingsWrapper(
     HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 )
-# 2. OpenAI的 text-embedding-ada-002 模型
+# 2. OpenAI's text-embedding-ada-002 model
 openai_embedding = LangchainEmbeddingsWrapper(OpenAIEmbeddings(model="text-embedding-ada-002"))
 
-# 创建答案相关性评估指标
-# 分别为两种embedding模型创建AnswerRelevancy评估指标
+# Create AnswerRelevancy evaluation metric
+# Create AnswerRelevancy evaluation metrics for both embedding models
 opensource_relevancy = [AnswerRelevancy(llm=llm, embeddings=opensource_embedding)]
 openai_relevancy = [AnswerRelevancy(llm=llm, embeddings=openai_embedding)]
 
-print("\n正在评估答案相关性...")
-print("\n使用开源Embedding模型评估:")
-# 使用开源embedding模型进行评估
+print("\nEvaluating Answer Relevancy...")
+print("\nEvaluating with Open-source Embedding Model:")
+# Evaluate using the open-source embedding model
 opensource_result = evaluate(dataset, opensource_relevancy)
 scores = opensource_result['answer_relevancy']
 opensource_mean = np.mean(scores) if isinstance(scores, (list, np.ndarray)) else scores
-print(f"相关性评分: {opensource_mean:.4f}")
+print(f"Relevancy Score: {opensource_mean:.4f}")
 
-print("\n使用OpenAI Embedding模型评估:")
-# 使用OpenAI embedding模型进行评估
+print("\nEvaluating with OpenAI Embedding Model:")
+# Evaluate using the OpenAI embedding model
 openai_result = evaluate(dataset, openai_relevancy)
 scores = openai_result['answer_relevancy']
 openai_mean = np.mean(scores) if isinstance(scores, (list, np.ndarray)) else scores
-print(f"相关性评分: {openai_mean:.4f}")
+print(f"Relevancy Score: {openai_mean:.4f}")
 
-# 比较两种embedding模型的结果
-print("\n=== Embedding模型比较 ===")
+# Compare results of two embedding models
+print("\n=== Embedding Model Comparison ===")
 diff = openai_mean - opensource_mean
-print(f"开源模型评分: {opensource_mean:.4f}")
-print(f"OpenAI模型评分: {openai_mean:.4f}")
-print(f"差异: {diff:.4f} ({'OpenAI更好' if diff > 0 else '开源模型更好' if diff < 0 else '相当'})")
+print(f"Open-source Model Score: {opensource_mean:.4f}")
+print(f"OpenAI Model Score: {openai_mean:.4f}")
+print(f"Difference: {diff:.4f} ({'OpenAI is better' if diff > 0 else 'Open-source model is better' if diff < 0 else 'Similar'})")
 
 
 '''
-我做了以下修改：
-移除了 ragas.embeddings.base 中的 HuggingfaceEmbeddings 导入
-改为导入 LangChain 的 HuggingFaceEmbeddings
-使用 LangchainEmbeddingsWrapper 来包装 LangChain 的 HuggingFaceEmbeddings
-这样做的原因是：
-LangChain 的 HuggingFaceEmbeddings 是一个完整的实现，包含了所有必要的方法
-LangchainEmbeddingsWrapper 会将 LangChain 的嵌入模型适配到 RAGAS 的接口
-这个包装器会自动处理同步和异步方法的转换
-1. Faithfulness（忠实度）
-- 评估生成的答案是否忠实于上下文内容
-- 通过将答案分解为简单陈述，然后验证每个陈述是否可以从上下文中推断得出
-- 该指标仅依赖LLM，不需要embedding模型
+I made the following changes:
+Removed HuggingfaceEmbeddings import from ragas.embeddings.base
+Changed to import LangChain's HuggingFaceEmbeddings
+Used LangchainEmbeddingsWrapper to wrap LangChain's HuggingFaceEmbeddings
+The reasons for this are:
+LangChain's HuggingFaceEmbeddings is a complete implementation that includes all necessary methods
+LangchainEmbeddingsWrapper adapts LangChain's embedding model to the RAGAS interface
+This wrapper automatically handles the conversion of synchronous and asynchronous methods
+1. Faithfulness
+- Evaluates whether the generated answer is faithful to the context content
+- By breaking down the answer into simple statements and verifying if each statement can be inferred from the context
+- This metric only relies on LLM and does not require an embedding model
 
-正在评估忠实度...
+Evaluating Faithfulness...
 Evaluating: 100%|███████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:05<00:00,  1.87s/it]
-忠实度评分: 0.6071
+Faithfulness Score: 0.6071
 
-正在评估答案相关性...
+Evaluating Answer Relevancy...
 
-使用开源Embedding模型评估:
+Evaluating with Open-source Embedding Model:
 Evaluating: 100%|███████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:01<00:00,  1.54it/s]
-相关性评分: 0.8565
+Relevancy Score: 0.8565
 
-使用OpenAI Embedding模型评估:
+Evaluating with OpenAI Embedding Model:
 Evaluating: 100%|███████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:06<00:00,  2.11s/it]
-相关性评分: 0.9426
+Relevancy Score: 0.9426
 
-=== Embedding模型比较 ===
-开源模型评分: 0.8565
-OpenAI模型评分: 0.9426
-差异: 0.0861 (OpenAI更好)
+=== Embedding Model Comparison ===
+Open-source Model Score: 0.8565
+OpenAI Model Score: 0.9426
+Difference: 0.0861 (OpenAI is better)
 
 
 '''

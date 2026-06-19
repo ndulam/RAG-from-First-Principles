@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-# 导入 LlamaIndex 相关模块
+# Import LlamaIndex related modules
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -20,9 +20,9 @@ from llama_index.core.evaluation import (
 )
 from llama_index.core.evaluation.eval_utils import get_responses, get_results_df
 
-# 1. 配置 LLM、Embedding、文本切分器
+# 1. Configure LLM, Embedding, Text Splitter
 # --------------------------------------------------
-# 设置 LLM（大模型）和 Embedding（向量模型）
+# Set LLM (Large Language Model) and Embedding (Vector Model)
 llm = OpenAI(model="gpt-3.5-turbo", temperature=0.1)
 embed_model = HuggingFaceEmbedding(
     model_name="sentence-transformers/all-mpnet-base-v2", max_length=512
@@ -33,77 +33,77 @@ node_parser = SentenceWindowNodeParser.from_defaults(
     window_metadata_key="window",
     original_text_metadata_key="original_text",
 )
-# 全局设置
+# Global settings
 Settings.llm = llm
 Settings.embed_model = embed_model
 Settings.text_splitter = text_splitter
 
-# 2. 加载 PDF 文档
+# 2. Load PDF Document
 # --------------------------------------------------
 pdf_path = "/home/huangj2/Documents/rag-in-action/90-Data/ComplexPDF/IPCC_AR6_WGII_Chapter03.pdf"
 documents = SimpleDirectoryReader(input_files=[pdf_path]).load_data()
 
-# 3. 文本切分为节点
+# 3. Split Text into Nodes
 # --------------------------------------------------
-# 滑动窗口节点
+# Sliding window nodes
 nodes = node_parser.get_nodes_from_documents(documents)
-# 基础句子节点
+# Base sentence nodes
 base_nodes = text_splitter.get_nodes_from_documents(documents)
 
-# 4. 构建向量索引
+# 4. Build Vector Index
 # --------------------------------------------------
 sentence_index = VectorStoreIndex(nodes)
 base_index = VectorStoreIndex(base_nodes)
 
-# 5. 检索与问答示例
+# 5. Retrieval and Q&A Example
 # --------------------------------------------------
-# 滑动窗口检索器
+# Sliding window retriever
 query_engine = sentence_index.as_query_engine(
-    # 设置检索返回的顶部结果数量为2
+    # Set the number of top retrieval results to 2
     similarity_top_k=2,
-    # 使用元数据替换后处理器，将检索结果的元数据替换为窗口内容
+    # Use metadata replacement post-processor to replace retrieved metadata with window content
     node_postprocessors=[MetadataReplacementPostProcessor(target_metadata_key="window")],
 )
 window_response = query_engine.query("What are the concerns surrounding the AMOC?")
-print("\n【滑动窗口检索器返回】\n", window_response)
-# 获取第一个检索结果的窗口内容
+print("\n【Sliding Window Retriever Response】\n", window_response)
+# Get the window content of the first retrieval result
 window = window_response.source_nodes[0].node.metadata["window"]
-# 获取第一个检索结果的原始句子文本
+# Get the original sentence text of the first retrieval result
 sentence = window_response.source_nodes[0].node.metadata["original_text"]
 print(f"Window: {window}")
 print("------------------")
 print(f"Original Sentence: {sentence}")
 
-# 基础检索器
+# Base retriever
 base_query_engine = base_index.as_query_engine(similarity_top_k=2)
 vector_response = base_query_engine.query("What are the concerns surrounding the AMOC?")
-print("\n【基础检索器返回】\n", vector_response)
+print("\n【Base Retriever Response】\n", vector_response)
 
-# 打印所有 source_nodes 的原始句子
-print("\n【滑动窗口检索器 source_nodes 原始句子】")
+# Print original sentences of all source_nodes from sliding window retriever
+print("\n【Sliding Window Retriever source_nodes Original Sentences】")
 for source_node in window_response.source_nodes:
     print(source_node.node.metadata["original_text"])
     print("--------")
 
-# 检查基础检索器 source_nodes 是否包含 AMOC
-print("\n【基础检索器 source_nodes 是否包含 'AMOC'】")
+# Check if base retriever source_nodes contain AMOC
+print("\n【Base Retriever source_nodes Contains 'AMOC'】")
 for node in vector_response.source_nodes:
     print("AMOC mentioned?", "AMOC" in node.node.text)
     print("--------")
 
-# 遍历输出所有基础检索器的 node.text
-print("\n【基础检索器 source_nodes 的 node.text】")
+# Iterate and print node.text of all base retriever source_nodes
+print("\n【Base Retriever source_nodes node.text】")
 for i, node in enumerate(vector_response.source_nodes):
-    print(f"第 {i+1} 个 node.text:")
+    print(f"Node {i+1} text:")
     print(node.node.text)
     print("--------")
 
-# 6. 评测数据集准备
+# 6. Evaluation Dataset Preparation
 # --------------------------------------------------
-# 采样部分节点用于生成评测问题
+# Sample a portion of nodes for generating evaluation questions
 num_nodes_eval = 30
 sample_eval_nodes = random.sample(base_nodes[:200], num_nodes_eval)
-# 生成评测数据集（如未生成可取消注释）
+# Generate evaluation dataset (uncomment if not generated)
 # dataset_generator = DatasetGenerator(
 #     sample_eval_nodes,
 #     llm=OpenAI(model="gpt-4"),
@@ -113,10 +113,10 @@ sample_eval_nodes = random.sample(base_nodes[:200], num_nodes_eval)
 # eval_dataset = await dataset_generator.agenerate_dataset_from_nodes()
 # eval_dataset.save_json("90-Data/ComplexPDF/ipcc_eval_qr_dataset.json")
 
-# 加载已生成的评测数据集
+# Load pre-generated evaluation dataset
 eval_dataset = QueryResponseDataset.from_json("90-Data/ComplexPDF/ipcc_eval_qr_dataset.json")
 
-# 7. 构建评测器
+# 7. Build Evaluators
 # --------------------------------------------------
 evaluator_c = CorrectnessEvaluator(llm=OpenAI(model="gpt-4"))
 evaluator_s = SemanticSimilarityEvaluator()
@@ -132,21 +132,21 @@ evaluator_dict = {
 }
 batch_runner = BatchEvalRunner(evaluator_dict, workers=2, show_progress=True)
 
-# 8. 评测主流程
+# 8. Main Evaluation Process
 # --------------------------------------------------
 async def main():
     max_samples = 30
     eval_qs = eval_dataset.questions
     ref_response_strs = [r for (_, r) in eval_dataset.qr_pairs]
 
-    # 重新构建检索器，保证评测一致
+    # Rebuild retrievers to ensure consistent evaluation
     base_query_engine = base_index.as_query_engine(similarity_top_k=2)
     window_query_engine = sentence_index.as_query_engine(
         similarity_top_k=2,
         node_postprocessors=[MetadataReplacementPostProcessor(target_metadata_key="window")],
     )
 
-    # 获取模型回答
+    # Get model responses
     base_pred_responses = get_responses(
         eval_qs[:max_samples], base_query_engine, show_progress=True
     )
@@ -154,7 +154,7 @@ async def main():
         eval_qs[:max_samples], window_query_engine, show_progress=True
     )
 
-    # 评测
+    # Evaluate
     eval_results = await batch_runner.aevaluate_responses(
         queries=eval_qs[:max_samples],
         responses=pred_responses[:max_samples],
@@ -170,10 +170,9 @@ async def main():
         ["Sentence Window Retriever", "Base Retriever"],
         ["correctness", "relevancy", "faithfulness", "semantic_similarity"],
     )
-    print("\n【评测结果】")
+    print("\n【Evaluation Results】")
     print(results_df)
 
 if __name__ == "__main__":
     nest_asyncio.apply()
     asyncio.run(main())
-

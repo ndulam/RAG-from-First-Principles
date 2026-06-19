@@ -1,15 +1,15 @@
-# 课后作业：同学们可以基于这个代码框架，尝试用MultimodalRAG来生成一个图片
-# 不仅实现Multimodal检索，还可以还进一步基于检索内容，组合所有信息，利用现代LLM生成新的文本或图像。
+# Homework: Students can try to generate an image using MultimodalRAG based on this code framework.
+# Not only implement Multimodal retrieval, but also further combine all information based on the retrieved content, and use modern LLMs to generate new text or images.
 
 import weaviate
 import weaviate.classes as wvc
 import requests
 from openai import OpenAI
 
-# 1. 连接Weaviate实例（本地或云端）
-client = weaviate.connect_to_local()  # 如用云服务请替换为 connect_to_wcs/wcs_cloud
+# 1. Connect to Weaviate instance (local or cloud)
+client = weaviate.connect_to_local()  # Replace with connect_to_wcs/wcs_cloud if using cloud service
 
-# 2. 创建Multimodal集合（Collection）
+# 2. Create Multimodal Collection
 def create_multimodal_collection():
     client.collections.create(
         name="Animals",
@@ -19,21 +19,21 @@ def create_multimodal_collection():
             video_fields=["video"],
         )
     )
-    print("Multimodal集合 'Animals' 创建完成")
+    print("Multimodal collection 'Animals' created")
 
-# 3. 插入Multimodal数据（以图片为例）
+# 3. Insert Multimodal Data (taking image as an example)
 def insert_multimodal_data():
     animals = client.collections.get("Animals")
-    # 这里假设有一张图片的base64字符串
-    image_base64 = "<你的图片base64字符串>"
+    # Assuming there is a base64 string of an image here
+    image_base64 = "<YOUR_IMAGE_BASE64_STRING>"
     animals.data.insert({
         "name": "puppy",
         "image": image_base64,
         "mediaType": "image"
     })
-    print("图片数据已插入")
+    print("Image data inserted")
 
-# 4. 检索图片（以文本为query）
+# 4. Retrieve Image (using text as query)
 def retrieve_image(query):
     animals = client.collections.get("Animals")
     response = animals.query.near_text(
@@ -43,10 +43,10 @@ def retrieve_image(query):
         limit=1,
     )
     result = response.objects[0].properties
-    print("检索到的图片对象:", result)
+    print("Retrieved image object:", result)
     return result['image']
 
-# 5. 用GPT-4V生成图片描述
+# 5. Generate Image Description with GPT-4V
 def generate_description_from_image_gpt4(prompt, image64, openai_api_key):
     headers = {
         "Content-Type": "application/json",
@@ -67,10 +67,10 @@ def generate_description_from_image_gpt4(prompt, image64, openai_api_key):
     }
     response_oai = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
     result = response_oai.json()['choices'][0]['message']['content']
-    print(f"生成的描述: {result}")
+    print(f"Generated description: {result}")
     return result
 
-# 6. 用DALL-E-3根据描述生成图片
+# 6. Generate Image with DALL-E-3 based on description
 def generate_image_dalee3(prompt, openai_api_key):
     openai_client = OpenAI(api_key=openai_api_key)
     response_oai = openai_client.images.generate(
@@ -81,22 +81,22 @@ def generate_image_dalee3(prompt, openai_api_key):
         n=1,
     )
     result = response_oai.data[0].url
-    print(f"生成的图片URL: {result}")
+    print(f"Generated image URL: {result}")
     return result
 
 if __name__ == "__main__":
-    # 步骤演示
-    # 1. 创建集合
+    # Step-by-step demonstration
+    # 1. Create collection
     create_multimodal_collection()
-    # 2. 插入数据（请先替换图片base64字符串）
+    # 2. Insert data (please replace image base64 string first)
     insert_multimodal_data()
-    # 3. 检索图片
+    # 3. Retrieve image
     image64 = retrieve_image("dog with a sign")
-    # 4. 用GPT-4V生成描述（请替换为你的OpenAI API Key）
+    # 4. Generate description with GPT-4V (please replace with your OpenAI API Key)
     description = generate_description_from_image_gpt4(
-        prompt="这是一张我的宠物的图片，请给出可爱生动的描述。",
+        prompt="This is a picture of my pet, please provide a cute and vivid description.",
         image64=image64,
-        openai_api_key="<你的OpenAI API Key>"
+        openai_api_key="<YOUR_OPENAI_API_KEY>"
     )
-    # 5. 用DALL-E-3生成图片
-    generate_image_dalee3(description, openai_api_key="<你的OpenAI API Key>")
+    # 5. Generate image with DALL-E-3
+    generate_image_dalee3(description, openai_api_key="<YOUR_OPENAI_API_KEY>")

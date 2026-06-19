@@ -111,4 +111,3 @@ Parameter tuning recommendations:
 - rate: adjust according to the importance of the information; set a higher value for key information
 - compress: numeric data usually doesn't need to be compressed
 """
-

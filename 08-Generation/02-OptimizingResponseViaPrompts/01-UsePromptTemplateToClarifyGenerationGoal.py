@@ -6,40 +6,40 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAI
 import os
 
-# 1. 加载文档
+# 1. Load Document
 loader = TextLoader("90-Data/BlackMythWukong/setup.txt")
 documents = loader.load()
 
-# 2. 分割文档
+# 2. Split Document
 text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 texts = text_splitter.split_documents(documents)
 
-# 3. 创建向量数据库
+# 3. Create Vector Database
 embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 db = FAISS.from_documents(texts, embeddings)
 
-# 4. 检索相关内容
-query = "白骨精的特点和战斗方式是什么？"
+# 4. Retrieve Relevant Content
+query = "What are the characteristics and combat style of Baigujing?"
 docs = db.similarity_search(query)
 retrieved_content = docs[0].page_content
 
-# 5. 定义提示模板
+# 5. Define Prompt Template
 template = """
-基于以下检索到的资料：
+Based on the following retrieved information:
 {context}
 
-请详细分析并按照以下格式生成角色分析报告：
+Please analyze in detail and generate a character analysis report in the following format:
 
-人物名称：[提供完整名称]
+Character Name: [Provide full name]
 
-背景故事：介绍角色的来历和背景，与其他角色的关系，在故事中的定位。
-技能特点：介绍角色的主要技能和能力，特殊能力描述，战斗风格特点。
-战斗策略：介绍角色的主要攻击方式，防御机制，战斗中的特殊表现，克制和弱点。
+Background Story: Introduce the character's origin and background, relationships with other characters, and their role in the story.
+Skill Characteristics: Introduce the character's main skills and abilities, description of special abilities, and combat style characteristics.
+Combat Strategy: Introduce the character's main attack methods, defense mechanisms, special performance in combat, strengths and weaknesses.
 
-请基于资料进行详尽分析，确保内容准确且具有连贯性。
+Please conduct a detailed analysis based on the information, ensuring accuracy and coherence.
 """
 
-# 创建PromptTemplate和LLM
+# Create PromptTemplate and LLM
 prompt = PromptTemplate(
     input_variables=["context"],
     template=template
@@ -47,7 +47,7 @@ prompt = PromptTemplate(
 
 llm = OpenAI(openai_api_key=os.getenv("OPENAI_API_KEY"))
 
-# 生成文本
+# Generate Text
 formatted_prompt = prompt.format(context=retrieved_content)
 response = llm.invoke(formatted_prompt)
 print(response)

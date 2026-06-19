@@ -6,69 +6,69 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAI
 import os
 
-# 示例数据
+# Example data
 examples = [
     {
-        "context": "某大型制造企业的供应链系统出现延迟问题，导致生产效率下降15%。经过调查发现主要是由于供应商管理混乱和库存预测不准确导致。",
-        "answer": """问题分析报告：
-                    核心问题：供应链效率低下
-                    影响程度：生产效率降低15%
-                    主要原因：
-                    - 供应商管理体系不完善
-                    - 库存预测系统准确度不足
+        "context": "A large manufacturing enterprise's supply chain system experienced delays, leading to a 15% decrease in production efficiency. Investigation revealed that this was mainly due to chaotic supplier management and inaccurate inventory forecasting.",
+        "answer": """Problem Analysis Report:
+                    Core Issue: Inefficient supply chain
+                    Impact: 15% reduction in production efficiency
+                    Main Reasons:
+                    - Imperfect supplier management system
+                    - Insufficient accuracy of inventory forecasting system
 
-                    建议方案：
-                    1. 优化供应商评估体系
-                    2. 引入智能预测系统
-                    3. 建立实时监控机制"""
+                    Proposed Solutions:
+                    1. Optimize supplier evaluation system
+                    2. Introduce intelligent forecasting system
+                    3. Establish real-time monitoring mechanism"""
     },
     {
-        "context": "某科技公司的员工流失率达到25%，主要集中在研发部门，影响了产品迭代进度。",
-        "answer": """问题分析报告：
-                    核心问题：高员工流失率
-                    影响程度：流失率25%
-                    主要原因：
-                    - 薪资福利竞争力不足
-                    - 职业发展空间受限
+        "context": "A technology company's employee turnover rate reached 25%, mainly concentrated in the R&D department, affecting product iteration progress.",
+        "answer": """Problem Analysis Report:
+                    Core Issue: High employee turnover rate
+                    Impact: 25% turnover rate
+                    Main Reasons:
+                    - Insufficient competitiveness of salary and benefits
+                    - Limited career development opportunities
 
-                    建议方案：
-                    1. 优化薪酬体系
-                    2. 完善晋升机制
-                    3. 改善工作环境"""
+                    Proposed Solutions:
+                    1. Optimize compensation system
+                    2. Improve promotion mechanism
+                    3. Enhance working environment"""
     }
 ]
 
-# 创建向量数据库
+# Create vector database
 embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 example_texts = [ex["context"] for ex in examples]
 db = FAISS.from_texts(example_texts, embeddings)
 
-# 用户输入的问题描述
-current_issue = """某零售连锁企业的客户投诉率在过去三个月上升40%，主要集中在配送时效和商品质量两个方面，影响了品牌声誉。"""
+# User input problem description
+current_issue = """A retail chain's customer complaint rate increased by 40% in the past three months, mainly focusing on delivery timeliness and product quality, affecting brand reputation."""
 
-# 检索最相似的示例
+# Retrieve the most similar example
 docs = db.similarity_search(current_issue, k=1)
 most_similar_example = next(ex for ex in examples if ex["context"] == docs[0].page_content)
 
-# 构建提示词
-prompt = """这是一个企业问题分析示例：
+# Construct prompt
+prompt = """Here is an example of enterprise problem analysis:
 
-示例：
-基于以下情况：
+Example:
+Based on the following situation:
 {example_context}
 
 {example_answer}
 
-现在，请基于以下问题，按照相同格式生成分析报告：
+Now, based on the following problem, generate an analysis report in the same format:
 {input_context}
 
-请保持分析的专业性和可操作性。
+Please maintain professionalism and actionability in the analysis.
 """
 
-# 创建LLM
+# Create LLM
 llm = OpenAI(openai_api_key=os.getenv("OPENAI_API_KEY"))
 
-# 格式化提示词并生成回答
+# Format prompt and generate response
 formatted_prompt = prompt.format(
     example_context=most_similar_example["context"],
     example_answer=most_similar_example["answer"],

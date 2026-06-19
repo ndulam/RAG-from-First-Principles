@@ -1,29 +1,29 @@
 import os
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
-from openai import OpenAI as OpenAIClient  # 避免与TruLens的OpenAI类名冲突
+from openai import OpenAI as OpenAIClient  # Avoid naming conflicts with TruLens's OpenAI class
 
-# Trulens是一个用于深度学习模型（尤其是LLM应用）可观察性和评估的开源库。
-# 它可以帮助开发者跟踪、调试和评估RAG（检索增强生成）等复杂应用的性能。
-# - TruSession: 管理评估会话和结果存储。
-# - Feedback: 定义评估指标，如相关性、真实性等。
-# - TruApp: 将你的应用包装起来，使其可被Trulens监控。
-# - instrument: 一个装饰器，用于标记需要跟踪的具体函数。
+# Trulens is an open-source library for observability and evaluation of deep learning models (especially LLM applications).
+# It helps developers track, debug, and evaluate the performance of complex applications like RAG (Retrieval Augmented Generation).
+# - TruSession: Manages evaluation sessions and result storage.
+# - Feedback: Defines evaluation metrics such as relevance, groundedness, etc.
+# - TruApp: Wraps your application to make it monitorable by Trulens.
+# - instrument: A decorator used to mark specific functions that need to be tracked.
 from trulens.core import TruSession, Feedback, Select
 from trulens.apps.app import TruApp, instrument
 from trulens.providers.openai import OpenAI as TruLensOpenAI
 import numpy as np
 
-# 设置API密钥
+# Set API key
 # os.environ["OPENAI_API_KEY"] = "your_key_here"
 
-# 初始化嵌入函数
+# Initialize embedding function
 embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get("OPENAI_API_KEY"),
                                              model_name="text-embedding-ada-002")
 chroma_client = chromadb.Client()
 vector_store = chroma_client.get_or_create_collection("Info", embedding_function=embedding_function)
 
-# 添加示例数据
+# Add example data
 vector_store.add("starbucks_info", documents=[
     """
     Starbucks Corporation is an American multinational chain of coffeehouses headquartered in Seattle, Washington.
@@ -32,18 +32,18 @@ vector_store.add("starbucks_info", documents=[
 ])
 
 class RAG:
-    # @instrument 是Trulens提供的装饰器，用于"检测"或"装备"一个函数。
-    # 被标记后，每当这个函数被调用时，Trulens会记录其输入、输出、执行时间、错误等信息。
-    # 这对于理解RAG流程中每个步骤（检索、生成）的具体行为至关重要。
+    # @instrument is a decorator provided by Trulens to "instrument" or "equip" a function.
+    # When marked, every time this function is called, Trulens records its input, output, execution time, errors, and other information.
+    # This is crucial for understanding the specific behavior of each step (retrieval, generation) in the RAG process.
     @instrument
     def retrieve(self, query: str):
-        """检索相关文档"""
+        """Retrieve relevant documents"""
         results = vector_store.query(query_texts=[query], n_results=2)
         return results["documents"][0] if results["documents"] else []
 
     @instrument
     def generate_completion(self, query: str, context: list):
-        """生成回答"""
+        """Generate answer"""
         oai_client = OpenAIClient(api_key=os.environ.get("OPENAI_API_KEY"))
         context_str = "\n".join(context) if context else "No context available."
         completion = oai_client.chat.completions.create(
@@ -54,53 +54,53 @@ class RAG:
 
     @instrument
     def query(self, query: str):
-        """完整的RAG查询流程"""
+        """Complete RAG query process"""
         context = self.retrieve(query)
         return self.generate_completion(query, context)
 
-# 初始化TruLens会话
-# TruSession是与Trulens后端（可以是本地SQLite文件或数据库）交互的入口点。
-# 它负责管理和存储所有的跟踪数据和评估结果。
-# database_redact_keys=True 选项会自动隐藏记录中的敏感信息（如API密钥），确保安全。
+# Initialize TruLens session
+# TruSession is the entry point for interacting with the Trulens backend (which can be a local SQLite file or a database).
+# It is responsible for managing and storing all tracking data and evaluation results.
+# The database_redact_keys=True option automatically hides sensitive information (like API keys) in records to ensure security.
 session = TruSession(database_redact_keys=True)
-# 重置数据库会清空所有之前的记录，确保我们从一个干净的环境开始本次评估。
+# Resetting the database clears all previous records, ensuring we start this evaluation from a clean environment.
 session.reset_database()
 
-# 初始化TruLens的OpenAI提供者
-# Provider是Trulens用来执行评估的"裁判"。这里我们使用OpenAI的gpt-4模型。
-# 这些评估本身就是通过向LLM提出问题来完成的，例如："给定的回答是否与上下文一致？"
+# Initialize TruLens's OpenAI provider
+# A Provider is Trulens's "judge" for performing evaluations. Here we use OpenAI's gpt-4 model.
+# These evaluations themselves are done by asking the LLM questions, such as: "Is the given answer consistent with the context?"
 provider = TruLensOpenAI(model_engine="gpt-4")
 
-# 定义评估指标 (Feedback Functions)
-# Feedback是Trulens的核心概念，用于定义我们关心的评估维度。
-# 每个Feedback函数都由一个评估器（provider的方法）和选择器（selector）组成。
-# 选择器（.on(...)）精确地指定了要评估的应用的哪个部分（输入、输出或中间结果）。
+# Define evaluation metrics (Feedback Functions)
+# Feedback is a core concept in Trulens, used to define the evaluation dimensions we care about.
+# Each Feedback function consists of an evaluator (a method of the provider) and a selector.
+# The selector (.on(...)) precisely specifies which part of the application (input, output, or intermediate results) to evaluate.
 
-# 1. Groundedness (内容真实性/依据性)
-#    - 评估器: provider.groundedness_measure_with_cot_reasons，使用CoT（思维链）来判断回答是否完全基于所提供的上下文。
-#    - 选择器: .on(Select.RecordCalls.retrieve.rets) 指定评估的上下文是 `retrieve` 方法的返回结果。
-#              .on_output() 指定要评估的内容是RAG应用的最终输出（生成的答案）。
+# 1. Groundedness
+#    - Evaluator: provider.groundedness_measure_with_cot_reasons, uses CoT (Chain of Thought) to determine if the answer is fully based on the provided context.
+#    - Selector: .on(Select.RecordCalls.retrieve.rets) specifies that the context for evaluation is the return result of the `retrieve` method.
+#              .on_output() specifies that the content to be evaluated is the final output of the RAG application (the generated answer).
 f_groundedness = Feedback(provider.groundedness_measure_with_cot_reasons, name="Groundedness") \
     .on(Select.RecordCalls.retrieve.rets).on_output()
 
-# 2. Answer Relevance (答案相关性)
-#    - 评估器: provider.relevance_with_cot_reasons，判断生成的答案是否与原始问题相关。
-#    - 选择器: .on_input() 指定评估的上下文是应用的顶层输入（用户的query）。
-#              .on_output() 指定要评估的内容是应用的最终输出。
+# 2. Answer Relevance
+#    - Evaluator: provider.relevance_with_cot_reasons, determines if the generated answer is relevant to the original question.
+#    - Selector: .on_input() specifies that the context for evaluation is the top-level input of the application (the user's query).
+#              .on_output() specifies that the content to be evaluated is the final output of the application.
 f_answer_relevance = Feedback(provider.relevance_with_cot_reasons, name="Answer Relevance") \
     .on_input().on_output()
 
-# 3. Context Relevance (上下文相关性)
-#    - 评估器: provider.context_relevance_with_cot_reasons，判断检索到的上下文与原始问题的相关性。
-#    - 选择器: .on_input() 指定评估的上下文是应用的顶层输入。
-#              .on(Select.RecordCalls.retrieve.rets[:]) 指定要评估的内容是 `retrieve` 方法返回的上下文列表中的每个元素。
-#    - 聚合器: .aggregate(np.mean) 因为上下文可能包含多个文档，使用聚合函数（这里是求平均值）将所有上下文相关性得分合并为一个总分。
+# 3. Context Relevance
+#    - Evaluator: provider.context_relevance_with_cot_reasons, determines the relevance of the retrieved context to the original question.
+#    - Selector: .on_input() specifies that the context for evaluation is the top-level input of the application.
+#              .on(Select.RecordCalls.retrieve.rets[:]) specifies that the content to be evaluated is each element in the list of contexts returned by the `retrieve` method.
+#    - Aggregator: .aggregate(np.mean) Because the context may contain multiple documents, an aggregation function (here, calculating the mean) is used to combine all context relevance scores into a single total score.
 f_context_relevance = Feedback(provider.context_relevance_with_cot_reasons, name="Context Relevance") \
     .on_input().on(Select.RecordCalls.retrieve.rets[:]).aggregate(np.mean)
 
-# 设置TruApp
-# TruApp将我们的RAG应用实例与上面定义的Feedback函数列表打包在一起。
-# 它创建了一个可被Trulens跟踪和评估的"可观察"应用。
+# Set up TruApp
+# TruApp packages our RAG application instance with the list of Feedback functions defined above.
+# It creates an "observable" application that can be tracked and evaluated by Trulens.
 rag = RAG()
 tru_rag = TruApp(
     rag,
@@ -109,16 +109,16 @@ tru_rag = TruApp(
     feedbacks=[f_groundedness, f_answer_relevance, f_context_relevance]
 )
 
-# 执行查询并记录
-# 使用 `with tru_rag as recording:` 上下文管理器来运行应用。
-# 在这个代码块中，对`rag.query()`的调用及其内部所有被`@instrument`标记的方法都会被Trulens自动记录。
-# 记录下来的数据（app-json）包含了完整的调用链、输入输出和中间结果。
+# Execute query and record
+# Use the `with tru_rag as recording:` context manager to run the application.
+# Within this code block, calls to `rag.query()` and all its internally `@instrument` marked methods will be automatically recorded by Trulens.
+# The recorded data (app-json) includes the complete call chain, inputs, outputs, and intermediate results.
 with tru_rag as recording:
     response = rag.query("What wave of coffee culture is Starbucks seen to represent in the United States?")
     print(f"Response: {response}")
 
-# 查看评估结果
-# get_leaderboard() 方法会从数据库中读取记录，并以表格形式展示所有评估的结果。
-# 它会显示每个Feedback的平均得分，便于我们快速了解应用的整体性能。
-# 这个看板对于比较不同版本应用（例如，更改提示、模型或检索策略）的性能差异非常有用。
+# View evaluation results
+# The get_leaderboard() method reads records from the database and displays all evaluation results in a table format.
+# It shows the average score for each Feedback, allowing us to quickly understand the overall performance of the application.
+# This leaderboard is very useful for comparing performance differences between different versions of an application (e.g., after changing prompts, models, or retrieval strategies).
 print(session.get_leaderboard())

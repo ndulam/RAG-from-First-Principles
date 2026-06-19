@@ -5,10 +5,10 @@ from weaviate.classes.config import Configure
 from weaviate.classes.query import NearMediaType
 # from IPython.display import Image, Audio, Video
 
-# 连接到本地 Weaviate 实例
+# Connect to local Weaviate instance
 client = weaviate.connect_to_local()
 
-# 检查并创建名为 "Monkey" 的集合
+# Check and create a collection named "Monkey"
 if client.collections.exists("Monkey"):
     client.collections.delete("Monkey")
 
@@ -21,12 +21,12 @@ client.collections.create(
     )
 )
 
-# 将文件转换为 base64 编码
+# Convert file to base64 encoding
 def to_base64(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-# 插入图像数据
+# Insert image data
 image_dir = "90-Data/Multimodal/Weaviate"
 image_files = os.listdir(image_dir)
 monkey = client.collections.get("Monkey")
@@ -39,7 +39,7 @@ for name in image_files:
         "mediaType": "image"
     })
 
-# # 插入音频数据
+# # Insert audio data
 # audio_dir = "./data/audio/"
 # audio_files = os.listdir(audio_dir)
 # for name in audio_files:
@@ -51,7 +51,7 @@ for name in image_files:
 #         "mediaType": "audio"
 #     })
 
-# # 插入视频数据
+# # Insert video data
 # video_dir = "./data/video/"
 # video_files = os.listdir(video_dir)
 # for name in video_files:
@@ -63,14 +63,14 @@ for name in image_files:
 #         "mediaType": "video"
 #     })
 
-# 文本搜索示例
+# Text search example
 query = "Monkey with fire"
 response = monkey.query.near_text(
     query=query,
     return_properties=["name", "path", "mediaType"],
     limit=3
 )
-print(f"与查询词 '{query}' 相似的对象有：")
+print(f"Objects similar to query '{query}':")
 for obj in response.objects:
     print(obj.properties)
 
@@ -80,22 +80,22 @@ response = monkey.query.near_text(
     return_properties=["name", "path", "mediaType"],
     limit=3
 )
-print(f"与查询词 '{query}' 相似的对象有：")
+print(f"Objects similar to query '{query}':")
 for obj in response.objects:
     print(obj.properties)
 
-# 图像搜索示例
+# Image search example
 test_image_path = "90-Data/Multimodal/query_image.jpg"
 response = monkey.query.near_image(
     near_image=to_base64(test_image_path),
     return_properties=["name", "path", "mediaType"],
     limit=3
 )
-print("与当前图像相似的对象有：")
+print("Objects similar to the current image:")
 for obj in response.objects:
     print(obj.properties)
 
-# # 音频搜索示例
+# # Audio search example
 # test_audio_path = "./test/test-audio.wav"
 # response = animals.query.near_media(
 #     media=to_base64(test_audio_path),
@@ -106,7 +106,7 @@ for obj in response.objects:
 # for obj in response.objects:
 #     print(obj.properties)
 
-# # 视频搜索示例
+# # Video search example
 # test_video_path = "./test/test-video.mp4"
 # response = animals.query.near_media(
 #     media=to_base64(test_video_path),
