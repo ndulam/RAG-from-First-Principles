@@ -1,3 +1,7 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # 1. Load the document
 from langchain_community.document_loaders import WebBaseLoader
 loader = WebBaseLoader(
@@ -12,7 +16,7 @@ all_splits = text_splitter.split_documents(docs)
 
 # 3. Set up the embedding model
 from langchain_openai import OpenAIEmbeddings # pip install langchain-openai
-embeddings = OpenAIEmbeddings()
+embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 4. Create the vector store
 from langchain_core.vectorstores import InMemoryVectorStore
@@ -39,7 +43,7 @@ prompt = ChatPromptTemplate.from_template("""
 
 # 8. Use the large language model to generate the answer
 from langchain_openai import ChatOpenAI
-llm = ChatOpenAI(model="gpt-3.5-turbo")
+llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY"))
 answer = llm.invoke(prompt.format(question=question, context=docs_content))
 print(answer.content)
 

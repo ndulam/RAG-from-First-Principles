@@ -1,3 +1,7 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # 1. Load the document
 from langchain_community.document_loaders import WebBaseLoader
 
@@ -18,7 +22,7 @@ all_splits = text_splitter.split_documents(docs)
 # 3. Set up the embedding model
 from langchain_openai import OpenAIEmbeddings
 
-embeddings = OpenAIEmbeddings()
+embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 4. Create the vector store
 from langchain_core.vectorstores import InMemoryVectorStore
@@ -47,7 +51,7 @@ from langchain_core.runnables import RunnablePassthrough
 
 # Set up the DeepSeek large model
 from langchain_deepseek import ChatDeepSeek
-llm = ChatDeepSeek(model="deepseek-chat")
+llm = ChatDeepSeek(model="deepseek-chat", api_key=os.getenv("DEEPSEEK_API_KEY"))
 
 # 8. Build the LCEL chain
 chain = (

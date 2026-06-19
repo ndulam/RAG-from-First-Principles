@@ -8,10 +8,7 @@ load_dotenv()
 
 # Get the Cohere API key
 # URL: https://dashboard.cohere.com/api-keys
-# If CO_API_KEY isn't set in the env file, you can also set it this way
-# import os
-# api_key = 'XXXX'
-# os.environ['CO_API_KEY'] = api_key
+# Set CO_API_KEY in your .env file; langchain_cohere.CohereRerank reads it automatically.
 
 documents = [
     Document(

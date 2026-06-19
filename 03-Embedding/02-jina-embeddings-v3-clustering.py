@@ -1,13 +1,16 @@
+import os
 import pandas as pd
 import numpy as np
 import requests
 from sklearn.cluster import KMeans
+from dotenv import load_dotenv
+load_dotenv()
 
 # 1. Configure the Jina API
 url = 'https://api.jina.ai/v1/embeddings'
 headers = {
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer jina_4a0adace937d43299b955eb9146386a54B2Ubzak2NcPXcTekETSbKeDLtep'
+    'Authorization': f"Bearer {os.getenv('JINA_API_KEY')}"
 }
 
 # 2. Load the game_descriptions data

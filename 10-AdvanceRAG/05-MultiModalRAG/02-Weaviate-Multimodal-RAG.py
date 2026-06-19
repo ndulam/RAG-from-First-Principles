@@ -1,10 +1,15 @@
 # Homework: Students can try to generate an image using MultimodalRAG based on this code framework.
 # Not only implement Multimodal retrieval, but also further combine all information based on the retrieved content, and use modern LLMs to generate new text or images.
 
+import os
 import weaviate
 import weaviate.classes as wvc
 import requests
 from openai import OpenAI
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
 
 # 1. Connect to Weaviate instance (local or cloud)
 client = weaviate.connect_to_local()  # Replace with connect_to_wcs/wcs_cloud if using cloud service
@@ -96,7 +101,7 @@ if __name__ == "__main__":
     description = generate_description_from_image_gpt4(
         prompt="This is a picture of my pet, please provide a cute and vivid description.",
         image64=image64,
-        openai_api_key="<YOUR_OPENAI_API_KEY>"
+        openai_api_key=os.getenv("OPENAI_API_KEY")
     )
     # 5. Generate image with DALL-E-3
-    generate_image_dalee3(description, openai_api_key="<YOUR_OPENAI_API_KEY>")
+    generate_image_dalee3(description, openai_api_key=os.getenv("OPENAI_API_KEY"))

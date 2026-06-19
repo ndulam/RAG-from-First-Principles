@@ -1,12 +1,16 @@
 import os
+from dotenv import load_dotenv
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.llms.openai import OpenAI  # import the OpenAI LLM class
 from llama_index.embeddings.openai import OpenAIEmbedding # import the OpenAI Embedding class
 
+# Load environment variables from the .env file
+load_dotenv()
+
 # --- Start configuring your custom API base URL and key ---
-# Replace the placeholders below with your actual API base URL and API key
-custom_api_base_url = "https://vip.apiyi.com/v1"
-custom_api_key = "XXX"            # e.g.: "sk-yourkeyvalue"
+# Set CUSTOM_API_BASE_URL and CUSTOM_API_KEY in your .env file
+custom_api_base_url = os.getenv("CUSTOM_API_BASE_URL")
+custom_api_key = os.getenv("CUSTOM_API_KEY")
 
 # (Optional) confirm the model names your third-party API supports/requires
 

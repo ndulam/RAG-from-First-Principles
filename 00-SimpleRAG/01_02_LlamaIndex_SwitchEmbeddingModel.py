@@ -2,9 +2,13 @@
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding # requires pip install llama-index-embeddings-huggingface
 
+# Load environment variables (OPENAI_API_KEY is still used for the default LLM)
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # Load a local embedding model
-# import os
-# os.environ['HF_ENDPOINT']= 'https://hf-mirror.com' # set a mirror if HuggingFace happens to be blocked
+os.environ['HF_ENDPOINT']= 'https://hf-mirror.com' # set a mirror if HuggingFace happens to be blocked
 embed_model = HuggingFaceEmbedding(
     model_name="BAAI/bge-small-zh" # model path/name (downloaded from HuggingFace on first run)
     )

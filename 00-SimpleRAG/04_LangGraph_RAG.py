@@ -1,3 +1,7 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # 1. Load the document
 from langchain_community.document_loaders import WebBaseLoader
 loader = WebBaseLoader(
@@ -44,7 +48,7 @@ def retrieve(state: State):
 # 8. Define the generation step
 def generate(state: State):
     from langchain_openai import ChatOpenAI
-    llm = ChatOpenAI(model="gpt-4")
+    llm = ChatOpenAI(model="gpt-4", api_key=os.getenv("OPENAI_API_KEY"))
     docs_content = "\n\n".join(doc.page_content for doc in state["context"])
     messages = prompt.invoke({"question": state["question"], "context": docs_content})
     response = llm.invoke(messages)

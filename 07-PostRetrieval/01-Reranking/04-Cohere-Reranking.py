@@ -40,22 +40,15 @@ print("🔄 Initializing Cohere reranking service...")
 print("🔐 Configuring Cohere API key...")
 print("📝 Get your API key here: https://dashboard.cohere.com/api-keys")
 
-# Get the Cohere API key - two configuration methods
 import os
 
-# Method 1: read from environment variable (recommended)
-api_key_from_env = os.getenv('CO_API_KEY')
+# Read the Cohere API key from the environment (set CO_API_KEY in your .env file)
+api_key = os.getenv('CO_API_KEY')
 
-# Method 2: set directly (for testing only; use environment variables in production)
-api_key = 'XXXX'  # Replace with your actual API key
-os.environ['CO_API_KEY'] = api_key
-
-if api_key_from_env:
+if api_key:
     print("✅ Successfully read API key from environment variable")
 else:
-    print("⚠️  Using hardcoded API key (use an environment variable in production)")
-
-print("🔒 Security reminder: keep your API key safe and never commit it to a code repository")
+    print("⚠️  CO_API_KEY is not set - add it to your .env file")
 
 # 2. Prepare sample documents
 print("\n📋 Preparing test documents...")
