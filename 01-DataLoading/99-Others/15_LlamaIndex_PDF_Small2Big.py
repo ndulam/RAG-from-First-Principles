@@ -45,7 +45,7 @@ query_engine = index.as_query_engine(
 
 # Example queries
 query = "What is the change of free cash flow and what is the rate from the financial and operational highlights?"
-query = "how much COVID-19 response initiatives in millions in year 2021?" # 这个问题LC会LI不会
+query = "how much COVID-19 response initiatives in millions in year 2021?" # LangChain can answer this, LlamaIndex cannot
 query = "What is the Adjusted EBITDA loss in year COVID-19?"
 query = "how much is the Loss from operations for the period ended March 31, 2021?"
 query = "how much is the Loss from operations for 2022?"

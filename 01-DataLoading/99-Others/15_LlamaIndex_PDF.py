@@ -32,7 +32,7 @@ query_engine = index.as_query_engine(
 
 query = "What is the change of free cash flow and what is the rate from the financial and operational highlights?"
 query = "how many COVID-19 response initiatives in year 2021?"
-query = "how much the COVID-19 response initiatives inpact the EBITDA?" # 重塑问题的重要性
+query = "how much the COVID-19 response initiatives inpact the EBITDA?" # the importance of reframing the question
 # query = "After the year of COVID-19, how much EBITDA profit improved?"
 # query = "What is the Adjusted EBITDA loss in year COVID-19?"
 # query = "how much is the Loss from operations?"

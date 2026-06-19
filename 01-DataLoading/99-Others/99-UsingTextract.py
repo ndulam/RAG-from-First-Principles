@@ -2,19 +2,19 @@ import textract
 text = textract.process("data/BlackMythWukong/black mythWukong.pdf")
 print(text)
 
-# Textract 与 PyMuPDF、Unstructured 对比:
+# Textract vs PyMuPDF / Unstructured:
 
-# 优势:
-# 1. 支持多种文档格式(不仅PDF,还包括doc、odt等)
-# 2. 使用简单,API统一
-# 3. 自动检测文档编码
-# 4. 不需要额外的依赖库
-# 5. 适合快速提取文本内容
+# Advantages:
+# 1. Supports multiple document formats (not just PDF, also doc, odt, etc.)
+# 2. Simple to use, unified API
+# 3. Automatically detects document encoding
+# 4. No extra dependencies required
+# 5. Good for quickly extracting text content
 
-# 劣势:
-# 1. 功能相对简单,只能提取文本
-# 2. 无法获取文档结构信息
-# 3. 不支持图片提取
-# 4. 对复杂布局的处理能力较弱
-# 5. 无法获取元数据
-# 6. 处理大文件时性能较差
+# Disadvantages:
+# 1. Relatively limited functionality, text extraction only
+# 2. Cannot retrieve document structure information
+# 3. Does not support image extraction
+# 4. Weaker handling of complex layouts
+# 5. Cannot retrieve metadata
+# 6. Poorer performance on large files

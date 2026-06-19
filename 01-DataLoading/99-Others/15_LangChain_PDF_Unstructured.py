@@ -5,18 +5,18 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
 
-# 加载环境变量
+# Load environment variables
 load_dotenv()
 
-# 初始化 OpenAI 模型
+# Initialize OpenAI models
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
 
-# 加载 PDF 文件
+# Load PDF file
 loader = UnstructuredPDFLoader("data/PDF/uber_10q_march_2022.pdf")
 documents = loader.load()
 
-# 文本分割
+# Split text
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
     chunk_overlap=200,
@@ -25,10 +25,10 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 chunks = text_splitter.split_documents(documents)
 
-# 创建向量存储
+# Create vector store
 vectorstore = FAISS.from_documents(chunks, embeddings)
 
-# 创建检索链
+# Create retrieval chain
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
@@ -37,7 +37,7 @@ qa_chain = RetrievalQA.from_chain_type(
     verbose=True
 )
 
-# 查询示例
+# Example query
 query = "What is the change of free cash flow and what is the rate from the financial and operational highlights?"
 query = "how many COVID-19 response initiatives in year 2021?"
 response = qa_chain.invoke({"query": query})

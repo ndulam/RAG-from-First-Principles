@@ -18,7 +18,7 @@ Status values: `pending`, `in_progress`, `done`, `skipped` (with reason).
 | Directory | Files w/ Chinese | Status |
 | --- | --- | --- |
 | 00-SimpleRAG | 21 | done |
-| 01-DataLoading | 47 | pending |
+| 01-DataLoading | 47 | done |
 | 02-DocChunking | 7 | pending |
 | 03-Embedding | 6 | pending |
 | 04-VectorDB | 28 | pending |
@@ -41,6 +41,15 @@ Status values: `pending`, `in_progress`, `done`, `skipped` (with reason).
   used as the RAG example corpus. Translating these is a bigger content
   translation job (not just code comments) - handled last, may be partial.
 - Commit after each top-level directory completes so work is recoverable.
+- `01-DataLoading/04-PDFFileLoading/07-Unstructed-PDF-CompareVariousModes.ipynb`:
+  source code was already English; remaining Chinese was only in stale cell
+  outputs (raw OCR/extracted text dumps from Chinese-language source PDFs:
+  Yungang Grottoes museum description, Black Myth Wukong game lore). Cleared
+  those outputs (set to `[]`, execution_count to `null`) rather than
+  hand-translating tens of thousands of characters of dumped PDF text with
+  no pedagogical value. Same handling should apply to any other notebook
+  where the only remaining Chinese is in stale execution output rather than
+  source/markdown.
 
 ## Resume instructions
 
