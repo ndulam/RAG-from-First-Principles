@@ -1,7 +1,7 @@
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
 from langchain_core.documents import Document
 
-markdown_path = "99-EN/black-myth-wukong/black_myth_wukong_versions.md"
+markdown_path = "../../99-EN/black-myth-wukong/black_myth_wukong_versions.md"
 loader = UnstructuredMarkdownLoader(markdown_path)
 
 data = loader.load()

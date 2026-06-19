@@ -30,7 +30,7 @@ Advantages:
 """
 
 # Document directory configuration
-doc_dirs = ["99-EN/shanxi-tourism", "99-EN/assets/shanxi-tourism"]
+doc_dirs = ["../../99-EN/shanxi-tourism", "../../99-EN/assets/shanxi-tourism"]
 
 def load_documents(directory):
     """

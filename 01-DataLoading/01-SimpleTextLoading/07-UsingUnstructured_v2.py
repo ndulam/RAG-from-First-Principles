@@ -1,5 +1,5 @@
 from unstructured.partition.text import partition_text
-text = "99-EN/black-myth-wukong/black_myth_wukong_setting.txt"
+text = "../../99-EN/black-myth-wukong/black_myth_wukong_setting.txt"
 elements = partition_text(text)
 for element in elements:
     print(element)

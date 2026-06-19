@@ -1,7 +1,7 @@
 # 1. Load and preprocess the dataset
 import json
 from typing import Optional, Dict
-with open("99-EN/journey-of-extinction-husun/battle_scenes.json", 'r', encoding='utf-8') as f:
+with open("../../99-EN/journey-of-extinction-husun/battle_scenes.json", 'r', encoding='utf-8') as f:
     dataset = json.load(f)
 
 docs = []

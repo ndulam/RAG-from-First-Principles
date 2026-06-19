@@ -16,7 +16,7 @@ class GameInfo(BaseModel):
     reception: str = Field(description="Market Reception")
 
 # Load data
-documents = SimpleDirectoryReader(input_files=["99-EN/black-myth-wukong/black_myth_wukong_wiki.txt"], encoding="utf-8").load_data()
+documents = SimpleDirectoryReader(input_files=["../../99-EN/black-myth-wukong/black_myth_wukong_wiki.txt"], encoding="utf-8").load_data()
 index = VectorStoreIndex.from_documents(documents)
 
 # 1. Basic Parsing Mode - Using COMPACT mode

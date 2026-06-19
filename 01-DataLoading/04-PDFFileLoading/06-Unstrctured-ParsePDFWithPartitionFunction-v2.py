@@ -2,7 +2,7 @@
 from unstructured.partition.auto import partition
 
 # Set the PDF file path
-filename = "99-EN/black-myth-wukong/black_myth_wukong_slides.pdf"
+filename = "../../99-EN/black-myth-wukong/black_myth_wukong_slides.pdf"
 
 # Use the partition function to parse the PDF file
 # content_type specifies the file type as PDF

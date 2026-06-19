@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import CSVLoader
 # # Part 1: basic CSV loading and printing records
-file_path = "99-EN/black-myth-wukong/black_myth_wukong.csv"
+file_path = "../../99-EN/black-myth-wukong/black_myth_wukong.csv"
 # loader = CSVLoader(file_path=file_path)
 # data = loader.load()
 # print("Example 1: basic CSV loading and printing the first two records")

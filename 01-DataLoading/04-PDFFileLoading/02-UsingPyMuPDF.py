@@ -1,6 +1,6 @@
 import pymupdf
 # Open the PDF file
-doc = pymupdf.open("99-EN/black-myth-wukong/black_myth_wukong_slides.pdf")
+doc = pymupdf.open("../../99-EN/black-myth-wukong/black_myth_wukong_slides.pdf")
 text = [page.get_text() for page in doc]
 print(text)
 

@@ -1,5 +1,5 @@
 from unstructured.partition.auto import partition
-filename = "99-EN/black-myth-wukong/black_myth_wukong_slides.pdf"
+filename = "../../99-EN/black-myth-wukong/black_myth_wukong_slides.pdf"
 elements = partition(filename=filename, 
                      content_type="application/pdf"
                     )

@@ -44,7 +44,7 @@ print("🔄 Initializing the RankLLM reranking system...")
 
 # 1. Document loading and preprocessing
 print("📖 Loading and preprocessing the document...")
-doc_path = "99-EN/shanxi-tourism/yungang_grottoes.txt"
+doc_path = "../../99-EN/shanxi-tourism/yungang_grottoes.txt"
 print(f"Document path: {doc_path}")
 
 print("  🔤 Loading the document with TextLoader...")

@@ -11,7 +11,7 @@ output_dir = 'output'
 os.makedirs(output_dir, exist_ok=True)
 
 # Convert the PDF to images and save them
-images = pdf2image.convert_from_path('99-EN/black-myth-wukong/black_myth_wukong_slides.pdf')
+images = pdf2image.convert_from_path('../../99-EN/black-myth-wukong/black_myth_wukong_slides.pdf')
 for i, image in enumerate(images):
     image.save(f'{output_dir}/page_{i+1}.png')
 
