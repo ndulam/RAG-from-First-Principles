@@ -1,4 +1,4 @@
-# 双层检索-富豪榜 - 需要pip install openpyxl
+# Two-tier retrieval - Billionaires Ranking - requires pip install openpyxl
 import os
 from dotenv import load_dotenv
 import pandas as pd
@@ -7,23 +7,23 @@ import torch
 from pymilvus import MilvusClient, DataType, FieldSchema, CollectionSchema
 import logging
 
-# 设置日志
+# Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# 加载环境变量
+# Load environment variables
 load_dotenv()
 
-# 初始化嵌入模型
+# Initialize the embedding model
 embedding_function = SentenceTransformer(
     'BAAI/bge-m3',
     device='cuda:0' if torch.cuda.is_available() else 'cpu',
     trust_remote_code=True
 )
 
-# 连接到Milvus
+# Connect to Milvus
 client = MilvusClient("richman_bge_m3.db")
 
-# 1. 创建summary向量数据库
+# 1. Create the summary vector collection
 summary_collection_name = "billionaires_summary"
 summary_fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),

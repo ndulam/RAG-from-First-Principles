@@ -1,4 +1,4 @@
-# 导入相关的库
+# Import required libraries
 import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
@@ -10,223 +10,225 @@ from langchain_deepseek import ChatDeepSeek
 from langchain.load import dumps, loads
 
 """
-RRF（Reciprocal Rank Fusion）重排算法实现
+RRF (Reciprocal Rank Fusion) reranking algorithm implementation
 
-RRF是一种简单而有效的多检索结果融合算法，它通过将多个检索查询的结果进行排名融合，
-来提高检索的准确性和覆盖面。
+RRF is a simple yet effective algorithm for fusing multiple retrieval result lists.
+It fuses the rankings of results from multiple retrieval queries to improve
+retrieval accuracy and coverage.
 
-核心思想：
-1. 对于同一个用户问题，生成多个不同角度的查询
-2. 分别对每个查询进行检索
-3. 使用RRF算法将多个检索结果列表融合成一个统一的排序列表
-4. RRF算法为每个文档分配分数：score = 1/(rank + k)，其中rank是该文档在某个结果列表中的排名
+Core idea:
+1. For a single user question, generate multiple queries from different angles
+2. Retrieve results for each query separately
+3. Use the RRF algorithm to fuse multiple retrieval result lists into one unified ranked list
+4. The RRF algorithm assigns a score to each document: score = 1/(rank + k), where rank is the
+   document's rank within a given result list
 
-优势：
-- 提高检索的覆盖面：多个查询可以从不同角度检索相关文档
-- 降低单一查询的偏差：通过多查询融合减少单一查询的局限性
-- 简单高效：算法复杂度低，易于实现和理解
+Advantages:
+- Improves retrieval coverage: multiple queries can retrieve relevant documents from different angles
+- Reduces the bias of a single query: fusing multiple queries reduces the limitations of any one query
+- Simple and efficient: the algorithm has low complexity and is easy to implement and understand
 """
 
-# 文档目录配置
+# Document directory configuration
 doc_dir = "90-Data/Shanxi Cultural Tourism"
 
 def load_documents(directory):
     """
-    文档加载函数
-    
-    功能：读取指定目录中的所有文档（支持PDF、TXT格式）
-    
-    参数：
-        directory (str): 文档所在目录路径
-    
-    返回：
-        list: 加载的文档列表，每个文档包含内容和元数据
-    
-    说明：
-        - 遍历目录中的所有文件
-        - 根据文件扩展名选择合适的加载器
-        - 支持PDF和TXT格式文件
-        - 跳过不支持的文件格式
+    Document loading function
+
+    Purpose: Read all documents (PDF and TXT formats supported) in the specified directory
+
+    Args:
+        directory (str): Path to the directory containing the documents
+
+    Returns:
+        list: List of loaded documents, each containing content and metadata
+
+    Notes:
+        - Iterates over all files in the directory
+        - Picks the appropriate loader based on the file extension
+        - Supports PDF and TXT format files
+        - Skips unsupported file formats
     """
     documents = []
     for filename in os.listdir(directory):
         filepath = os.path.join(directory, filename)
-        
+
         if filename.endswith(".pdf"):
-            # 使用PyPDFLoader加载PDF文件
+            # Use PyPDFLoader to load PDF files
             loader = PyPDFLoader(filepath)
         elif filename.endswith(".txt"):
-            # 使用TextLoader加载TXT文件
+            # Use TextLoader to load TXT files
             loader = TextLoader(filepath)
         else:
-            continue  # 跳过不支持的文件类型
-        
-        # 加载文档并添加到列表中
+            continue  # Skip unsupported file types
+
+        # Load the document and add it to the list
         documents.extend(loader.load())
     return documents
 
-# 第一步：加载文档
-print("📖 正在加载文档...")
+# Step 1: Load documents
+print("📖 Loading documents...")
 docs = load_documents(doc_dir)
-print(f"✅ 成功加载 {len(docs)} 个文档")
+print(f"✅ Successfully loaded {len(docs)} documents")
 
-# 第二步：文本切块（分割）
-print("\n🔪 正在进行文本切块...")
+# Step 2: Text chunking (splitting)
+print("\n🔪 Chunking text...")
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=300,      # 每个文本块的最大字符数
-    chunk_overlap=50     # 相邻文本块之间的重叠字符数，确保上下文连续性
+    chunk_size=300,      # Maximum number of characters per text chunk
+    chunk_overlap=50     # Overlapping characters between adjacent chunks, to keep context continuous
 )
 splits = text_splitter.split_documents(docs)
-print(f"✅ 文档已切分为 {len(splits)} 个文本块")
+print(f"✅ Documents split into {len(splits)} text chunks")
 
-# 第三步：创建向量索引
-print("\n🔍 正在创建向量索引...")
-# 使用HuggingFace的轻量级嵌入模型
+# Step 3: Create the vector index
+print("\n🔍 Creating vector index...")
+# Use HuggingFace's lightweight embedding model
 embed_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-# 使用Chroma向量数据库存储文档向量
+# Use the Chroma vector database to store document vectors
 vectorstore = Chroma.from_documents(documents=splits, embedding=embed_model)
-# 创建检索器
+# Create the retriever
 retriever = vectorstore.as_retriever()
-print("✅ 向量索引创建完成")
+print("✅ Vector index created")
 
 def reciprocal_rank_fusion(results: list[list], k=60):
     """
-    RRF（Reciprocal Rank Fusion）算法实现
-    
-    功能：将多个检索结果列表融合成一个统一的排序列表
-    
-    参数：
-        results (list[list]): 多个检索结果列表，每个列表包含按相关性排序的文档
-        k (int): RRF算法的调节参数，默认值60（经验值）
-    
-    返回：
-        list: 融合后的(文档, 分数)元组列表，按分数降序排序
-    
-    算法原理：
-        1. 对于每个检索结果列表中的每个文档
-        2. 计算该文档的RRF分数：score = 1 / (rank + k)
-        3. 如果同一文档出现在多个列表中，累加其分数
-        4. 按最终分数对所有文档进行排序
-    
-    优势：
-        - rank越小（排名越靠前），分数越高
-        - k参数防止分母为0，并调节不同排名之间的差距
-        - 多次出现的文档会获得更高的累积分数
+    RRF (Reciprocal Rank Fusion) algorithm implementation
+
+    Purpose: Fuse multiple retrieval result lists into one unified ranked list
+
+    Args:
+        results (list[list]): Multiple retrieval result lists, each containing documents sorted by relevance
+        k (int): The RRF algorithm's tuning parameter, default value 60 (an empirical value)
+
+    Returns:
+        list: A list of (document, score) tuples after fusion, sorted in descending order of score
+
+    Algorithm details:
+        1. For each document in each retrieval result list
+        2. Compute the document's RRF score: score = 1 / (rank + k)
+        3. If the same document appears in multiple lists, accumulate its score
+        4. Sort all documents by their final score
+
+    Advantages:
+        - The smaller the rank (i.e., the higher the document is ranked), the higher the score
+        - The k parameter prevents the denominator from being 0 and tunes the gap between different ranks
+        - Documents that appear multiple times accumulate a higher score
     """
-    print(f"🔄 RRF算法处理 {len(results)} 个检索结果列表...")
-    
-    fused_scores = {}  # 存储每个文档的累积分数
-    
-    # 遍历每个检索结果列表
+    print(f"🔄 RRF algorithm processing {len(results)} retrieval result lists...")
+
+    fused_scores = {}  # Stores the cumulative score for each document
+
+    # Iterate over each retrieval result list
     for list_idx, docs in enumerate(results):
-        print(f"  处理第 {list_idx + 1} 个结果列表，包含 {len(docs)} 个文档")
-        
-        # 遍历该列表中的每个文档
+        print(f"  Processing result list {list_idx + 1}, containing {len(docs)} documents")
+
+        # Iterate over each document in this list
         for rank, doc in enumerate(docs):
-            # 将文档序列化为字符串作为唯一标识
+            # Serialize the document to a string to use as a unique identifier
             doc_str = dumps(doc)
-            
-            # 如果该文档首次出现，初始化分数
+
+            # If this document appears for the first time, initialize its score
             if doc_str not in fused_scores:
                 fused_scores[doc_str] = 0
-            
-            # 计算RRF分数并累加
+
+            # Compute the RRF score and accumulate it
             rrf_score = 1 / (rank + k)
             fused_scores[doc_str] += rrf_score
-            
-            # 调试信息：显示文档在当前列表中的排名和分数
-            if rank < 3:  # 只显示前3个文档的详细信息
-                print(f"    文档 {rank+1}: RRF分数 = 1/({rank}+{k}) = {rrf_score:.4f}")
-    
-    # 按分数降序排序，返回(文档, 分数)元组列表
+
+            # Debug info: show the document's rank and score within the current list
+            if rank < 3:  # Only show details for the top 3 documents
+                print(f"    Document {rank+1}: RRF score = 1/({rank}+{k}) = {rrf_score:.4f}")
+
+    # Sort by score in descending order, returning a list of (document, score) tuples
     reranked_results = [
         (loads(doc), score)
         for doc, score in sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
     ]
-    
-    print(f"✅ RRF融合完成，共 {len(reranked_results)} 个唯一文档")
+
+    print(f"✅ RRF fusion complete, {len(reranked_results)} unique documents in total")
     return reranked_results
 
-# 第四步：多查询生成
-print("\n💭 配置多查询生成器...")
-template = """你是一个帮助用户生成多个搜索查询的助手。
+# Step 4: Multi-query generation
+print("\n💭 Configuring the multi-query generator...")
+template = """You are an assistant that helps users generate multiple search queries.
 
-请根据以下问题生成4个不同角度的相关搜索查询，这些查询应该：
-1. 从不同的角度理解原问题
-2. 使用不同的关键词和表达方式
-3. 覆盖问题的不同方面
+Based on the following question, generate 4 related search queries from different angles. These queries should:
+1. Understand the original question from different perspectives
+2. Use different keywords and phrasing
+3. Cover different aspects of the question
 
-原问题：{question}
+Original question: {question}
 
-请生成4个相关的搜索查询："""
+Please generate 4 related search queries:"""
 
 prompt_rag_fusion = ChatPromptTemplate.from_template(template)
 llm = ChatDeepSeek(model="deepseek-chat")
 
-# 创建查询生成链
+# Create the query generation chain
 generate_queries = (
-    prompt_rag_fusion 
+    prompt_rag_fusion
     | llm
-    | StrOutputParser() 
-    | (lambda x: x.split("\n"))  # 按行分割生成的查询
+    | StrOutputParser()
+    | (lambda x: x.split("\n"))  # Split the generated queries by line
 )
-print("✅ 多查询生成器配置完成")
+print("✅ Multi-query generator configured")
 
-# 第五步：测试示例
-print("\n🎯 开始RRF重排测试...")
+# Step 5: Test examples
+print("\n🎯 Starting RRF reranking test...")
 questions = [
-    "山西有哪些著名的旅游景点？",
-    "Yungang Grottoes的历史背景是什么？",
-    "Mount Wutai的文化和宗教意义是什么？"
+    "What are the famous tourist attractions in Shanxi?",
+    "What is the historical background of the Yungang Grottoes?",
+    "What is the cultural and religious significance of Mount Wutai?"
 ]
 
-# 对每个问题进行RRF检索和重排
+# Perform RRF retrieval and reranking for each question
 for idx, question in enumerate(questions, 1):
     print(f"\n{'='*50}")
-    print(f"🔍 第 {idx} 个问题：{question}")
+    print(f"🔍 Question {idx}: {question}")
     print('='*50)
-    
-    # 第一步：生成多个查询
-    print("\n1️⃣ 生成多个相关查询...")
+
+    # Step 1: Generate multiple queries
+    print("\n1️⃣ Generating multiple related queries...")
     queries = generate_queries.invoke({"question": question})
-    # 过滤空查询
+    # Filter out empty queries
     queries = [q.strip() for q in queries if q.strip()]
-    print(f"生成了 {len(queries)} 个查询：")
+    print(f"Generated {len(queries)} queries:")
     for i, query in enumerate(queries, 1):
-        print(f"  查询 {i}: {query}")
-    
-    # 第二步：对每个查询进行检索
-    print(f"\n2️⃣ 对每个查询进行向量检索...")
+        print(f"  Query {i}: {query}")
+
+    # Step 2: Retrieve for each query
+    print(f"\n2️⃣ Performing vector retrieval for each query...")
     all_results = []
     for i, query in enumerate(queries, 1):
-        print(f"  检索查询 {i}: {query}")
+        print(f"  Retrieving for query {i}: {query}")
         docs = retriever.invoke(query)
         all_results.append(docs)
-        print(f"    检索到 {len(docs)} 个相关文档")
-    
-    # 第三步：使用RRF算法融合结果
-    print(f"\n3️⃣ 使用RRF算法融合检索结果...")
-    reranked_docs = reciprocal_rank_fusion(all_results)
-    
-    # 第四步：展示最终结果
-    print(f"\n4️⃣ 最终RRF重排结果（显示前3个）：")
-    print(f"总共融合了 {len(reranked_docs)} 个唯一文档")
-    
-    for i, (doc, score) in enumerate(reranked_docs[:3], 1):
-        print(f"\n📄 排名 {i} (RRF分数: {score:.4f}):")
-        # 截取前200个字符避免输出过长
-        content_preview = doc.page_content[:200].replace('\n', ' ').strip()
-        print(f"   内容预览: {content_preview}...")
-        
-        # 显示文档来源信息（如果有）
-        if hasattr(doc, 'metadata') and doc.metadata:
-            source = doc.metadata.get('source', '未知来源')
-            print(f"   来源: {source}")
+        print(f"    Retrieved {len(docs)} relevant documents")
 
-print(f"\n🎉 RRF重排测试完成！")
-print("\n📋 RRF算法总结：")
-print("- ✅ 多角度查询生成：从不同角度理解用户问题")
-print("- ✅ 多检索结果融合：整合多个检索结果的优势")
-print("- ✅ 排名优化：通过RRF算法重新排序文档")
-print("- ✅ 提高召回率：减少单一查询的遗漏")
-print("- ✅ 提升相关性：多次出现的文档获得更高权重")
+    # Step 3: Fuse the results using the RRF algorithm
+    print(f"\n3️⃣ Fusing retrieval results using the RRF algorithm...")
+    reranked_docs = reciprocal_rank_fusion(all_results)
+
+    # Step 4: Show the final results
+    print(f"\n4️⃣ Final RRF reranked results (showing top 3):")
+    print(f"Fused {len(reranked_docs)} unique documents in total")
+
+    for i, (doc, score) in enumerate(reranked_docs[:3], 1):
+        print(f"\n📄 Rank {i} (RRF score: {score:.4f}):")
+        # Truncate to the first 200 characters to avoid overly long output
+        content_preview = doc.page_content[:200].replace('\n', ' ').strip()
+        print(f"   Content preview: {content_preview}...")
+
+        # Show the document's source info (if available)
+        if hasattr(doc, 'metadata') and doc.metadata:
+            source = doc.metadata.get('source', 'Unknown source')
+            print(f"   Source: {source}")
+
+print(f"\n🎉 RRF reranking test complete!")
+print("\n📋 RRF algorithm summary:")
+print("- ✅ Multi-angle query generation: understands the user's question from different angles")
+print("- ✅ Multi-result fusion: combines the strengths of multiple retrieval results")
+print("- ✅ Rank optimization: reorders documents using the RRF algorithm")
+print("- ✅ Improved recall: reduces omissions from relying on a single query")
+print("- ✅ Improved relevance: documents appearing multiple times receive higher weight")

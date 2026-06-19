@@ -1,4 +1,4 @@
-# 导入所需的库
+# Import required libraries
 from langchain_cohere import CohereRerank
 from langchain_core.documents import Document
 from langchain_community.retrievers import BM25Retriever
@@ -6,59 +6,59 @@ from dotenv import load_dotenv
 load_dotenv()
 
 """
-Cohere重排算法实现
+Cohere Reranking Algorithm Implementation
 
-Cohere Rerank是由Cohere公司提供的商业级重排API服务，基于先进的语言模型技术。
+Cohere Rerank is a commercial-grade reranking API service provided by Cohere, built on advanced language model technology.
 
-核心特点：
-1. 企业级性能：基于大规模预训练模型，具备强大的语义理解能力
-2. 多语言支持：支持包括中文在内的多种语言的重排任务
-3. 即用即得：无需本地部署模型，通过API调用即可使用
-4. 持续优化：模型持续更新，性能不断提升
+Core features:
+1. Enterprise-grade performance: based on large-scale pretrained models with strong semantic understanding
+2. Multilingual support: handles reranking tasks across many languages, including Chinese
+3. Ready to use: no need to deploy models locally, just call the API
+4. Continuous optimization: models are updated continuously, with performance improving over time
 
-技术优势：
-- 高精度：基于先进的Transformer架构和大规模训练数据
-- 低延迟：优化的推理引擎，支持实时重排需求
-- 易集成：标准的REST API接口，易于集成到现有系统
-- 可扩展：支持大批量文档的并行重排处理
+Technical advantages:
+- High precision: based on advanced Transformer architecture and large-scale training data
+- Low latency: optimized inference engine supporting real-time reranking needs
+- Easy integration: standard REST API interface, easy to integrate into existing systems
+- Scalable: supports parallel reranking of large batches of documents
 
-适用场景：
-- 商业级搜索系统
-- 对精度要求较高的应用
-- 快速原型开发和测试
-- 多语言检索系统
+Suitable scenarios:
+- Commercial-grade search systems
+- Applications with high precision requirements
+- Rapid prototyping and testing
+- Multilingual retrieval systems
 
-成本考虑：
-- 按API调用次数计费
-- 适合中小规模应用或对成本不敏感的场景
-- 建议在开发阶段进行成本评估
+Cost considerations:
+- Billed per API call
+- Suitable for small-to-medium scale applications or cost-insensitive scenarios
+- Recommended to evaluate cost during the development phase
 """
 
-print("🔄 初始化Cohere重排服务...")
+print("🔄 Initializing Cohere reranking service...")
 
-# 1. API密钥配置
-print("🔐 配置Cohere API密钥...")
-print("📝 获取API密钥地址：https://dashboard.cohere.com/api-keys")
+# 1. API key configuration
+print("🔐 Configuring Cohere API key...")
+print("📝 Get your API key here: https://dashboard.cohere.com/api-keys")
 
-# 获取Cohere API key - 两种配置方式
+# Get the Cohere API key - two configuration methods
 import os
 
-# 方式1：从环境变量读取（推荐）
+# Method 1: read from environment variable (recommended)
 api_key_from_env = os.getenv('CO_API_KEY')
 
-# 方式2：直接设置（仅用于测试，生产环境请使用环境变量）
-api_key = 'XXXX'  # 请替换为您的实际API密钥
+# Method 2: set directly (for testing only; use environment variables in production)
+api_key = 'XXXX'  # Replace with your actual API key
 os.environ['CO_API_KEY'] = api_key
 
 if api_key_from_env:
-    print("✅ 从环境变量成功读取API密钥")
+    print("✅ Successfully read API key from environment variable")
 else:
-    print("⚠️  使用硬编码API密钥（请在生产环境中使用环境变量）")
+    print("⚠️  Using hardcoded API key (use an environment variable in production)")
 
-print("🔒 安全提醒：请确保API密钥的安全，不要将其提交到代码仓库")
+print("🔒 Security reminder: keep your API key safe and never commit it to a code repository")
 
-# 2. 准备示例文档
-print("\n📋 准备测试文档...")
+# 2. Prepare sample documents
+print("\n📋 Preparing test documents...")
 documents = [
     Document(
         page_content="Mount Wutai是中国四大佛教名山之一，以文殊菩萨道场闻名。",

@@ -1,67 +1,74 @@
 """
-CRAG (Corrective Retrieval-Augmented Generation) 反思式检索系统
+CRAG (Corrective Retrieval-Augmented Generation) Reflective Retrieval System
 
-CRAG是一种改进的RAG方法，通过以下步骤提高检索质量：
-1. 检索：从向量数据库检索相关文档
-2. 评分：评估检索文档的相关性
-3. 决策：根据评分结果决定是直接生成答案还是进行查询重写
-4. 校正：如果文档不相关，重写查询并进行网络搜索
-5. 生成：基于过滤后的相关文档生成最终答案
+CRAG is an improved RAG approach that boosts retrieval quality through the
+following steps:
+1. Retrieve: fetch relevant documents from the vector database
+2. Grade: assess the relevance of the retrieved documents
+3. Decide: based on the grading results, decide whether to generate the
+   answer directly or rewrite the query
+4. Correct: if the documents are not relevant, rewrite the query and run a
+   web search
+5. Generate: produce the final answer based on the filtered, relevant
+   documents
 
-这种方法能够自动检测和纠正不准确的检索结果，提高RAG系统的可靠性。
+This approach can automatically detect and correct inaccurate retrieval
+results, improving the reliability of the RAG system.
 """
 
 # ================================
-# 第一部分：数据准备和向量数据库构建
+# Part 1: Data preparation and vector database construction
 # ================================
 
-#1 为3篇博客文章创建索引
+#1 Build an index for 3 blog posts
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv
 
-# 加载环境变量（包含OpenAI API密钥等）
+# Load environment variables (including the OpenAI API key, etc.)
 load_dotenv()
 
-# 定义要索引的博客文章URL
-# 这些是关于AI智能体、提示工程和对抗攻击的技术博客
+# Define the blog post URLs to index
+# These are technical blog posts about AI agents, prompt engineering, and
+# adversarial attacks
 urls = [
-    "https://lilianweng.github.io/posts/2023-06-23-agent/",        # AI智能体相关
-    "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",  # 提示工程
-    "https://lilianweng.github.io/posts/2023-10-25-adv-attack-llm/",      # LLM对抗攻击
+    "https://lilianweng.github.io/posts/2023-06-23-agent/",        # AI agents
+    "https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/",  # Prompt engineering
+    "https://lilianweng.github.io/posts/2023-10-25-adv-attack-llm/",      # LLM adversarial attacks
 ]
 
-# 使用WebBaseLoader加载每个URL的内容
+# Load the content of each URL with WebBaseLoader
 docs = [WebBaseLoader(url).load() for url in urls]
-# 将嵌套列表展平为单一文档列表
+# Flatten the nested list into a single list of documents
 docs_list = [item for sublist in docs for item in sublist]
 
-# 创建文本分割器，使用tiktoken编码器来准确计算token数量
-# chunk_size=250: 每个文档片段最多250个token
-# chunk_overlap=0: 片段间无重叠，避免重复信息
+# Create a text splitter that uses the tiktoken encoder to accurately count
+# tokens
+# chunk_size=250: each document chunk has at most 250 tokens
+# chunk_overlap=0: no overlap between chunks, avoiding duplicated information
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size=250, chunk_overlap=0
 )
-# 将文档分割成小块，便于检索和处理
+# Split the documents into small chunks for easier retrieval and processing
 doc_splits = text_splitter.split_documents(docs_list)
 
-# 创建向量数据库
-# 使用Chroma作为向量存储，OpenAI的嵌入模型进行向量化
+# Create the vector database
+# Use Chroma as the vector store and OpenAI's embedding model for vectorization
 vectorstore = Chroma.from_documents(
     documents=doc_splits,
-    collection_name="rag-chroma",  # 集合名称
-    embedding=OpenAIEmbeddings(),  # 使用OpenAI的text-embedding-ada-002模型
+    collection_name="rag-chroma",  # Collection name
+    embedding=OpenAIEmbeddings(),  # Use OpenAI's text-embedding-ada-002 model
 )
-# 将向量存储转换为检索器，用于后续的相似性搜索
+# Convert the vector store into a retriever for subsequent similarity search
 retriever = vectorstore.as_retriever()
 
 # ================================
-# 第二部分：检索评分器 - CRAG的核心组件
+# Part 2: Retrieval grader - the core component of CRAG
 # ================================
 
-#2 检索评分器
+#2 Retrieval grader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI

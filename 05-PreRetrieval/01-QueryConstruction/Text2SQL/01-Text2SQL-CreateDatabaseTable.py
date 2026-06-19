@@ -1,8 +1,8 @@
-# 连接到SQLite数据库
+# Connect to the SQLite database
 import sqlite3
 conn = sqlite3.connect('90-Data/tourism.db')
 cursor = conn.cursor()
-# 创建景区信息表
+# Create the scenic spots table
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS scenic_spots (
     scenic_id INTEGER PRIMARY KEY,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS scenic_spots (
     level VARCHAR(20),
     monthly_visitors INTEGER
 )''')
-# 创建城市信息表
+# Create the city info table
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS city_info (
     city_id INTEGER PRIMARY KEY,
@@ -19,25 +19,25 @@ CREATE TABLE IF NOT EXISTS city_info (
     annual_tourism_income INTEGER,
     famous_dish VARCHAR(100)
 )''')
-# 插入示例数据到景区信息表
+# Insert sample data into the scenic spots table
 sample_scenic_spots = [
-    (1, 'Jinci Temple', '太原市', 'AAAAA', 50000),
-    (2, 'Mount Wutai', '忻州市', 'AAAAA', 80000),
-    (3, 'Yungang Grottoes', '大同市', 'AAAAA', 70000),
-    (4, 'Pingyao Ancient City', '晋中市', 'AAAAA', 90000),
-    (5, '乔家大院', '晋中市', 'AAAA', 45000)
+    (1, 'Jinci Temple', 'Taiyuan', 'AAAAA', 50000),
+    (2, 'Mount Wutai', 'Xinzhou', 'AAAAA', 80000),
+    (3, 'Yungang Grottoes', 'Datong', 'AAAAA', 70000),
+    (4, 'Pingyao Ancient City', 'Jinzhong', 'AAAAA', 90000),
+    (5, 'Qiao Family Compound', 'Jinzhong', 'AAAA', 45000)
 ]
 cursor.executemany('INSERT OR REPLACE INTO scenic_spots VALUES (?, ?, ?, ?, ?)', sample_scenic_spots)
-# 插入示例数据到城市信息表
+# Insert sample data into the city info table
 sample_city_info = [
-    (1, '太原市', 200000000, '刀削面'),
-    (2, '大同市', 180000000, '大同醋'),
-    (3, '晋中市', 150000000, '臊子面'),
-    (4, '忻州市', 120000000, '莜面栲栳栳'),
-    (5, '运城市', 130000000, '运城煮饼')
+    (1, 'Taiyuan', 200000000, 'Daoxiao noodles'),
+    (2, 'Datong', 180000000, 'Datong vinegar'),
+    (3, 'Jinzhong', 150000000, 'Saozi noodles'),
+    (4, 'Xinzhou', 120000000, 'Youmian kaolaolao'),
+    (5, 'Yuncheng', 130000000, 'Yuncheng boiled cakes')
 ]
 cursor.executemany('INSERT OR REPLACE INTO city_info VALUES (?, ?, ?, ?)', sample_city_info)
-# 提交更改并关闭连接
+# Commit the changes and close the connection
 conn.commit()
 conn.close()
-print("数据库表创建完成，并已插入示例数据。")
+print("Database tables created and sample data inserted.")

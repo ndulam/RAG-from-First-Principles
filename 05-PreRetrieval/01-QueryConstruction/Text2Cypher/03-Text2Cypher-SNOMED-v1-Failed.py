@@ -1,120 +1,120 @@
-# 准备Neo4j数据库连接
+# Prepare the Neo4j database connection
 from neo4j import GraphDatabase
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
-# Neo4j连接配置
-uri = "bolt://localhost:7687"  # 默认Neo4j Bolt端口
+# Neo4j connection configuration
+uri = "bolt://localhost:7687"  # Default Neo4j Bolt port
 username = "neo4j"
-password = os.getenv("NEO4J_PASSWORD")  # 从环境变量获取密码
+password = os.getenv("NEO4J_PASSWORD")  # Get the password from an environment variable
 
-# 初始化Neo4j驱动
+# Initialize the Neo4j driver
 driver = GraphDatabase.driver(uri, auth=(username, password))
 
-# 准备SNOMED CT Schema描述
+# Prepare the SNOMED CT schema description
 schema_description = """
-你正在访问一个SNOMED CT图数据库，主要包含以下节点和关系：
+You are accessing a SNOMED CT graph database, which mainly contains the following nodes and relationships:
 
-节点类型：
-1. Concept (概念节点)
-   - conceptId: 概念唯一标识符
-   - fullySpecifiedName: 完整概念名称
-   - preferredTerm: 首选术语
-   - active: 是否激活
-   - effectiveTime: 生效时间
-   - moduleId: 模块ID
+Node types:
+1. Concept (concept node)
+   - conceptId: unique concept identifier
+   - fullySpecifiedName: fully specified concept name
+   - preferredTerm: preferred term
+   - active: whether active
+   - effectiveTime: effective time
+   - moduleId: module ID
 
-2. Description (描述节点)
-   - descriptionId: 描述唯一标识符
-   - term: 术语文本
-   - typeId: 描述类型ID
-   - languageCode: 语言代码
-   - active: 是否激活
+2. Description (description node)
+   - descriptionId: unique description identifier
+   - term: term text
+   - typeId: description type ID
+   - languageCode: language code
+   - active: whether active
 
-3. Relationship (关系节点)
-   - relationshipId: 关系唯一标识符
-   - typeId: 关系类型ID
-   - active: 是否激活
+3. Relationship (relationship node)
+   - relationshipId: unique relationship identifier
+   - typeId: relationship type ID
+   - active: whether active
 
-关系类型：
-1. IS_A: 表示概念之间的层级关系
-2. HAS_DESCRIPTION: 概念与其描述之间的关系
-3. HAS_RELATIONSHIP: 概念之间的其他关系
+Relationship types:
+1. IS_A: represents a hierarchical relationship between concepts
+2. HAS_DESCRIPTION: relationship between a concept and its description
+3. HAS_RELATIONSHIP: other relationships between concepts
 """
 
-# 初始化DeepSeek客户端
+# Initialize the DeepSeek client
 from openai import OpenAI
 client = OpenAI(
     base_url="https://api.deepseek.com",
     api_key=os.getenv("DEEPSEEK_API_KEY")
 )
 
-# 设置查询
-user_query = "查找与'Diabetes'相关的所有概念及其描述"
+# Set the query
+user_query = "Find all concepts related to 'Diabetes' and their descriptions"
 
-# 准备生成Cypher的提示词
+# Prepare the prompt for generating Cypher
 prompt = f"""
-以下是SNOMED CT图数据库的结构描述：
+Below is a description of the SNOMED CT graph database structure:
 {schema_description}
-用户的自然语言问题如下：
+The user's natural language question is as follows:
 "{user_query}"
-请注意：
-1. 使用MATCH子句来匹配节点和关系
-2. 使用WHERE子句来过滤条件
-3. 使用RETURN子句来指定返回结果
-4. 请只返回Cypher查询语句，不要包含任何其他解释、注释或格式标记（如```cypher）
+Please note:
+1. Use a MATCH clause to match nodes and relationships
+2. Use a WHERE clause to filter conditions
+3. Use a RETURN clause to specify the returned results
+4. Return only the Cypher query statement, without any other explanation, comments, or formatting markers (such as ```cypher)
 """
 
-# 调用LLM生成Cypher语句
+# Call the LLM to generate the Cypher statement
 response = client.chat.completions.create(
     model="deepseek-chat",
     messages=[
-        {"role": "system", "content": "你是一个Cypher查询专家。请只返回Cypher查询语句，不要包含任何Markdown格式或其他说明。"},
+        {"role": "system", "content": "You are a Cypher query expert. Return only the Cypher query statement, without any Markdown formatting or other explanation."},
         {"role": "user", "content": prompt}
     ],
     temperature=0
 )
 
-# 清理Cypher语句，移除可能的Markdown标记
+# Clean up the Cypher statement, removing any Markdown markers
 cypher = response.choices[0].message.content.strip()
 cypher = cypher.replace('```cypher', '').replace('```', '').strip()
-print(f"\n生成的Cypher查询语句：\n{cypher}")
+print(f"\nGenerated Cypher query:\n{cypher}")
 
-# 执行Cypher查询并获取结果
+# Execute the Cypher query and get the results
 def run_query(tx, query):
     result = tx.run(query)
     return [record for record in result]
 
 with driver.session() as session:
     results = session.execute_read(run_query, cypher)
-    print(f"查询结果：{results}")
+    print(f"Query results: {results}")
 
-# 生成自然语言描述
+# Generate a natural language description
 if results:
     nl_prompt = f"""
-查询结果如下：
+The query results are as follows:
 {results}
-请将这些数据转换为自然语言描述，使其易于理解。
-原始问题是：{user_query}
+Please convert this data into a natural language description that is easy to understand.
+The original question was: {user_query}
 
-要求：
-1. 使用通俗易懂的语言
-2. 包含所有查询到的数据信息
-3. 如果有专业术语，请适当解释
+Requirements:
+1. Use clear, easy-to-understand language
+2. Include all the queried data information
+3. If there are technical terms, explain them appropriately
 """
     response_nl = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "你是一个医学信息专家，负责将SNOMED CT查询结果转换为易懂的自然语言描述。"},
+            {"role": "system", "content": "You are a medical information expert responsible for converting SNOMED CT query results into an easy-to-understand natural language description."},
             {"role": "user", "content": nl_prompt}
         ],
         temperature=0.7
-    )    
+    )
     description = response_nl.choices[0].message.content.strip()
-    print(f"自然语言描述：\n{description}")
+    print(f"Natural language description:\n{description}")
 else:
-    print("未找到相关数据。")
+    print("No relevant data found.")
 
-# 关闭数据库连接
-driver.close() 
+# Close the database connection
+driver.close()

@@ -1,7 +1,7 @@
-# 安装依赖：pip install pymilvus
-# pip show pymilvus  # 查看当前 SDK 版本
+# Install dependency: pip install pymilvus
+# pip show pymilvus  # check the current SDK version
 '''
-# 安装Milvus服务端
+# Install the Milvus server
 
 wget https://github.com/milvus-io/milvus/releases/download/v2.5.10/milvus-standalone-docker-compose.yml -O docker-compose.yml
 
@@ -16,78 +16,78 @@ Creating milvus-standalone ... done
 from pymilvus import MilvusClient, exceptions
 
 # ——————————————
-# 1. 连接 Milvus Standalone
+# 1. Connect to Milvus Standalone
 # ——————————————
-# uri: 协议+地址+端口，默认为 http://localhost:19530
-# token: "用户名:密码"，默认 root:Milvus
+# uri: protocol+address+port, defaults to http://localhost:19530
+# token: "username:password", defaults to root:Milvus
 client = MilvusClient(
     uri="http://localhost:19530",
     token="root:Milvus"
 )
 
 # ——————————————
-# 2. 创建数据库 my_database_1（无额外属性）
+# 2. Create database my_database_1 (no extra properties)
 # ——————————————
 try:
     client.create_database(db_name="my_database_1")
-    print("✓ my_database_1 创建成功")
+    print("✓ my_database_1 created successfully")
 except exceptions.AlreadyExistError:
-    print("ℹ my_database_1 已存在")
+    print("ℹ my_database_1 already exists")
 
 # ——————————————
-# 3. 创建数据库 my_database_2（设置副本数为 3）
+# 3. Create database my_database_2 (set replica count to 3)
 # ——————————————
 client.create_database(
     db_name="my_database_2",
     properties={"database.replica.number": 3}
 )
-print("✓ my_database_2 创建成功，副本数=3")
+print("✓ my_database_2 created successfully, replicas=3")
 
 # ——————————————
-# 4. 列出所有数据库
+# 4. List all databases
 # ——————————————
 db_list = client.list_databases()
-print("当前所有数据库：", db_list)
+print("All current databases:", db_list)
 
 # ——————————————
-# 5. 查看默认数据库（default）详情
+# 5. View details of the default database
 # ——————————————
 default_info = client.describe_database(db_name="default")
-print("默认数据库详情：", default_info)
+print("Default database details:", default_info)
 
 # ——————————————
-# 6. 修改 my_database_1 属性：限制最大集合数为 10
+# 6. Modify my_database_1 properties: limit max collections to 10
 # ——————————————
 client.alter_database_properties(
     db_name="my_database_1",
     properties={"database.max.collections": 10}
 )
-print("✓ 已为 my_database_1 限制最大集合数为 10")
+print("✓ Limited my_database_1 to a maximum of 10 collections")
 
 # ——————————————
-# 7. 删除 my_database_1 的 max.collections 限制
+# 7. Remove the max.collections limit on my_database_1
 # ——————————————
 client.drop_database_properties(
     db_name="my_database_1",
     property_keys=["database.max.collections"]
 )
-print("✓ 已移除 my_database_1 的最大集合数限制")
+print("✓ Removed the max collections limit on my_database_1")
 
 # ——————————————
-# 8. 切换到 my_database_2（后续所有操作都作用于该库）
+# 8. Switch to my_database_2 (all subsequent operations apply to this database)
 # ——————————————
 client.use_database(db_name="my_database_2")
-print("✓ 已切换当前数据库为 my_database_2")
+print("✓ Switched the current database to my_database_2")
 
 # ——————————————
-# 9. 删除数据库 my_database_2
-#    （注意：如果库内有 Collection，需先 client.drop_collection() 将其清空）
+# 9. Delete database my_database_2
+#    (note: if the database has collections, drop them first with client.drop_collection())
 # ——————————————
 client.drop_database(db_name="my_database_2")
-print("✓ my_database_2 已删除")
+print("✓ my_database_2 deleted")
 
 # ——————————————
-# 10. 删除数据库 my_database_1
+# 10. Delete database my_database_1
 # ——————————————
 client.drop_database(db_name="my_database_1")
-print("✓ my_database_1 已删除")
+print("✓ my_database_1 deleted")

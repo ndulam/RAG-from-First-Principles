@@ -1,81 +1,81 @@
 from langchain_deepseek import ChatDeepSeek 
 from langchain_huggingface import HuggingFaceEmbeddings 
-# 初始化语言模型和向量嵌入模型
+# Initialize the language model and the embedding model
 llm = ChatDeepSeek(model="deepseek-chat", temperature=0.1)
 embed_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-zh")
-# 准备游戏知识文本，创建Document对象。
+# Prepare the game knowledge text and create a Document object.
 from langchain.schema import Document
 game_knowledge = """
-《Chronicles of Godslaying∙猢狲》是一款动作角色扮演游戏。游戏背景setup在架空的神话世界中。玩家将扮演齐天大圣孙Wukong，在充满东方神话元素的世界中展开冒险。游戏的战斗系统极具特色，采用了独特的"变身系统"。Wukong可以在战斗中变换不同形态。每种形态都有其独特的战斗风格和技能组合。金刚形态侧重力量型打击，带来压倒性的破坏力。魔佛形态则专注法术攻击，能释放强大的法术伤害。游戏世界中充满了标志性的神话角色，除了主角孙Wukong以外，还有来自佛教、道教等各派系的神魔。这些角色既可能是Wukong的盟友，也可能是需要击败的强大对手。装备系统包含了丰富的武器选择，除了著名的如意金箍棒以外，Wukong还可以使用各种神器法宝。不同武器有其特色效果，玩家需要根据BattleScenes灵活选择。游戏的画面表现极具东方美学特色，场景融合了水墨画风格，将山川、建筑等元素完美呈现。战斗特效既有中国传统文化元素，又具备现代游戏的视觉震撼力。难度设计上，Boss战充满挑战性，需要玩家精准把握战斗节奏和技能运用。同时游戏也提供了多种难度选择，照顾不同技术水平的玩家。
+"Chronicles of Godslaying: Wukong" is an action role-playing game. The game's setting is built around an alternate-history mythological world. Players take on the role of the Great Sage Equal to Heaven, Sun Wukong, embarking on an adventure through a world steeped in Eastern mythology. The game's combat system is highly distinctive, featuring a unique "transformation system." Wukong can switch between different forms during battle. Each form has its own distinctive combat style and skill set. The Vajra form emphasizes power-based strikes, delivering overwhelming destructive force. The Demon Buddha form focuses on spell attacks, capable of unleashing powerful magical damage. The game world is filled with iconic mythological characters; besides the protagonist Sun Wukong, there are gods and demons from Buddhist, Taoist, and other factions. These characters may be Wukong's allies, or they may be formidable adversaries that must be defeated. The equipment system offers a wide range of weapon choices; besides the famous Ruyi Cudgel, Wukong can also wield various divine weapons and treasures. Different weapons have their own distinctive effects, and players need to choose flexibly based on the battle scene. The game's visual presentation has a strongly Eastern aesthetic; the scenes blend ink-wash painting styles, perfectly rendering mountains, rivers, architecture, and other elements. The combat effects combine traditional Chinese cultural elements with the visual impact of modern games. In terms of difficulty design, boss fights are highly challenging, requiring players to precisely time their combat rhythm and skill usage. The game also offers multiple difficulty options to accommodate players of different skill levels.
 
 """
-# 创建Document对象
+# Create a Document object
 documents = [Document(page_content=game_knowledge)]
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-# 父文本块分割器（较大的文本块）
+# Parent text-chunk splitter (larger chunks)
 parent_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
     chunk_overlap=200,
     separators=["\n\n", "\n", "。", "！", "？", "；", ",", " ", ""]
 )
-# 子文本块分割器（较小的文本块）
+# Child text-chunk splitter (smaller chunks)
 child_splitter = RecursiveCharacterTextSplitter(
     chunk_size=200,
     chunk_overlap=50,
     separators=["\n\n", "\n", "。", "！", "？", "；", ",", " ", ""]
 )
-# 创建父子文本块
+# Create the parent and child text chunks
 parent_docs = parent_splitter.split_documents(documents)
 child_docs = child_splitter.split_documents(documents)
-# 创建存储和检索器，建立两层存储系统
-from langchain.retrievers import ParentDocumentRetriever # 父文档检索器
-from langchain.storage import InMemoryStore # 内存存储
-from langchain_community.vectorstores import Chroma # 向量存储
+# Create the storage and retriever, establishing a two-tier storage system
+from langchain.retrievers import ParentDocumentRetriever # Parent document retriever
+from langchain.storage import InMemoryStore # In-memory storage
+from langchain_community.vectorstores import Chroma # Vector store
 vectorstore = Chroma(
     collection_name="game_knowledge",
     embedding_function=embed_model
 )
 store = InMemoryStore()
 retriever = ParentDocumentRetriever(
-    vectorstore=vectorstore, # 向量存储
-    docstore=store, # 文档存储
-    child_splitter=child_splitter, # 子文本块分割器
-    parent_splitter=parent_splitter, # 父文本块分割器
+    vectorstore=vectorstore, # Vector store
+    docstore=store, # Document store
+    child_splitter=child_splitter, # Child text-chunk splitter
+    parent_splitter=parent_splitter, # Parent text-chunk splitter
 )
-# 添加文本块
+# Add the text chunks
 retriever.add_documents(documents)
-# 自定义提示模板
+# Custom prompt template
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
-prompt_template = """基于以下上下文信息回答问题。如果无法找到答案，请说“我找不到相关信息”。
-上下文：
+prompt_template = """Answer the question based on the following context. If you cannot find the answer, say "I cannot find relevant information."
+Context:
 {context}
-问题：{question}
-回答："""
+Question: {question}
+Answer:"""
 PROMPT = PromptTemplate(
     template=prompt_template,
     input_variables=["context", "question"]
 )
-# 创建问答链
+# Create the QA chain
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
-    chain_type="stuff", # 问答链类型
-    retriever=retriever,# 检索器
-    return_source_documents=True, # 是否返回源文档
+    chain_type="stuff", # QA chain type
+    retriever=retriever,# Retriever
+    return_source_documents=True, # Whether to return source documents
     chain_type_kwargs={"prompt": PROMPT}
 )
-# 通过实际问答测试系统
+# Test the system with actual questions
 test_questions = [
-    "游戏中Wukong有哪些形态变化？",
-    "游戏的画面风格是怎样的？",
+    "What forms can Wukong transform into in the game?",
+    "What is the game's visual style like?",
 ]
 for question in test_questions:
-    print(f"\n问题：{question}")
-    result = qa_chain({"query": question})    
-    print(f"\n回答：{result['result']}")
-    print("\n使用的源文档：")
+    print(f"\nQuestion: {question}")
+    result = qa_chain({"query": question})
+    print(f"\nAnswer: {result['result']}")
+    print("\nSource documents used:")
     for i, doc in enumerate(result["source_documents"], 1):
-        print(f"\n相关文档 {i}:")
-        print(f"长度：{len(doc.page_content)} 字符")
-        print(f"内容片段：{doc.page_content[:150]}...")
+        print(f"\nRelated document {i}:")
+        print(f"Length: {len(doc.page_content)} characters")
+        print(f"Content snippet: {doc.page_content[:150]}...")
         print("---")

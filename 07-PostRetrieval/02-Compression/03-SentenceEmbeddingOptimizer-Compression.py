@@ -1,20 +1,20 @@
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.postprocessor import SentenceEmbeddingOptimizer
-# 加载文档
-documents = SimpleDirectoryReader("data/Shanxi Cultural Tourism").load_data()  
+# Load documents
+documents = SimpleDirectoryReader("data/Shanxi Cultural Tourism").load_data()
 index = VectorStoreIndex.from_documents(documents)
-# 不使用优化的查询
-print("不使用优化：")
+# Query without optimization
+print("Without optimization:")
 query_engine = index.as_query_engine()
-response = query_engine.query("山西省的主要旅游景点有哪些？")
-print(f"答案：{response}")
-# 使用优化（百分比截断）
-print("\n使用优化（percentile_cutoff=0.5）：")
+response = query_engine.query("What are the main tourist attractions in Shanxi Province?")
+print(f"Answer: {response}")
+# With optimization (percentile cutoff)
+print("\nWith optimization (percentile_cutoff=0.5):")
 query_engine = index.as_query_engine(node_postprocessors=[SentenceEmbeddingOptimizer(percentile_cutoff=0.5)])
-response = query_engine.query("山西省的主要旅游景点有哪些？")
-print(f"答案：{response}")
-# 使用优化（阈值截断）
-print("\n使用优化（threshold_cutoff=0.7）：")
+response = query_engine.query("What are the main tourist attractions in Shanxi Province?")
+print(f"Answer: {response}")
+# With optimization (threshold cutoff)
+print("\nWith optimization (threshold_cutoff=0.7):")
 query_engine = index.as_query_engine(node_postprocessors=[SentenceEmbeddingOptimizer(threshold_cutoff=0.7)])
-response = query_engine.query("山西省的主要旅游景点有哪些？")
-print(f"答案：{response}")
+response = query_engine.query("What are the main tourist attractions in Shanxi Province?")
+print(f"Answer: {response}")

@@ -1,29 +1,29 @@
-# 导入所需的库
+# Import the required libraries
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_deepseek import ChatDeepSeek 
+from langchain_deepseek import ChatDeepSeek
 from langchain_community.document_loaders import YoutubeLoader
 from langchain.chains.query_constructor.base import AttributeInfo
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from pydantic import BaseModel, Field
-# 定义视频元数据模型
+# Define the video metadata model
 class VideoMetadata(BaseModel):
-    """视频元数据模型，定义了需要提取的视频属性"""
-    source: str = Field(description="视频ID")
-    title: str = Field(description="视频标题")
-    description: str = Field(description="视频描述")
-    view_count: int = Field(description="观看次数")
-    publish_date: str = Field(description="发布日期")
-    length: int = Field(description="视频长度(秒)")
-    author: str = Field(description="作者")
-# 加载视频数据
+    """Video metadata model defining the video attributes to extract"""
+    source: str = Field(description="Video ID")
+    title: str = Field(description="Video title")
+    description: str = Field(description="Video description")
+    view_count: int = Field(description="View count")
+    publish_date: str = Field(description="Publish date")
+    length: int = Field(description="Video length (seconds)")
+    author: str = Field(description="Author")
+# Load video data
 video_urls = [
-    "https://www.youtube.com/watch?v=zDvnAY0zH7U",  # 山西Foguang Temple
-    "https://www.youtube.com/watch?v=iAinNeOp6Hk",  # 中国最大宅院
-    "https://www.youtube.com/watch?v=gCVy6NQtk2U",  # 宋代地下宫殿
+    "https://www.youtube.com/watch?v=zDvnAY0zH7U",  # Foguang Temple, Shanxi
+    "https://www.youtube.com/watch?v=iAinNeOp6Hk",  # China's largest residential compound
+    "https://www.youtube.com/watch?v=gCVy6NQtk2U",  # Song Dynasty underground palace
 ]
-# 加载视频元数据
+# Load video metadata
 videos = []
 for url in video_urls:
     try:
@@ -31,67 +31,67 @@ for url in video_urls:
         docs = loader.load()
         doc = docs[0]
         videos.append(doc)
-        print(f"已加载：{doc.metadata['title']}")
+        print(f"Loaded: {doc.metadata['title']}")
     except Exception as e:
-        print(f"加载失败 {url}: {str(e)}")
-# 创建向量存储
+        print(f"Failed to load {url}: {str(e)}")
+# Create the vector store
 embed_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-zh")
 vectorstore = Chroma.from_documents(videos, embed_model)
-# 配置检索器的元数据字段
+# Configure the retriever's metadata fields
 metadata_field_info = [
     AttributeInfo(
         name="title",
-        description="视频标题（字符串）",
-        type="string", 
+        description="Video title (string)",
+        type="string",
     ),
     AttributeInfo(
         name="author",
-        description="视频作者（字符串）",
+        description="Video author (string)",
         type="string",
     ),
     AttributeInfo(
         name="view_count",
-        description="视频观看次数（整数）",
+        description="Video view count (integer)",
         type="integer",
     ),
     AttributeInfo(
         name="publish_date",
-        description="视频发布日期，格式为YYYY-MM-DD的字符串",
+        description="Video publish date, as a string in YYYY-MM-DD format",
         type="string",
     ),
     AttributeInfo(
         name="length",
-        description="视频长度，以秒为单位的整数",
+        description="Video length, an integer in seconds",
         type="integer"
     ),
 ]
-# 创建自查询检索器SelfQueryRetriever
-llm = ChatDeepSeek(model="deepseek-chat", temperature=0)  # 确定性输出
+# Create the SelfQueryRetriever
+llm = ChatDeepSeek(model="deepseek-chat", temperature=0)  # Deterministic output
 retriever = SelfQueryRetriever.from_llm(
     llm=llm,
     vectorstore=vectorstore,
-    document_contents="包含视频标题、作者、观看次数、发布日期等信息的视频元数据",
+    document_contents="Video metadata including title, author, view count, publish date, and other information",
     metadata_field_info=metadata_field_info,
     enable_limit=True,
     verbose=True
 )
-# 执行示例查询
+# Run example queries
 queries = [
-    "找出观看次数超过100000的视频",
-    "显示最新发布的视频"
+    "Find videos with more than 100000 views",
+    "Show the most recently published videos"
 ]
-# 执行查询并输出结果
+# Run the queries and print the results
 for query in queries:
-    print(f"\n查询：{query}")
+    print(f"\nQuery: {query}")
     try:
         results = retriever.invoke(query)
         if not results:
-            print("未找到匹配的视频")
-            continue            
+            print("No matching videos found")
+            continue
         for doc in results:
-            print(f"标题：{doc.metadata['title']}")
-            print(f"观看次数：{doc.metadata['view_count']}")
-            print(f"发布日期：{doc.metadata['publish_date']}")
+            print(f"Title: {doc.metadata['title']}")
+            print(f"View count: {doc.metadata['view_count']}")
+            print(f"Publish date: {doc.metadata['publish_date']}")
     except Exception as e:
-        print(f"查询出错：{str(e)}")
+        print(f"Query error: {str(e)}")
         continue

@@ -1,27 +1,27 @@
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_deepseek import ChatDeepSeek
 from langchain.chains import RetrievalQA
-# 系统setup文档：关注具体游戏机制和系统
+# System setup documents: focus on specific game mechanics and systems
 system_docs = [
-    "《Chronicles of Godslaying∙猢狲》采用独特的变身系统作为核心战斗机制",
-    "金刚形态下可以使用重型武器，增加攻击力和防御力",
-    "魔佛形态专注于法术攻击，可以释放强大的法术伤害",
-    "战斗中可以随时切换不同形态，实现连击",
-    "游戏难度分为普通、困难和修罗三个等级"
+    "《Chronicles of Godslaying∙Wukong》uses a unique transformation system as its core combat mechanic",
+    "In Vajra form, you can use heavy weapons, increasing attack and defense power",
+    "Demon Buddha form focuses on spell attacks, unleashing powerful magical damage",
+    "You can switch between different forms at any time during combat to chain combos",
+    "Game difficulty is divided into three levels: Normal, Hard, and Asura"
 ]
-# 世界观文档：关注剧情和背景setup
+# Lore documents: focus on the story and background setup
 lore_docs = [
-    "游戏背景setup在架空的神话世界中，融合东方神话元素",
-    "孙Wukong在游戏中被封印500年后重新苏醒",
-    "世界中存在佛教、道教等多个势力的神魔",
-    "玩家扮演的孙Wukong需要在各方势力中寻找真相",
-    "游戏场景包括水墨画风格的山川和建筑"
+    "The game's setting is a fictional mythological world blending Eastern mythological elements",
+    "Wukong reawakens in the game after being sealed for 500 years",
+    "The world contains deities and demons from multiple factions such as Buddhism and Taoism",
+    "The player, playing as Wukong, must seek the truth among the various factions",
+    "Game scenes include mountains and architecture rendered in an ink-wash painting style"
 ]
-# 创建两种不同的检索器：BM25+向量检索器
-from langchain_community.retrievers import BM25Retriever # BM25检索器
-from langchain_community.vectorstores import FAISS # 向量数据库，此时不是检索器
-from langchain.retrievers import EnsembleRetriever # 混合检索器
-# 创建BM25检索器
+# Create two different retrievers: BM25 + vector retriever
+from langchain_community.retrievers import BM25Retriever # BM25 retriever
+from langchain_community.vectorstores import FAISS # Vector database, not a retriever itself
+from langchain.retrievers import EnsembleRetriever # Hybrid retriever
+# Create the BM25 retriever
 bm25_retriever = BM25Retriever.from_texts(
     system_docs + lore_docs,
     metadatas=[{"source": "system" if i < len(system_docs) else "lore"} 

@@ -1,4 +1,4 @@
-# 导入所需的库
+# Import required libraries
 from langchain_cohere import CohereRerank
 from langchain.retrievers.contextual_compression import ContextualCompressionRetriever
 from langchain_core.documents import Document
@@ -6,44 +6,44 @@ from langchain_community.retrievers import BM25Retriever
 from dotenv import load_dotenv
 load_dotenv()
 
-# 获取Cohere API key
-# 地址：https://dashboard.cohere.com/api-keys
-# 如果env文件没有设置CO_API_KEY，也可以通过以下方式
+# Get the Cohere API key
+# URL: https://dashboard.cohere.com/api-keys
+# If CO_API_KEY isn't set in the env file, you can also set it this way
 # import os
 # api_key = 'XXXX'
 # os.environ['CO_API_KEY'] = api_key
 
 documents = [
     Document(
-        page_content="Mount Wutai是中国四大佛教名山之一，以文殊菩萨道场闻名。",
-        metadata={"source": "山西旅游指南"}
+        page_content="Mount Wutai is one of China's four sacred Buddhist mountains, famous as the bodhimanda of Manjushri Bodhisattva.",
+        metadata={"source": "Shanxi Travel Guide"}
     ),
     Document(
-        page_content="Yungang Grottoes是中国三大石窟之一，以精美的佛教雕塑著称。",
-        metadata={"source": "山西旅游指南"}
+        page_content="Yungang Grottoes is one of China's three great grotto complexes, renowned for its exquisite Buddhist sculptures.",
+        metadata={"source": "Shanxi Travel Guide"}
     ),
     Document(
-        page_content="Pingyao Ancient City是中国保存最完整的古代县城之一，被列为世界文化遗产。",
-        metadata={"source": "山西旅游指南"}
+        page_content="Pingyao Ancient City is one of China's best-preserved ancient county towns, listed as a UNESCO World Heritage Site.",
+        metadata={"source": "Shanxi Travel Guide"}
     )
 ]
-# 创建BM25检索器
+# Create a BM25 retriever
 retriever = BM25Retriever.from_documents(documents)
-retriever.k = 3  # 设置返回前3个结果
-# 设置Cohere重排序器
-# 模型地址: https://huggingface.co/Cohere/rerank-multilingual-v3.0
+retriever.k = 3  # Return the top 3 results
+# Set up the Cohere reranker
+# Model URL: https://huggingface.co/Cohere/rerank-multilingual-v3.0
 compressor = CohereRerank(model="rerank-multilingual-v3.0")
-# 创建ContextualCompressionRetriever
+# Create the ContextualCompressionRetriever
 compression_retriever = ContextualCompressionRetriever(
     base_compressor=compressor,
     base_retriever=retriever
 )
-# 执行查询、重排和压缩
-query = "山西有哪些著名的旅游景点？"
+# Run the query, rerank, and compress
+query = "What are some famous tourist attractions in Shanxi?"
 compressed_docs = compression_retriever.invoke(query)
-# 输出压缩结果
-print(f"查询：{query}\n")
-print("重排并压缩后的结果：")
+# Print the compressed results
+print(f"Query: {query}\n")
+print("Reranked and compressed results:")
 for i, doc in enumerate(compressed_docs, 1):
     print(f"{i}. {doc.page_content}")
 

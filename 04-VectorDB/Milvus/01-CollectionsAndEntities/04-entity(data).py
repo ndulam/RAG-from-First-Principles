@@ -1,29 +1,29 @@
 from pymilvus import MilvusClient
 import random
 
-# 连接到 Milvus
+# Connect to Milvus
 client = MilvusClient(
     uri="http://localhost:19530",
     token="root:Milvus"
 )
 
-# 1. 创建集合
-# 检查集合是否存在，如果存在则删除
+# 1. Create the collection
+# Check whether the collection exists, and delete it if so
 if client.has_collection("quick_setup"):
     client.drop_collection("quick_setup")
 
-# 创建集合
+# Create the collection
 client.create_collection(
     collection_name="quick_setup",
-    dimension=5,  # vector 维度
+    dimension=5,  # vector dimension
     primary_field_name="id",
     vector_field_name="vector",
     id_type="int"
 )
 
-print("集合创建成功")
+print("Collection created successfully")
 
-# 2. 插入实体
+# 2. Insert entities
 data=[
     {"id": 0, "vector": [0.3580376395471989, -0.6023495712049978, 0.18414012509913835, -0.26286205330961354, 0.9029438446296592], "color": "pink_8682"},
     {"id": 1, "vector": [0.19886812562848388, 0.06023560599112088, 0.6976963061752597, 0.2614474506242501, 0.838729485096104], "color": "red_7025"},
@@ -44,7 +44,7 @@ res = client.insert(
 
 print(res)
 
-# 3. 更新实体
+# 3. Update entities
 update_data = [
     {"id": 0, "vector": [random.random() for _ in range(5)], "color": "updated_pink_8682"},
     {"id": 1, "vector": [random.random() for _ in range(5)], "color": "updated_red_7025"}
@@ -54,21 +54,21 @@ res = client.upsert(
     collection_name="quick_setup",
     data=update_data
 )
-print("\n更新结果:", res)
+print("\nUpdate result:", res)
 
-# 4. 删除实体
+# 4. Delete entities
 res = client.delete(
     collection_name="quick_setup",
     ids=[0]
 )
-print("\n删除结果:", res)
+print("\nDelete result:", res)
 
-# 5. 查询实体
-client.flush(collection_name="quick_setup") # 刷新内存
-client.load(collection_name="quick_setup") # 加载到内存
+# 5. Query entities
+client.flush(collection_name="quick_setup") # flush to disk
+client.load(collection_name="quick_setup") # load into memory
 res = client.query(
     collection_name="quick_setup",
     filter="id in [1,2]",
     output_fields=["id", "color"]
 )
-print("\n查询结果:", res)
+print("\nQuery result:", res)

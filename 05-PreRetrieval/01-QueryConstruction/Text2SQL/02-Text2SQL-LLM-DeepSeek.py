@@ -1,25 +1,25 @@
-# 准备数据库连接
+# Prepare the database connection
 import sqlite3
 conn = sqlite3.connect('90-Data/tourism.db')
 cursor = conn.cursor()
 
-# 准备Schema描述
+# Prepare the schema description
 schema_description = """
-你正在访问一个包含两张表的数据库：
-1. scenic_spots（景区信息表）
-   - scenic_id (INT): 主键，景区唯一标识
-   - scenic_name (VARCHAR): 景区名称
-   - city (VARCHAR): 所在城市
-   - level (VARCHAR): 景区等级
-   - monthly_visitors (INT): 当月游客量
-2. city_info（城市信息表）
-   - city_id (INT): 主键，城市唯一标识
-   - city_name (VARCHAR): 城市名称
-   - annual_tourism_income (INT): 年度文旅收入（单位：元）
-   - famous_dish (VARCHAR): 当地名菜/特色小吃
+You are accessing a database that contains two tables:
+1. scenic_spots (scenic spot information table)
+   - scenic_id (INT): primary key, unique scenic spot identifier
+   - scenic_name (VARCHAR): scenic spot name
+   - city (VARCHAR): the city it is located in
+   - level (VARCHAR): scenic spot rating
+   - monthly_visitors (INT): monthly visitor count
+2. city_info (city information table)
+   - city_id (INT): primary key, unique city identifier
+   - city_name (VARCHAR): city name
+   - annual_tourism_income (INT): annual tourism income (in yuan)
+   - famous_dish (VARCHAR): local specialty dish/snack
 """
 
-# 初始化DeepSeek客户端
+# Initialize the DeepSeek client
 import os
 from openai import OpenAI
 client = OpenAI(
@@ -27,69 +27,69 @@ client = OpenAI(
     api_key=os.getenv("DEEPSEEK_API_KEY")
 )
 
-# 设置查询
-user_query = "查询太原市的AAAAA级景区及其当月游客量"
+# Set the query
+user_query = "Find the AAAAA-rated scenic spots in Taiyuan and their monthly visitor counts"
 
-# 准备生成SQL的提示词
+# Prepare the prompt for generating SQL
 prompt = f"""
-以下是数据库的结构描述：
+Below is a description of the database structure:
 {schema_description}
-用户的自然语言问题如下：
+The user's natural language question is as follows:
 "{user_query}"
-请注意：
-1. scenic_spots表中的city字段存储的是城市名称，对应city_info表中的city_name
-2. 两张表之间的关联应该使用city_name和city进行匹配
-3. 请只返回SQL查询语句，不要包含任何其他解释、注释或格式标记（如```sql）
+Please note:
+1. The city field in the scenic_spots table stores the city name, corresponding to city_name in the city_info table
+2. The two tables should be joined using city_name and city
+3. Return only the SQL query statement, without any other explanation, comments, or formatting markers (such as ```sql)
 """
-# 调用LLM生成SQL语句
+# Call the LLM to generate the SQL statement
 response = client.chat.completions.create(
     model="deepseek-chat",
     messages=[
-        {"role": "system", "content": "你是一个SQL专家。请只返回SQL查询语句，不要包含任何Markdown格式或其他说明。"},
+        {"role": "system", "content": "You are a SQL expert. Return only the SQL query statement, without any Markdown formatting or other explanation."},
         {"role": "user", "content": prompt}
     ],
     temperature=0
 )
 
-# 清理SQL语句，移除可能的Markdown标记
+# Clean up the SQL statement, removing any Markdown markers
 sql = response.choices[0].message.content.strip()
 sql = sql.replace('```sql', '').replace('```', '').strip()
-print(f"\n生成的SQL查询语句：\n{sql}")
+print(f"\nGenerated SQL query:\n{sql}")
 
-# 执行SQL并获取结果
+# Execute the SQL and get the results
 cursor.execute(sql)
 results = cursor.fetchall()
-print(f"查询结果：{results}")
+print(f"Query results: {results}")
 conn.close()
 
-# 生成自然语言描述
+# Generate a natural language description
 if results:
-    # 获取列名
+    # Get the column names
     column_names = [description[0] for description in cursor.description]
-    # 将结果转换为字典列表
-    results_with_columns = [dict(zip(column_names, row)) for row in results]    
+    # Convert the results into a list of dictionaries
+    results_with_columns = [dict(zip(column_names, row)) for row in results]
     nl_prompt = f"""
-查询结果如下：
+The query results are as follows:
 {results_with_columns}
-请将这些数据转换为自然语言描述，使其易于理解。
-原始问题是：{user_query}
+Please convert this data into a natural language description that is easy to understand.
+The original question was: {user_query}
 
-要求：
-1. 使用通俗易懂的语言
-2. 包含所有查询到的数据信息
-3. 如果有数字，请使用中文数字表述
+Requirements:
+1. Use clear, easy-to-understand language
+2. Include all the queried data information
+3. If there are numbers, spell them out in words
 """
     response_nl = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "你是一个数据分析师，负责将查询结果转换为易懂的自然语言描述。"},
+            {"role": "system", "content": "You are a data analyst responsible for converting query results into an easy-to-understand natural language description."},
             {"role": "user", "content": nl_prompt}
         ],
         temperature=0.7
-    )    
+    )
     description = response_nl.choices[0].message.content.strip()
-    print(f"自然语言描述：\n{description}")
+    print(f"Natural language description:\n{description}")
 else:
-    print("未找到相关数据。")
-# 关闭数据库连接
+    print("No relevant data found.")
+# Close the database connection
 conn.close()

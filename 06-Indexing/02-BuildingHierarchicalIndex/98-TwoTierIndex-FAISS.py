@@ -6,79 +6,79 @@ import faiss
 import numpy as np
 from openai import OpenAI
 
-# 加载环境变量
+# Load environment variables
 load_dotenv()
 
-# 1. 准备表格说明数据
+# 1. Prepare the table description data
 table_descriptions = [
-    "2023年WorldTopTenBillionaires榜单，展示了当年全球最富有的十位富豪及其财富情况。",
-    "2022年WorldTopTenBillionaires榜单，记录了当年全球最富有的十位富豪及其财富情况。",
-    "2021年WorldTopTenBillionaires榜单，展示了当年全球最富有的十位富豪及其财富情况。",
-    "2020年WorldTopTenBillionaires榜单，记录了当年全球最富有的十位富豪及其财富情况。",
-    "2019年WorldTopTenBillionaires榜单，展示了当年全球最富有的十位富豪及其财富情况。"
+    "The 2023 WorldTopTenBillionaires list, showing the ten wealthiest people in the world that year and their net worth.",
+    "The 2022 WorldTopTenBillionaires list, recording the ten wealthiest people in the world that year and their net worth.",
+    "The 2021 WorldTopTenBillionaires list, showing the ten wealthiest people in the world that year and their net worth.",
+    "The 2020 WorldTopTenBillionaires list, recording the ten wealthiest people in the world that year and their net worth.",
+    "The 2019 WorldTopTenBillionaires list, showing the ten wealthiest people in the world that year and their net worth."
 ]
 
-# 2. 设置第一层嵌入模型（用于匹配年份）
+# 2. Set up the first-layer embedding model (used to match the year)
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 desc_embeddings = model.encode(table_descriptions)
 
-# 3. 创建第一层向量存储
+# 3. Create the first-layer vector store
 dimension = desc_embeddings.shape[1]
 desc_index = faiss.IndexFlatL2(dimension)
 desc_index.add(desc_embeddings.astype('float32'))
 
-# 4. 加载Excel文件并准备第二层数据
+# 4. Load the Excel file and prepare the second-layer data
 excel_file = "90-Data/ComplexPDF/TopTenBillionaires/WorldTopTenBillionaires.xlsx"
 all_tables_data = {}
 
-# 读取Excel文件中的所有sheet
+# Read all sheets from the Excel file
 with pd.ExcelFile(excel_file) as xls:
     for sheet_name in xls.sheet_names:
         df = pd.read_excel(xls, sheet_name=sheet_name)
-        # 将DataFrame转换为文本格式
+        # Convert the DataFrame into text format
         table_text = df.to_string(index=False)
         all_tables_data[sheet_name] = table_text
 
-# 5. 创建第二层向量存储
+# 5. Create the second-layer vector store
 table_embeddings = model.encode(list(all_tables_data.values()))
 table_index = faiss.IndexFlatL2(dimension)
 table_index.add(table_embeddings.astype('float32'))
 
 def search_relevant_table(question):
-    # 第一层检索：匹配年份
+    # First-layer retrieval: match the year
     query_embedding = model.encode([question])[0]
     distances, indices = desc_index.search(
-        np.array([query_embedding]).astype('float32'), 
+        np.array([query_embedding]).astype('float32'),
         k=1
     )
     matched_year = indices[0][0]
-    
-    # 第二层检索：在匹配的年份表格中搜索具体信息
+
+    # Second-layer retrieval: search for specific information within the matched year's table
     table_embedding = model.encode([all_tables_data[f"billionaires_table_{matched_year+2}"]])[0]
     distances, indices = table_index.search(
-        np.array([table_embedding]).astype('float32'), 
+        np.array([table_embedding]).astype('float32'),
         k=1
     )
-    
+
     return table_descriptions[matched_year], all_tables_data[f"billionaires_table_{matched_year+2}"]
 
 def generate_answer(question):
-    # 检索相关信息
+    # Retrieve relevant information
     year_context, table_context = search_relevant_table(question)
-    
-    # 构建提示词
-    prompt = f"""根据以下参考信息回答问题：
-    
-年份信息：{year_context}
 
-相关数据：
+    # Build the prompt
+    prompt = f"""Answer the question based on the following reference information:
+
+Year information: {year_context}
+
+Relevant data:
 {table_context}
 
-问题：{question}
+Question: {question}
 
-请基于以上信息给出详细回答："""
+Please give a detailed answer based on the above information:"""
 
-    # 使用DeepSeek生成答案
+    # Use DeepSeek to generate the answer
     client = OpenAI(
         api_key=os.getenv("DEEPSEEK_API_KEY"),
         base_url="https://api.deepseek.com/v1"
@@ -92,12 +92,12 @@ def generate_answer(question):
         }],
         max_tokens=1024
     )
-    
+
     return response.choices[0].message.content
 
-# 测试示例
+# Test example
 if __name__ == "__main__":
-    test_question = "2023年世界首富是谁？他的财富是多少？"
+    test_question = "Who was the richest person in the world in 2023? What was their net worth?"
     answer = generate_answer(test_question)
-    print(f"问题：{test_question}")
-    print(f"答案：{answer}") 
+    print(f"Question: {test_question}")
+    print(f"Answer: {answer}")

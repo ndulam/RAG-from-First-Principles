@@ -2,140 +2,140 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
 """
-CrossEncoder重排算法实现
+CrossEncoder reranking algorithm implementation
 
-CrossEncoder是一种基于BERT的双向编码器重排模型，专门用于计算查询-文档对的相关性分数。
+CrossEncoder is a BERT-based bidirectional encoder reranking model, specifically designed to compute relevance scores for query-document pairs.
 
-核心原理：
-1. 将查询和文档作为一个整体输入到BERT模型中
-2. 利用[CLS]标记的输出来预测相关性分数
-3. 通过端到端的方式训练，能够捕捉查询与文档之间的深层交互
+Core principle:
+1. Feed the query and document into the BERT model together as a single input
+2. Use the output at the [CLS] token to predict the relevance score
+3. Trained end-to-end, enabling it to capture deep interactions between the query and the document
 
-与其他方法的区别：
-- 相比于双塔模型(Bi-Encoder)：CrossEncoder能够更好地建模查询与文档间的交互
-- 相比于传统BM25：能够理解语义相似性，不仅仅依赖关键词匹配
-- 相比于简单的向量相似度：考虑了查询与文档的位置信息和上下文关系
+Differences from other methods:
+- Compared to the dual-tower model (Bi-Encoder): CrossEncoder models the interaction between query and document better
+- Compared to traditional BM25: it can understand semantic similarity, not just rely on keyword matching
+- Compared to simple vector similarity: it accounts for positional information and contextual relationships between the query and document
 
-优势：
-- 精度高：能够精确建模查询-文档对的相关性
-- 语义理解强：基于预训练语言模型，具备强大的语义理解能力
-- 适应性好：可以通过微调适应特定领域
+Advantages:
+- High accuracy: can precisely model the relevance of query-document pairs
+- Strong semantic understanding: based on a pretrained language model with powerful semantic comprehension
+- Good adaptability: can be fine-tuned to adapt to specific domains
 
-劣势：
-- 计算开销大：需要对每个查询-文档对单独编码
-- 实时性差：不适合大规模检索的第一阶段，通常用于重排阶段
+Disadvantages:
+- High computational cost: requires encoding each query-document pair separately
+- Poor real-time performance: not suitable for the first stage of large-scale retrieval, typically used in the reranking stage
 """
 
-print("🔄 初始化CrossEncoder重排模型...")
+print("🔄 Initializing CrossEncoder reranking model...")
 
-# 1. 加载预训练的CrossEncoder模型
-print("📥 加载预训练模型...")
-model_name = "cross-encoder/ms-marco-MiniLM-L-12-v2"  # MS MARCO数据集上训练的小型模型
-print(f"使用模型: {model_name}")
-print("  - 该模型在MS MARCO段落检索任务上进行了微调")
-print("  - 专门优化用于计算查询-段落相关性分数")
-print("  - 平衡了模型大小和性能，适合生产环境使用")
+# 1. Load the pretrained CrossEncoder model
+print("📥 Loading pretrained model...")
+model_name = "cross-encoder/ms-marco-MiniLM-L-12-v2"  # A small model trained on the MS MARCO dataset
+print(f"Using model: {model_name}")
+print("  - This model is fine-tuned on the MS MARCO passage retrieval task")
+print("  - Specifically optimized to compute query-passage relevance scores")
+print("  - Balances model size and performance, suitable for production use")
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
-print("✅ 模型加载完成")
+print("✅ Model loading complete")
 
-# 2. 准备测试数据
-print("\n📋 准备测试数据...")
-query = "山西有哪些著名的旅游景点？"
+# 2. Prepare test data
+print("\n📋 Preparing test data...")
+query = "What are some famous tourist attractions in Shanxi?"
 documents = [
-    "Mount Wutai是中国四大佛教名山之一，以文殊菩萨道场闻名。",
-    "Yungang Grottoes是中国三大石窟之一，以精美的佛教雕塑著称。",
-    "Pingyao Ancient City是中国保存最完整的古代县城之一，被列为世界文化遗产。",
+    "Mount Wutai is one of China's four sacred Buddhist mountains, famous as the bodhimanda of Manjushri Bodhisattva.",
+    "Yungang Grottoes is one of China's three great grotto complexes, renowned for its exquisite Buddhist sculptures.",
+    "Pingyao Ancient City is one of China's best-preserved ancient county towns, listed as a UNESCO World Heritage Site.",
 ]
 
-print(f"查询: {query}")
-print(f"候选文档数量: {len(documents)}")
+print(f"Query: {query}")
+print(f"Number of candidate documents: {len(documents)}")
 for i, doc in enumerate(documents, 1):
-    print(f"  文档 {i}: {doc}")
+    print(f"  Document {i}: {doc}")
 
 def encode_and_score(query, docs):
     """
-    CrossEncoder相关性评分函数
-    
-    功能：计算查询与每个文档的相关性分数
-    
-    参数：
-        query (str): 用户查询
-        docs (list): 候选文档列表
-    
-    返回：
-        list: 每个文档对应的相关性分数
-    
-    工作流程：
-        1. 将查询和文档拼接为"[CLS] query [SEP] document [SEP]"格式
-        2. 通过tokenizer进行编码，生成input_ids、attention_mask等
-        3. 输入到BERT模型中，获取[CLS]位置的输出
-        4. 通过分类头计算相关性分数
-        5. 分数越高表示相关性越强
+    CrossEncoder relevance scoring function
+
+    Purpose: compute the relevance score between the query and each document
+
+    Args:
+        query (str): the user query
+        docs (list): list of candidate documents
+
+    Returns:
+        list: the relevance score corresponding to each document
+
+    Workflow:
+        1. Concatenate the query and document into the "[CLS] query [SEP] document [SEP]" format
+        2. Encode via the tokenizer, generating input_ids, attention_mask, etc.
+        3. Feed into the BERT model and obtain the output at the [CLS] position
+        4. Compute the relevance score through the classification head
+        5. A higher score indicates stronger relevance
     """
-    print(f"\n🧠 开始计算 {len(docs)} 个文档的相关性分数...")
+    print(f"\n🧠 Computing relevance scores for {len(docs)} documents...")
     scores = []
-    
+
     for i, doc in enumerate(docs, 1):
-        print(f"  处理文档 {i}/{len(docs)}...")
-        
-        # 将查询和文档组合为BERT输入格式
-        # 格式: [CLS] query [SEP] document [SEP]
+        print(f"  Processing document {i}/{len(docs)}...")
+
+        # Combine the query and document into BERT input format
+        # Format: [CLS] query [SEP] document [SEP]
         inputs = tokenizer(
-            query, 
-            doc, 
-            return_tensors="pt",           # 返回PyTorch张量
-            truncation=True,               # 截断过长的输入
-            max_length=512,                # BERT最大输入长度
-            padding="max_length"           # 填充到最大长度
+            query,
+            doc,
+            return_tensors="pt",           # Return PyTorch tensors
+            truncation=True,               # Truncate overly long inputs
+            max_length=512,                # Maximum BERT input length
+            padding="max_length"           # Pad to the maximum length
         )
-        
-        # 前向传播计算相关性分数
-        with torch.no_grad():  # 禁用梯度计算，节省内存
+
+        # Forward pass to compute the relevance score
+        with torch.no_grad():  # Disable gradient computation to save memory
             outputs = model(**inputs)
-            # 获取logits（原始分数），通常第一个元素是相关性分数
+            # Get the logits (raw scores); the first element is usually the relevance score
             score = outputs.logits[0][0].item()
             scores.append(score)
-            
-        print(f"    查询-文档对相关性分数: {score:.4f}")
-        print(f"    输入长度: {len(inputs['input_ids'][0])} tokens")
-    
-    print("✅ 相关性分数计算完成")
+
+        print(f"    Query-document pair relevance score: {score:.4f}")
+        print(f"    Input length: {len(inputs['input_ids'][0])} tokens")
+
+    print("✅ Relevance score computation complete")
     return scores
 
-# 3. 执行CrossEncoder重排
-print(f"\n🎯 执行CrossEncoder重排...")
+# 3. Run CrossEncoder reranking
+print(f"\n🎯 Running CrossEncoder reranking...")
 scores = encode_and_score(query, documents)
 
-# 4. 根据分数排序文档
-print(f"\n📊 根据相关性分数排序文档...")
+# 4. Sort documents by score
+print(f"\n📊 Sorting documents by relevance score...")
 ranked_docs = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
 
-# 5. 输出重排结果
+# 5. Output the reranking results
 print(f"\n{'='*60}")
-print(f"🏆 CrossEncoder重排结果")
+print(f"🏆 CrossEncoder Reranking Results")
 print(f"{'='*60}")
-print(f"查询: {query}")
-print(f"\n排序结果（按相关性分数降序）:")
+print(f"Query: {query}")
+print(f"\nRanking results (sorted by relevance score, descending):")
 
 for rank, (doc, score) in enumerate(ranked_docs, start=1):
-    print(f"\n📄 排名 {rank}:")
-    print(f"   相关性分数: {score:.4f}")
-    print(f"   文档内容: {doc}")
-    
-    # 解释分数含义
-    if score > 0:
-        relevance_level = "高度相关"
-    elif score > -2:
-        relevance_level = "中等相关"
-    else:
-        relevance_level = "低相关"
-    print(f"   相关性级别: {relevance_level}")
+    print(f"\n📄 Rank {rank}:")
+    print(f"   Relevance score: {score:.4f}")
+    print(f"   Document content: {doc}")
 
-print(f"\n📋 CrossEncoder重排总结:")
-print("- ✅ 深度语义理解：捕捉查询与文档间的细粒度交互")
-print("- ✅ 精确相关性建模：端到端训练获得准确的相关性分数")
-print("- ✅ 上下文感知：考虑词汇的位置信息和上下文关系")
-print("- ⚠️  计算密集：每个查询-文档对都需要单独编码")
-print("- 💡 最佳实践：用于对初检索结果进行精细重排")
+    # Interpret the meaning of the score
+    if score > 0:
+        relevance_level = "Highly relevant"
+    elif score > -2:
+        relevance_level = "Moderately relevant"
+    else:
+        relevance_level = "Low relevance"
+    print(f"   Relevance level: {relevance_level}")
+
+print(f"\n📋 CrossEncoder Reranking Summary:")
+print("- ✅ Deep semantic understanding: captures fine-grained interactions between query and document")
+print("- ✅ Precise relevance modeling: end-to-end training yields accurate relevance scores")
+print("- ✅ Context-aware: accounts for positional information and contextual relationships of tokens")
+print("- ⚠️  Computationally intensive: each query-document pair must be encoded separately")
+print("- 💡 Best practice: use to finely rerank initial retrieval results")
