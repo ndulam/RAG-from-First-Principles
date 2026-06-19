@@ -49,13 +49,17 @@ if script_dir.exists():
     print(f"Working directory set to: {os.getcwd()}")
 
 # Import the relevant LlamaIndex modules
+from dotenv import load_dotenv
 from llama_index.core import Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
+# Load environment variables from the .env file
+load_dotenv()
+
 # Global settings
-Settings.llm = OpenAI(model="gpt-3.5-turbo")
-Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
+Settings.llm = OpenAI(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY"))
+Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=os.getenv("OPENAI_API_KEY"))
 
 # Parse the PDF structure and extract text and tables
 # Use a relative path, assuming we start from the project root

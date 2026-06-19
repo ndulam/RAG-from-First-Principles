@@ -2,10 +2,16 @@ from llama_index.core import VectorStoreIndex, StorageContext, Document, Setting
 from llama_index.core.node_parser import HierarchicalNodeParser, get_leaf_nodes, get_root_nodes
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.retrievers import AutoMergingRetriever
-from llama_index.llms.deepseek import DeepSeek 
+from llama_index.llms.deepseek import DeepSeek
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
+
 # Configure global settings
-Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1)
+Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1, api_key=os.getenv("DEEPSEEK_API_KEY"))
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
 # Prepare the game knowledge text
 game_knowledge = """The combat system of "Chronicles of Godslaying: Wukong" is exquisitely designed. Players can freely switch between multiple combat forms during battle, each with its own unique advantages. In Vajra form... while in Demon Buddha form..."""

@@ -4,8 +4,14 @@ from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.postprocessor import PrevNextNodePostprocessor, AutoPrevNextNodePostprocessor
 from llama_index.llms.deepseek import DeepSeek
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
+
 # Configure global settings
-Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1)
+Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1, api_key=os.getenv("DEEPSEEK_API_KEY"))
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
 Settings.node_parser = SentenceSplitter()
 # Prepare the game story text

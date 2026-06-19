@@ -2,6 +2,7 @@ import os
 from typing import List
 from unstructured.partition.pdf import partition_pdf
 import pandas as pd
+from dotenv import load_dotenv
 
 # Import relevant LlamaIndex modules
 from llama_index.core import VectorStoreIndex, Settings
@@ -14,9 +15,12 @@ from llama_index.core.retrievers import RecursiveRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core import get_response_synthesizer
 
+# Load environment variables from the .env file
+load_dotenv()
+
 # Global settings
-Settings.llm = OpenAI(model="gpt-3.5-turbo")
-Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
+Settings.llm = OpenAI(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY"))
+Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=os.getenv("OPENAI_API_KEY"))
 
 # ---------------------------
 # 1. Parse the PDF structure and extract text and tables
@@ -84,7 +88,7 @@ for element in elements:
 # ---------------------------
 # 3. Create the Pandas Query Engine and query
 # ---------------------------
-llm_for_table = OpenAI(model="gpt-4")
+llm_for_table = OpenAI(model="gpt-4", api_key=os.getenv("OPENAI_API_KEY"))
 
 df_query_engines = [
     PandasQueryEngine(table_info["table"], llm=llm_for_table)

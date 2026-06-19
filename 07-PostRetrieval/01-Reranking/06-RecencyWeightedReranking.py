@@ -1,10 +1,15 @@
+import os
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 import faiss
 from langchain.retrievers import TimeWeightedVectorStoreRetriever
 from langchain_community.docstore import InMemoryDocstore
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
+
+# Load environment variables from the .env file
+load_dotenv()
 
 """
 Recency-weighted reranking algorithm implementation
@@ -41,7 +46,7 @@ print("🔄 Initializing recency-weighted reranking system...")
 
 # 1. Configure the embedding model
 print("📥 Configuring OpenAI embedding model...")
-embeddings_model = OpenAIEmbeddings()
+embeddings_model = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
 print("  Model: OpenAI Embeddings")
 print("  Dimensions: 1536-dimensional vectors")
 print("  Note: requires the OPENAI_API_KEY environment variable to be set")

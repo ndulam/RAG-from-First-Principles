@@ -1,12 +1,17 @@
 # Import LlamaIndex related modules
+import os
+from dotenv import load_dotenv
 from llama_index.core import VectorStoreIndex, Settings
 from llama_index.readers.file import PyMuPDFReader
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
+# Load environment variables from the .env file
+load_dotenv()
+
 # Global settings
-Settings.llm = OpenAI(model="gpt-3.5-turbo")
-Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
+Settings.llm = OpenAI(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY"))
+Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=os.getenv("OPENAI_API_KEY"))
 
 # ---------------------------
 # 1. Parse PDF structure, extract text and tables

@@ -1,10 +1,16 @@
+import os
+from dotenv import load_dotenv
 from llama_index.core import  VectorStoreIndex, Settings, Document
 from llama_index.core.node_parser import  SentenceWindowNodeParser, SentenceSplitter
 from llama_index.llms.deepseek import DeepSeek
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.postprocessor import MetadataReplacementPostProcessor # Metadata replacement postprocessor
+
+# Load environment variables from the .env file
+load_dotenv()
+
 # Configure global settings
-Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1)
+Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1, api_key=os.getenv("DEEPSEEK_API_KEY"))
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
 Settings.text_splitter = SentenceSplitter(separator="\n",  chunk_size=50, chunk_overlap=0)
 # Prepare the knowledge text and create a Document object

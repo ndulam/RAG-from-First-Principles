@@ -1,5 +1,10 @@
-from langchain_deepseek import ChatDeepSeek 
+import os
+from dotenv import load_dotenv
+from langchain_deepseek import ChatDeepSeek
 from pydantic import BaseModel, Field
+
+# Load environment variables from the .env file
+load_dotenv()
 
 # Define tool schema
 class get_weather(BaseModel):
@@ -8,7 +13,7 @@ class get_weather(BaseModel):
     temperature: float = Field(..., description="Temperature")
 
 # Initialize LLM
-llm = ChatDeepSeek(model="deepseek-chat")
+llm = ChatDeepSeek(model="deepseek-chat", api_key=os.getenv("DEEPSEEK_API_KEY"))
 
 # Bind tools
 llm_with_tools = llm.bind_tools([get_weather])

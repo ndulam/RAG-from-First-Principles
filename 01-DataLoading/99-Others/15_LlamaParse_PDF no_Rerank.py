@@ -8,9 +8,7 @@ load_dotenv()
 
 import os
 
-# API access to llama-cloud
-os.environ["LLAMA_CLOUD_API_KEY"] = "llx-9LWXKaFjF7DgO3clPLL70nxb3sfngHXHbf5bZpnZSFvGNkcp"
-
+# API access to llama-cloud: set LLAMA_CLOUD_API_KEY in your .env file
 embed_model = OpenAIEmbedding(model="text-embedding-3-small")
 llm = OpenAI(model="gpt-3.5-turbo-0125")
 

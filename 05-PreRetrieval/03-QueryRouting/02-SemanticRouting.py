@@ -1,8 +1,13 @@
+import os
+from dotenv import load_dotenv
 from langchain.utils.math import cosine_similarity
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+# Load environment variables from the .env file
+load_dotenv()
 
 # Define two prompt templates
 combat_template = """You are an expert who is highly knowledgeable about Black Myth: Wukong's combat techniques.
@@ -20,7 +25,7 @@ Here is a question:
 {query}"""
 
 # Initialize the embedding model
-embeddings = OpenAIEmbeddings()
+embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
 prompt_templates = [combat_template, story_template]
 prompt_embeddings = embeddings.embed_documents(prompt_templates)
 
@@ -39,7 +44,7 @@ def prompt_router(input):
 chain = (
     {"query": RunnablePassthrough()}
     | RunnableLambda(prompt_router)
-    | ChatOpenAI()
+    | ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     | StrOutputParser()
 )
 

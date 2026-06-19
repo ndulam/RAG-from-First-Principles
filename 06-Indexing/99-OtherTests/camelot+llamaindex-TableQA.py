@@ -1,6 +1,7 @@
 import os
 from typing import List
 import camelot
+from dotenv import load_dotenv
 
 # Import relevant LlamaIndex modules
 from llama_index.core import VectorStoreIndex, Settings
@@ -13,9 +14,12 @@ from llama_index.core.retrievers import RecursiveRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core import get_response_synthesizer
 
+# Load environment variables from the .env file
+load_dotenv()
+
 # Global settings: use GPT-3.5-turbo as the LLM, and a smaller OpenAIEmbedding model
-Settings.llm = OpenAI(model="gpt-3.5-turbo")
-Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
+Settings.llm = OpenAI(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY"))
+Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", api_key=os.getenv("OPENAI_API_KEY"))
 
 # ---------------------------
 # 1. Load the PDF body text (narrative text)
@@ -49,7 +53,7 @@ table_dfs = get_tables(file_path, pages=[3, 25])
 # 3. Create a Pandas Query Engine for each table
 # ---------------------------
 # It's recommended to use a stronger LLM for table queries; GPT-4 is used here (other models also work)
-llm_for_table = OpenAI(model="gpt-4")
+llm_for_table = OpenAI(model="gpt-4", api_key=os.getenv("OPENAI_API_KEY"))
 df_query_engines = [
     PandasQueryEngine(table_df, llm=llm_for_table) for table_df in table_dfs
 ]

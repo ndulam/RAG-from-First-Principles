@@ -1,6 +1,11 @@
+import os
+from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_deepseek import ChatDeepSeek
 from langchain.chains import RetrievalQA
+
+# Load environment variables from the .env file
+load_dotenv()
 # System setup documents: focus on specific game mechanics and systems
 system_docs = [
     "《Chronicles of Godslaying∙Wukong》uses a unique transformation system as its core combat mechanic",

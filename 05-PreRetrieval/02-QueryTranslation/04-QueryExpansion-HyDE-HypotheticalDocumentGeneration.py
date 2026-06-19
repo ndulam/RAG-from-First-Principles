@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_deepseek import ChatDeepSeek
@@ -5,6 +7,10 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
+
+# Load environment variables from the .env file
+load_dotenv()
+
 # Load the documents and build the vector database
 loader = TextLoader("../../99-EN/black-myth-wukong/black_myth_wukong_wiki.txt", encoding='utf-8')
 data = loader.load()
@@ -19,7 +25,7 @@ Question: {question}
 Content:"""
 prompt_hyde = ChatPromptTemplate.from_template(template)
 # Initialize the model
-llm = ChatDeepSeek(model="deepseek-chat")
+llm = ChatDeepSeek(model="deepseek-chat", api_key=os.getenv("DEEPSEEK_API_KEY"))
 # Create the chain that generates the hypothetical document
 generate_docs_for_retrieval = (
     prompt_hyde | llm | StrOutputParser()

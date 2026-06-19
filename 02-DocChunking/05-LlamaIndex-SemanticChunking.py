@@ -1,9 +1,14 @@
+import os
+from dotenv import load_dotenv
 from llama_index.core import SimpleDirectoryReader
 from llama_index.core.node_parser import (
     SentenceSplitter,
     SemanticSplitterNodeParser,
 )
-from llama_index.embeddings.openai import OpenAIEmbedding 
+from llama_index.embeddings.openai import OpenAIEmbedding
+
+# Load environment variables from the .env file
+load_dotenv()
 # from llama_index.embeddings.huggingface import HuggingFaceEmbedding 
 # embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
 documents = SimpleDirectoryReader(input_files=["../99-EN/black-myth-wukong/black_myth_wukong_wiki.txt"]).load_data()
@@ -12,7 +17,7 @@ documents = SimpleDirectoryReader(input_files=["../99-EN/black-myth-wukong/black
 splitter = SemanticSplitterNodeParser(
     buffer_size=3,  # buffer size
     breakpoint_percentile_threshold=90, # breakpoint percentile threshold
-    embed_model=OpenAIEmbedding()     # embedding model to use
+    embed_model=OpenAIEmbedding(api_key=os.getenv("OPENAI_API_KEY"))     # embedding model to use
 )
 # Create a base sentence splitter (as a control)
 base_splitter = SentenceSplitter(

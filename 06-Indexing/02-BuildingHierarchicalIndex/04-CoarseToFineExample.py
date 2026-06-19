@@ -6,8 +6,14 @@ from llama_index.core.retrievers import RecursiveRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core import get_response_synthesizer
 from typing import List
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
+
 # Configure global settings
-Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1)
+Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1, api_key=os.getenv("DEEPSEEK_API_KEY"))
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
 # Create descriptions of game scenes (main documents)
 scene_descriptions = [

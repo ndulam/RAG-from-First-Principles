@@ -1,5 +1,11 @@
 # Prepare the database connection
 import sqlite3
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
+
 conn = sqlite3.connect('data/tourism.db')
 cursor = conn.cursor()
 
@@ -21,7 +27,7 @@ You are accessing a database that contains two tables:
 
 # Initialize the OpenAI client
 from openai import OpenAI
-client = OpenAI()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Set the query
 user_query = "Find the AAAAA-rated scenic spots in Taiyuan and their monthly visitor counts"

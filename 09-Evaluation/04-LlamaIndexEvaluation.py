@@ -5,6 +5,7 @@ import nest_asyncio
 import numpy as np
 import pandas as pd
 from collections import defaultdict
+from dotenv import load_dotenv
 
 # Import LlamaIndex related modules
 from llama_index.llms.openai import OpenAI
@@ -20,10 +21,13 @@ from llama_index.core.evaluation import (
 )
 from llama_index.core.evaluation.eval_utils import get_responses, get_results_df
 
+# Load environment variables from the .env file
+load_dotenv()
+
 # 1. Configure LLM, Embedding, Text Splitter
 # --------------------------------------------------
 # Set LLM (Large Language Model) and Embedding (Vector Model)
-llm = OpenAI(model="gpt-3.5-turbo", temperature=0.1)
+llm = OpenAI(model="gpt-3.5-turbo", temperature=0.1, api_key=os.getenv("OPENAI_API_KEY"))
 embed_model = HuggingFaceEmbedding(
     model_name="sentence-transformers/all-mpnet-base-v2", max_length=512
 )
@@ -118,10 +122,10 @@ eval_dataset = QueryResponseDataset.from_json("90-Data/ComplexPDF/ipcc_eval_qr_d
 
 # 7. Build Evaluators
 # --------------------------------------------------
-evaluator_c = CorrectnessEvaluator(llm=OpenAI(model="gpt-4"))
+evaluator_c = CorrectnessEvaluator(llm=OpenAI(model="gpt-4", api_key=os.getenv("OPENAI_API_KEY")))
 evaluator_s = SemanticSimilarityEvaluator()
-evaluator_r = RelevancyEvaluator(llm=OpenAI(model="gpt-4"))
-evaluator_f = FaithfulnessEvaluator(llm=OpenAI(model="gpt-4"))
+evaluator_r = RelevancyEvaluator(llm=OpenAI(model="gpt-4", api_key=os.getenv("OPENAI_API_KEY")))
+evaluator_f = FaithfulnessEvaluator(llm=OpenAI(model="gpt-4", api_key=os.getenv("OPENAI_API_KEY")))
 # pairwise_evaluator = PairwiseComparisonEvaluator(llm=OpenAI(model="gpt-4"))
 
 evaluator_dict = {

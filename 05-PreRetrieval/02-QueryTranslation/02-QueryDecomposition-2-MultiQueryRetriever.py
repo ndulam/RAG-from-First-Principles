@@ -1,5 +1,7 @@
+import os
 import logging
 from typing import List
+from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import TextLoader
 from langchain_deepseek import ChatDeepSeek
@@ -8,6 +10,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain_core.output_parsers import BaseOutputParser
 from langchain.prompts import PromptTemplate
+# Load environment variables from the .env file
+load_dotenv()
+
 # Configure logging
 logging.basicConfig()
 logging.getLogger("langchain.retrievers.multi_query").setLevel(logging.INFO)
@@ -33,7 +38,7 @@ QUERY_PROMPT = PromptTemplate(
                 Please give 5 different queries, one per line.""",
 )
 # Set up the LLM processing pipeline
-llm = ChatDeepSeek(model="deepseek-chat", temperature=0)
+llm = ChatDeepSeek(model="deepseek-chat", temperature=0, api_key=os.getenv("DEEPSEEK_API_KEY"))
 llm_chain = QUERY_PROMPT | llm | output_parser
 # MultiQueryRetriever using the custom prompt template
 retriever = MultiQueryRetriever(

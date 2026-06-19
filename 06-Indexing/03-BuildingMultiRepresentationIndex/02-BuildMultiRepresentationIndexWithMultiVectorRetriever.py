@@ -1,3 +1,9 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from the .env file
+load_dotenv()
+
 # Load documents
 from langchain_community.document_loaders import WebBaseLoader
 loader = WebBaseLoader("https://lilianweng.github.io/posts/2023-06-23-agent/")
@@ -9,7 +15,7 @@ from langchain_core.output_parsers import StrOutputParser
 chain = (
     {"doc": lambda x: x.page_content}
     | ChatPromptTemplate.from_template("Summarize the following document:\n\n{doc}")
-    | ChatDeepSeek(model="deepseek-chat")
+    | ChatDeepSeek(model="deepseek-chat", api_key=os.getenv("DEEPSEEK_API_KEY"))
     | StrOutputParser()
 )
 summaries = chain.batch(docs, {"max_concurrency": 5})

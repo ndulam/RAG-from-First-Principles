@@ -1,7 +1,13 @@
-from langchain_deepseek import ChatDeepSeek 
-from langchain_huggingface import HuggingFaceEmbeddings 
+import os
+from dotenv import load_dotenv
+from langchain_deepseek import ChatDeepSeek
+from langchain_huggingface import HuggingFaceEmbeddings
+
+# Load environment variables from the .env file
+load_dotenv()
+
 # Initialize the language model and the embedding model
-llm = ChatDeepSeek(model="deepseek-chat", temperature=0.1)
+llm = ChatDeepSeek(model="deepseek-chat", temperature=0.1, api_key=os.getenv("DEEPSEEK_API_KEY"))
 embed_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-zh")
 # Prepare the game knowledge text and create a Document object.
 from langchain.schema import Document

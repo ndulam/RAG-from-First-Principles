@@ -1,4 +1,6 @@
 # Import the required libraries
+import os
+from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_deepseek import ChatDeepSeek
 from langchain_community.document_loaders import YoutubeLoader
@@ -7,6 +9,9 @@ from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from pydantic import BaseModel, Field
+
+# Load environment variables from the .env file
+load_dotenv()
 # Define the video metadata model
 class VideoMetadata(BaseModel):
     """Video metadata model defining the video attributes to extract"""
@@ -66,7 +71,7 @@ metadata_field_info = [
     ),
 ]
 # Create the SelfQueryRetriever
-llm = ChatDeepSeek(model="deepseek-chat", temperature=0)  # Deterministic output
+llm = ChatDeepSeek(model="deepseek-chat", temperature=0, api_key=os.getenv("DEEPSEEK_API_KEY"))  # Deterministic output
 retriever = SelfQueryRetriever.from_llm(
     llm=llm,
     vectorstore=vectorstore,

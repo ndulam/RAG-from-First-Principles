@@ -1,5 +1,6 @@
 # Import required libraries
 import os
+from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -8,6 +9,9 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_deepseek import ChatDeepSeek
 from langchain.load import dumps, loads
+
+# Load environment variables from the .env file
+load_dotenv()
 
 """
 RRF (Reciprocal Rank Fusion) reranking algorithm implementation
@@ -163,7 +167,7 @@ Original question: {question}
 Please generate 4 related search queries:"""
 
 prompt_rag_fusion = ChatPromptTemplate.from_template(template)
-llm = ChatDeepSeek(model="deepseek-chat")
+llm = ChatDeepSeek(model="deepseek-chat", api_key=os.getenv("DEEPSEEK_API_KEY"))
 
 # Create the query generation chain
 generate_queries = (

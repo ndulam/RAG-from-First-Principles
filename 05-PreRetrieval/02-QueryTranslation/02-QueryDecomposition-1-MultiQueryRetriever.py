@@ -1,10 +1,15 @@
+import os
 import logging
+from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import TextLoader
 from langchain_deepseek import ChatDeepSeek
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.retrievers.multi_query import MultiQueryRetriever # Multi-perspective query retriever
+# Load environment variables from the .env file
+load_dotenv()
+
 # Configure logging
 logging.basicConfig()
 logging.getLogger("langchain.retrievers.multi_query").setLevel(logging.INFO)
@@ -16,7 +21,7 @@ splits = text_splitter.split_documents(data)
 embed_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-zh")
 vectorstore = Chroma.from_documents(documents=splits, embedding= embed_model)
 # Use MultiQueryRetriever to generate multi-perspective queries
-llm = ChatDeepSeek(model="deepseek-chat", temperature=0)
+llm = ChatDeepSeek(model="deepseek-chat", temperature=0, api_key=os.getenv("DEEPSEEK_API_KEY"))
 retriever_from_llm = MultiQueryRetriever.from_llm(
     retriever=vectorstore.as_retriever(),
     llm=llm

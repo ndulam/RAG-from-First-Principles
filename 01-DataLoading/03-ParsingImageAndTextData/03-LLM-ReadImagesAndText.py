@@ -1,10 +1,14 @@
 from pdf2image import convert_from_path
 import base64
 import os
+from dotenv import load_dotenv
 from openai import OpenAI
 
+# Load environment variables from the .env file
+load_dotenv()
+
 # Initialize the OpenAI client
-client = OpenAI()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 output_dir = "temp_images"
 
 # 1. Convert the PDF to images
