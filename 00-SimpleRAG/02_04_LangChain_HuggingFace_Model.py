@@ -28,7 +28,7 @@ vector_store = InMemoryVectorStore(embeddings)
 vector_store.add_documents(all_splits)
 
 # 5. 构建用户查询
-question = "黑Wukong有哪些游戏场景？"
+question = "BlackMythWukong有哪些游戏场景？"
 
 # 6. 在向量存储中搜索相关文档，并准备上下文内容
 retrieved_docs = vector_store.similarity_search(question, k=3)

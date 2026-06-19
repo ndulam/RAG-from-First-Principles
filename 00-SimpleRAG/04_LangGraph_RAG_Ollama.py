@@ -65,7 +65,7 @@ graph = (
 )
 
 # 10. 运行查询
-question = "黑Wukong有哪些游戏场景？"
+question = "BlackMythWukong有哪些游戏场景？"
 response = graph.invoke({"question": question})
 print(f"\n问题: {question}")
 print(f"答案: {response['answer']}")

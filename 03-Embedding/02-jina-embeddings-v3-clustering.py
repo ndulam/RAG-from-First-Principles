@@ -11,7 +11,7 @@ headers = {
 }
 
 # 2. 读取game_descriptions数据
-df = pd.read_csv("90-文档-Data/Destruction of Gods/game_descriptions.csv")
+df = pd.read_csv("90-Data/Destruction of Gods/game_descriptions.csv")
 texts = df['description'].tolist()
 
 # 3. 获取文本嵌入

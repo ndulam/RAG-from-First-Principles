@@ -56,6 +56,6 @@ chain = (
 ) # 查看每个阶段的输入输出
 
 # 9. 执行查询
-question = "黑Wukong有哪些游戏场景？"
+question = "BlackMythWukong有哪些游戏场景？"
 response = chain.invoke(question) # 同步，可以换成异步执行
 print(response)

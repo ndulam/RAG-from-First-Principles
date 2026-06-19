@@ -27,7 +27,7 @@ def to_base64(path):
         return base64.b64encode(f.read()).decode("utf-8")
 
 # 插入图像数据
-image_dir = "90-文档-Data/多模态/Weaviate"
+image_dir = "90-Data/Multimodal/Weaviate"
 image_files = os.listdir(image_dir)
 monkey = client.collections.get("Monkey")
 for name in image_files:
@@ -85,7 +85,7 @@ for obj in response.objects:
     print(obj.properties)
 
 # 图像搜索示例
-test_image_path = "90-文档-Data/多模态/query_image.jpg"
+test_image_path = "90-Data/Multimodal/query_image.jpg"
 response = monkey.query.near_image(
     near_image=to_base64(test_image_path),
     return_properties=["name", "path", "mediaType"],
@@ -117,7 +117,7 @@ for obj in response.objects:
 # for obj in response.objects:
 #     print(obj.properties)
 
-# img_path = "90-文档-Data/多模态/Weaviate/02.jpg"
+# img_path = "90-Data/Multimodal/Weaviate/02.jpg"
 # with open(img_path, "rb") as f:
 #     image_base64 = base64.b64encode(f.read()).decode("utf-8")
 

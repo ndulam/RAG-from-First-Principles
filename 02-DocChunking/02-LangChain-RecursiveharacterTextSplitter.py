@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-loader = TextLoader("90-文档-Data/Shanxi Cultural Tourism/Yungang Grottoes.txt")
+loader = TextLoader("90-Data/Shanxi Cultural Tourism/Yungang Grottoes.txt")
 documents = loader.load()
 # 定义分割符列表，按优先级依次使用
 separators = ["\n\n", ".", "，", " "] # . 是句号，， 是逗号， 是空格

@@ -40,7 +40,7 @@ Settings.text_splitter = text_splitter
 
 # 2. 加载 PDF 文档
 # --------------------------------------------------
-pdf_path = "/home/huangj2/Documents/rag-in-action/90-文档-Data/复杂PDF/IPCC_AR6_WGII_Chapter03.pdf"
+pdf_path = "/home/huangj2/Documents/rag-in-action/90-Data/ComplexPDF/IPCC_AR6_WGII_Chapter03.pdf"
 documents = SimpleDirectoryReader(input_files=[pdf_path]).load_data()
 
 # 3. 文本切分为节点
@@ -111,10 +111,10 @@ sample_eval_nodes = random.sample(base_nodes[:200], num_nodes_eval)
 #     num_questions_per_chunk=2,
 # )
 # eval_dataset = await dataset_generator.agenerate_dataset_from_nodes()
-# eval_dataset.save_json("90-文档-Data/复杂PDF/ipcc_eval_qr_dataset.json")
+# eval_dataset.save_json("90-Data/ComplexPDF/ipcc_eval_qr_dataset.json")
 
 # 加载已生成的评测数据集
-eval_dataset = QueryResponseDataset.from_json("90-文档-Data/复杂PDF/ipcc_eval_qr_dataset.json")
+eval_dataset = QueryResponseDataset.from_json("90-Data/ComplexPDF/ipcc_eval_qr_dataset.json")
 
 # 7. 构建评测器
 # --------------------------------------------------

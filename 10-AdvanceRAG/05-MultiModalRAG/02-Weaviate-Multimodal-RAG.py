@@ -1,5 +1,5 @@
-# 课后作业：同学们可以基于这个代码框架，尝试用多模态RAG来生成一个图片
-# 不仅实现多模态检索，还可以还进一步基于检索内容，组合所有信息，利用现代LLM生成新的文本或图像。
+# 课后作业：同学们可以基于这个代码框架，尝试用MultimodalRAG来生成一个图片
+# 不仅实现Multimodal检索，还可以还进一步基于检索内容，组合所有信息，利用现代LLM生成新的文本或图像。
 
 import weaviate
 import weaviate.classes as wvc
@@ -9,7 +9,7 @@ from openai import OpenAI
 # 1. 连接Weaviate实例（本地或云端）
 client = weaviate.connect_to_local()  # 如用云服务请替换为 connect_to_wcs/wcs_cloud
 
-# 2. 创建多模态集合（Collection）
+# 2. 创建Multimodal集合（Collection）
 def create_multimodal_collection():
     client.collections.create(
         name="Animals",
@@ -19,9 +19,9 @@ def create_multimodal_collection():
             video_fields=["video"],
         )
     )
-    print("多模态集合 'Animals' 创建完成")
+    print("Multimodal集合 'Animals' 创建完成")
 
-# 3. 插入多模态数据（以图片为例）
+# 3. 插入Multimodal数据（以图片为例）
 def insert_multimodal_data():
     animals = client.collections.get("Animals")
     # 这里假设有一张图片的base64字符串
