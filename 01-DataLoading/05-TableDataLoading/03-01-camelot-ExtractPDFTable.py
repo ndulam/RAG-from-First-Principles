@@ -9,24 +9,24 @@ import time
 start_time = time.time()
 tables = camelot.read_pdf(pdf_path, pages="all")
 end_time = time.time()
-print(f"PDF表格解析耗时: {end_time - start_time:.2f}秒")
+print(f"PDF table parsing took: {end_time - start_time:.2f} seconds")
 
-# 转换所有表格为 DataFrame
+# Convert every table to a DataFrame
 if tables:
-    # 遍历所有表格
+    # Iterate over all the tables
     for i, table in enumerate(tables, 1):
-        # 将表格转换为 DataFrame
+        # Convert the table to a DataFrame
         df = table.df
-        
-        # 打印当前表格数据
-        print(f"\n表格 {i} 数据:")
+
+        # Print the current table's data
+        print(f"\nTable {i} data:")
         print(df)
-        
-        # 显示基本信息
-        print(f"\n表格 {i} 基本信息:")
+
+        # Show basic info
+        print(f"\nTable {i} basic info:")
         print(df.info())
-        
-        # 保存到CSV文件
+
+        # Save to a CSV file
         csv_filename = f"billionaires_table_{i}.csv"
         df.to_csv(csv_filename, index=False)
-        print(f"\n表格 {i} 数据已保存到 {csv_filename}")
+        print(f"\nTable {i} data saved to {csv_filename}")

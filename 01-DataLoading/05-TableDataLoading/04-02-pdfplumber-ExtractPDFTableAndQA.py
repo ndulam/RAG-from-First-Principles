@@ -6,7 +6,7 @@ from typing import List
 
 pdf_path = "90-Data/ComplexPDF/billionaires_page-1-5.pdf"
 
-# 打开 PDF 并解析表格
+# Open the PDF and parse the tables
 with pdfplumber.open(pdf_path) as pdf:
     tables = []
     for page in pdf.pages:
@@ -14,40 +14,40 @@ with pdfplumber.open(pdf_path) as pdf:
         if table:
             tables.append(table)
 
-# 转换所有表格为 DataFrame 并构建文档
+# Convert every table to a DataFrame and build documents
 documents: List[Document] = []
 if tables:
-    # 遍历所有表格
+    # Iterate over all the tables
     for i, table in enumerate(tables, 1):
-        # 将表格转换为 DataFrame
+        # Convert the table to a DataFrame
         df = pd.DataFrame(table)
-        
-        # 保存到CSV文件
+
+        # Save to a CSV file
         # csv_filename = f"billionaires_table_{i}.csv"
         # df.to_csv(csv_filename, index=False)
-        # print(f"\n表格 {i} 数据已保存到 {csv_filename}")
-        
-        # 将DataFrame转换为文本
+        # print(f"\nTable {i} data saved to {csv_filename}")
+
+        # Convert the DataFrame to text
         text = df.to_string()
-        
-        # 创建Document对象
-        doc = Document(text=text, metadata={"source": f"表格{i}"})
+
+        # Create a Document object
+        doc = Document(text=text, metadata={"source": f"Table {i}"})
         documents.append(doc)
 
-# 构建索引
+# Build the index
 index = VectorStoreIndex.from_documents(documents)
 
-# 创建查询引擎
+# Create the query engine
 query_engine = index.as_query_engine()
 
-# 示例问答
+# Example Q&A
 questions = [
-    "2023年谁是最富有的人?",
-    "最年轻的富豪是谁?"
+    "Who was the richest person in 2023?",
+    "Who was the youngest billionaire?"
 ]
 
-print("\n===== 问答演示 =====")
+print("\n===== Q&A Demo =====")
 for question in questions:
     response = query_engine.query(question)
-    print(f"\n问题: {question}")
-    print(f"回答: {response}")
+    print(f"\nQuestion: {question}")
+    print(f"Answer: {response}")

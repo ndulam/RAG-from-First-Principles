@@ -5,31 +5,31 @@ from llama_parse import LlamaParse
 import time
 from dotenv import load_dotenv
 
-# 加载环境变量（确保有OpenAI API密钥）
+# Load environment variables (make sure an OpenAI API key is set)
 load_dotenv()
 
-# 设置基础模型
+# Set up the base models
 embed_model = OpenAIEmbedding(model="text-embedding-3-small")
 llm = OpenAI(model="gpt-3.5-turbo-0125")
 
 Settings.llm = llm
 Settings.embed_model = embed_model
 
-# 定义PDF路径
+# Define the PDF path
 pdf_path = "90-Data/ComplexPDF/billionaires_page-1-5.pdf"
 
-# 记录开始时间
+# Record the start time
 start_time = time.time()
 
-# 使用LlamaParse解析PDF
+# Use LlamaParse to parse the PDF
 documents = LlamaParse(result_type="markdown").load_data(pdf_path)
 
-# 记录结束时间
+# Record the end time
 end_time = time.time()
-print(f"PDF解析耗时: {end_time - start_time:.2f}秒")
+print(f"PDF parsing took: {end_time - start_time:.2f} seconds")
 
-# 打印解析结果
-print("\n解析后的文档内容:")
+# Print the parsed result
+print("\nParsed document content:")
 for i, doc in enumerate(documents, 1):
-    print(f"\n文档 {i} 内容:")
+    print(f"\nDocument {i} content:")
     print(doc.text)
