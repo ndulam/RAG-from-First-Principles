@@ -2,15 +2,15 @@ from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import CharacterTextSplitter
 loader = TextLoader("90-Data/Shanxi Cultural Tourism/Yungang Grottoes.txt")
 documents = loader.load()
-# 设置分块器，指定块的大小为50个字符，无重叠
+# Configure the splitter: chunk size of 50 characters, no overlap
 text_splitter = CharacterTextSplitter(
-    chunk_size=100,  # 每个文本块的大小为50个字符
-    chunk_overlap=10,  # 文本块之间没有重叠部分
+    chunk_size=100,  # each text chunk is 50 characters
+    chunk_overlap=10,  # no overlap between chunks
 )
 chunks = text_splitter.split_documents(documents)
-print("\n=== 文档分块结果 ===")
+print("\n=== Document Chunking Results ===")
 for i, chunk in enumerate(chunks, 1):
-    print(f"\n--- 第 {i} 个文档块 ---")
-    print(f"内容: {chunk.page_content}")
-    print(f"元数据: {chunk.metadata}")
+    print(f"\n--- Document Chunk {i} ---")
+    print(f"Content: {chunk.page_content}")
+    print(f"Metadata: {chunk.metadata}")
     print("-" * 50)

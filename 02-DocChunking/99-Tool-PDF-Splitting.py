@@ -1,40 +1,40 @@
-# 把PDF的某几页提取出来，保存为同一目录新的PDF后缀页面
+# Extract specific pages from a PDF and save them as a new PDF in the same directory
 from pathlib import Path
 from pypdf import PdfReader, PdfWriter
 
 def extract_pages(pdf_path, output_path, page_numbers):
     """
-    提取指定页码的PDF页面并保存为新的PDF文件            
+    Extract the specified PDF pages and save them as a new PDF file
     """
     try:
-        # 确保输出目录存在
+        # Ensure the output directory exists
         output_dir = Path(output_path).parent
         output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # 打开原始PDF文件
+
+        # Open the original PDF file
         reader = PdfReader(pdf_path)
         writer = PdfWriter()
-        
-        # 提取指定页码
+
+        # Extract the specified pages
         for page_number in page_numbers:
             if 1 <= page_number <= len(reader.pages):
                 writer.add_page(reader.pages[page_number - 1])
             else:
-                print(f"警告：页码 {page_number} 超出范围，PDF共有 {len(reader.pages)} 页")
-                
-        # 保存新的PDF文件
+                print(f"Warning: page {page_number} is out of range, the PDF has {len(reader.pages)} pages")
+
+        # Save the new PDF file
         with open(output_path, 'wb') as output_file:
             writer.write(output_file)
-            
-        print(f"成功提取页面 {page_numbers} 到 {output_path}")
-            
+
+        print(f"Successfully extracted pages {page_numbers} to {output_path}")
+
     except Exception as e:
-        print(f"处理PDF时发生错误: {str(e)}")
+        print(f"Error processing PDF: {str(e)}")
         raise
-            
+
 if __name__ == "__main__":
     pdf_path = "90-Data/ComplexPDF/uber_10q_march_2022.pdf"
     output_path = "90-Data/ComplexPDF/uber_10q_march_2022_page1-3.pdf"
-    page_numbers = [26, 27, 28]  # 指定要提取的页码
+    page_numbers = [26, 27, 28]  # specify the page numbers to extract
     extract_pages(pdf_path, output_path, page_numbers)
         

@@ -15,7 +15,7 @@ llm = OpenAI(model="gpt-3.5-turbo-0125")
 
 Settings.embed_model = embed_model
 Settings.llm = llm
-Settings.node_parser = SentenceSplitter(chunk_size=250, chunk_overlap=20) # 50, 100, 250将得到不同的结果，为什么？
+Settings.node_parser = SentenceSplitter(chunk_size=250, chunk_overlap=20) # 50, 100, 250 give different results -- why?
 
 # Load PDF using standard PDFReader
 loader = PDFReader()

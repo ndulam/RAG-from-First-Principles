@@ -1,6 +1,6 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# 示例代码
+# Example code
 GAME_CODE = """
 class CombatSystem:
    def __init__(self):
@@ -61,20 +61,20 @@ class QuestSystem:
        return list(self.active_quests.keys())
 """
 
-# 创建文本分割器
+# Create the text splitter
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,  # 每个块的大小
-    chunk_overlap=00,  # 相邻块之间的重叠大小
-    # separators=["\n\n", "\n", " ", ""]  # 分割符列表
+    chunk_size=1000,  # size of each chunk
+    chunk_overlap=00,  # overlap between adjacent chunks
+    # separators=["\n\n", "\n", " ", ""]  # list of separators
 )
 
-# 执行分块
+# Perform chunking
 text_chunks = text_splitter.create_documents([GAME_CODE])
 
-# 打印分块结果
-print("\n=== 代码分块结果 ===")
+# Print chunking results
+print("\n=== Code Chunking Results ===")
 for i, chunk in enumerate(text_chunks, 1):
-    print(f"\n--- 第 {i} 个代码块 ---")
-    print(f"内容:\n{chunk.page_content}")
-    print(f"元数据: {chunk.metadata}")
+    print(f"\n--- Code Chunk {i} ---")
+    print(f"Content:\n{chunk.page_content}")
+    print(f"Metadata: {chunk.metadata}")
     print("-" * 50)

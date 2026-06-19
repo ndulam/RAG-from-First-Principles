@@ -67,15 +67,15 @@ class QuestSystem:
        return list(self.active_quests.keys())
 """
 python_splitter = RecursiveCharacterTextSplitter.from_language(
-   language=Language.PYTHON,  # 指定编程语言为Python
+   language=Language.PYTHON,  # specify the programming language as Python
    chunk_size=1000,
    chunk_overlap=0
 )
 
 python_docs = python_splitter.create_documents([GAME_CODE])
-print("\n=== 代码分块结果 ===")
+print("\n=== Code Chunking Results ===")
 for i, chunk in enumerate(python_docs, 1):
-    print(f"\n--- 第 {i} 个代码块 ---")
-    print(f"内容:\n{chunk.page_content}")
-    print(f"元数据: {chunk.metadata}")
+    print(f"\n--- Code Chunk {i} ---")
+    print(f"Content:\n{chunk.page_content}")
+    print(f"Metadata: {chunk.metadata}")
     print("-" * 50)
