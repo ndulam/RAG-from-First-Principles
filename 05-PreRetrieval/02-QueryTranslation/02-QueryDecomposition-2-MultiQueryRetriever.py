@@ -12,7 +12,7 @@ from langchain.prompts import PromptTemplate
 logging.basicConfig()
 logging.getLogger("langchain.retrievers.multi_query").setLevel(logging.INFO)
 # Load the game-related documents and build the vector database
-loader = TextLoader("90-Data/BlackMythWukong/BlackMythWukongsetup.txt", encoding='utf-8')
+loader = TextLoader("99-EN/black-myth-wukong/black_myth_wukong_setting.txt", encoding='utf-8')
 data = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
 splits = text_splitter.split_documents(data)

@@ -73,7 +73,7 @@ class WukongDataset:
                 self.images.append(WukongImage(**img_data))
 
 # Initialize the dataset
-dataset = WukongDataset("/home/huangj2/Documents/rag-in-action/90-Data/Multimodal", "/home/huangj2/Documents/rag-in-action/90-Data/Multimodal/metadata.json")
+dataset = WukongDataset("99-EN/assets/multimodal", "99-EN/multimodal/metadata.json")
 
 # ==================== 3. Generate image embeddings ====================
 # Generate embedding vectors for all images
@@ -228,7 +228,7 @@ def visualize_results(query_image: str, results: List[dict], output_path: str):
 
 # ==================== 7. Run an example query ====================
 # Run the query
-query_image = "/home/huangj2/Documents/rag-in-action/90-Data/Multimodal/query_image.jpg"
+query_image = "99-EN/assets/multimodal/query_image.jpg"
 query_text = "Find battle scenes of Wukong facing a building"
 
 results = search_similar_images(

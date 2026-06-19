@@ -1,7 +1,7 @@
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.postprocessor import SentenceEmbeddingOptimizer
 # Load documents
-documents = SimpleDirectoryReader("data/Shanxi Cultural Tourism").load_data()
+documents = SimpleDirectoryReader("99-EN/shanxi-tourism").load_data() + SimpleDirectoryReader("99-EN/assets/shanxi-tourism").load_data()
 index = VectorStoreIndex.from_documents(documents)
 # Query without optimization
 print("Without optimization:")

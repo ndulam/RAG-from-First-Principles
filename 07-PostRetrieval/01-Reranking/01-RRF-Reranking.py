@@ -30,7 +30,7 @@ Advantages:
 """
 
 # Document directory configuration
-doc_dir = "90-Data/Shanxi Cultural Tourism"
+doc_dirs = ["99-EN/shanxi-tourism", "99-EN/assets/shanxi-tourism"]
 
 def load_documents(directory):
     """
@@ -69,7 +69,7 @@ def load_documents(directory):
 
 # Step 1: Load documents
 print("📖 Loading documents...")
-docs = load_documents(doc_dir)
+docs = [doc for doc_dir in doc_dirs for doc in load_documents(doc_dir)]
 print(f"✅ Successfully loaded {len(docs)} documents")
 
 # Step 2: Text chunking (splitting)

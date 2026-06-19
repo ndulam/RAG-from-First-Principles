@@ -7,7 +7,7 @@ from langchain_openai import OpenAI
 import os
 
 # 1. Load Document
-loader = TextLoader("90-Data/BlackMythWukong/setup.txt")
+loader = TextLoader("99-EN/black-myth-wukong/black_myth_wukong_setting.txt")
 documents = loader.load()
 
 # 2. Split Document

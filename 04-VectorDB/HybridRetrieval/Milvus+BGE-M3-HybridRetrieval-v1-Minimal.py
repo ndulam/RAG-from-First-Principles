@@ -15,7 +15,7 @@ from pymilvus.exceptions import MilvusException
 import scipy.sparse # make sure scipy is installed
 
 # 0. Configuration (for easy modification)
-DATA_PATH = "/root/AI-BOX/code/rag/rag-in-action/90-Data/Chronicles of Godslaying/BattleScenes.json"
+DATA_PATH = "99-EN/journey-of-extinction-husun/battle_scenes.json"
 COLLECTION_NAME = "wukong_hybrid_v4" # use a new collection name to avoid conflicts with old data
 MILVUS_URI = "./wukong_v4.db" # use a new database file
 BATCH_SIZE = 50 # try reducing the batch size, e.g. 10 or 20, for testing

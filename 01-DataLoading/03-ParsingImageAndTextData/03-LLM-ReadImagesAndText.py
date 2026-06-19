@@ -54,7 +54,7 @@ from langchain_core.documents import Document
 documents = [
     Document(
         page_content=result,
-        metadata={"source": "data/BlackMythWukong/black mythWukong.pdf", "page_number": i + 1}
+        metadata={"source": "99-EN/black-myth-wukong/black_myth_wukong_slides.pdf", "page_number": i + 1}
     )
     for i, result in enumerate(results)
 ]

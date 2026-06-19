@@ -22,7 +22,7 @@ from langchain_core.documents import Document
 # Convert to the Documents data structure
 documents = [
 Document(page_content=element.text,
-  	     metadata={"source": "data/black mythWukongPPT.pptx"})
+  	     metadata={"source": "99-EN/black-myth-wukong/black_myth_wukong_slides.pptx"})
     for element in ppt_elements
 ]
 

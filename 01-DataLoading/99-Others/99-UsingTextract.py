@@ -1,5 +1,5 @@
 import textract
-text = textract.process("data/BlackMythWukong/black mythWukong.pdf")
+text = textract.process("99-EN/black-myth-wukong/black_myth_wukong_slides.pdf")
 print(text)
 
 # Textract vs PyMuPDF / Unstructured:

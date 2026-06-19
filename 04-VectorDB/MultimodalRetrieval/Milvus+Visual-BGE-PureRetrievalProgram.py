@@ -143,7 +143,7 @@ if __name__ == "__main__":
     searcher = MilvusSearcher("./wukong_images.db", "wukong_scenes")
 
     # Generate the query vector
-    query_image = "90-Data/Multimodal/query_image.jpg"
+    query_image = "99-EN/assets/multimodal/query_image.jpg"
     query_text = "Find similar snowy battle scenes"
     qvec = encoder.encode_query(query_image, query_text)
 

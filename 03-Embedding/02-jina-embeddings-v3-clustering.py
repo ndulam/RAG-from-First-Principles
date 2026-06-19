@@ -11,7 +11,7 @@ headers = {
 }
 
 # 2. Load the game_descriptions data
-df = pd.read_csv("90-Data/Chronicles of Godslaying/game_descriptions.csv")
+df = pd.read_csv("99-EN/journey-of-extinction-husun/jina_games.csv")
 texts = df['description'].tolist()
 
 # 3. Get text embeddings

@@ -6,7 +6,7 @@ from llama_index.core.node_parser import (
 from llama_index.embeddings.openai import OpenAIEmbedding 
 # from llama_index.embeddings.huggingface import HuggingFaceEmbedding 
 # embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
-documents = SimpleDirectoryReader(input_files=["90-Data/BlackMythWukong/BlackMythWukong-Wiki.txt"]).load_data()
+documents = SimpleDirectoryReader(input_files=["99-EN/black-myth-wukong/black_myth_wukong_wiki.txt"]).load_data()
 
 # Create the semantic splitter
 splitter = SemanticSplitterNodeParser(

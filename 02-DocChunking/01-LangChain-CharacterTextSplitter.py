@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import CharacterTextSplitter
-loader = TextLoader("90-Data/Shanxi Cultural Tourism/Yungang Grottoes.txt")
+loader = TextLoader("99-EN/shanxi-tourism/yungang_grottoes.txt")
 documents = loader.load()
 # Configure the splitter: chunk size of 50 characters, no overlap
 text_splitter = CharacterTextSplitter(
