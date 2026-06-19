@@ -1,16 +1,16 @@
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 
 import os
-# 获取当前脚本文件所在的目录
+# Get the directory the current script is in
 script_dir = os.path.dirname(__file__)
-print(f"获取当前脚本文件所在的目录：{script_dir}") 
-# 结合相对路径构建完整路径
+print(f"Directory of the current script: {script_dir}")
+# Build the full path from the relative path
 data_dir = os.path.join(script_dir, '../../90-Data/BlackMythWukong')
 
-# 加载目录下所有 Markdown 文件
+# Load every Markdown file in the directory
 loader = DirectoryLoader(data_dir,
                          glob="**/*.md",
-                         loader_cls=TextLoader # 指定加载工具
+                         loader_cls=TextLoader # specify the loader to use
                          )
 docs = loader.load()
-print(docs[0].page_content[:100])  # 打印第一个文档内容的前100个字符
+print(docs[0].page_content[:100])  # print the first 100 characters of the first document's content

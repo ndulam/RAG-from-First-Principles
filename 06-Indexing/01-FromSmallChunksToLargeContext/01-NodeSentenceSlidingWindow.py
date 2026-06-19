@@ -9,7 +9,7 @@ Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
 Settings.text_splitter = SentenceSplitter(separator="\n",  chunk_size=50, chunk_overlap=0)
 # 准备知识文本并创建Document对象
 game_knowledge = """
-《Destruction of Gods∙猢狲》是一款动作角色扮演游戏。游戏背景setup在架空的神话世界中。
+《Chronicles of Godslaying∙猢狲》是一款动作角色扮演游戏。游戏背景setup在架空的神话世界中。
 玩家将扮演齐天大圣孙Wukong，在充满东方神话元素的世界中展开冒险。
 游戏的战斗系统极具特色，采用了独特的“变身系统”。Wukong可以在战斗中变换不同形态。
 每种形态都有其独特的战斗风格和技能组合。金刚形态侧重力量型打击，带来压倒性的破坏力。

@@ -1,17 +1,17 @@
 from langchain_community.document_loaders import DirectoryLoader
 
 import os
-# 获取当前脚本文件所在的目录
+# Get the directory the current script is in
 script_dir = os.path.dirname(__file__)
-print(f"获取当前脚本文件所在的目录：{script_dir}") 
-# 结合相对路径构建完整路径
+print(f"Directory of the current script: {script_dir}")
+# Build the full path from the relative path
 data_dir = os.path.join(script_dir, '../../90-Data/BlackMythWukong')
 
-loader = DirectoryLoader(data_dir, 
-                         glob="**/*.md", 
+loader = DirectoryLoader(data_dir,
+                         glob="**/*.md",
                          use_multithreading=True,
                          show_progress=True,
                          )
 docs = loader.load()
-print(f"文档数：{len(docs)}")  # 输出文档总数
-print(docs[0])  # 输出第一个文档
+print(f"Number of documents: {len(docs)}")  # print the total document count
+print(docs[0])  # print the first document

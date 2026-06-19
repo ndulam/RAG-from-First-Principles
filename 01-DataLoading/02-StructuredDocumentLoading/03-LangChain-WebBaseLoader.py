@@ -1,7 +1,7 @@
-# 使用WebBaseLoader加载网页
+# Use WebBaseLoader to load a web page
 import bs4
 from langchain_community.document_loaders import WebBaseLoader
-page_url = "https://zh.wikipedia.org/wiki/black myth：Wukong"
+page_url = "https://en.wikipedia.org/wiki/Black_Myth:_Wukong"
 # loader = WebBaseLoader(web_paths=[page_url])
 # docs = []
 # docs = loader.load()
@@ -11,7 +11,7 @@ page_url = "https://zh.wikipedia.org/wiki/black myth：Wukong"
 # print(doc.page_content.strip()[:3000])
 
 
-# 只解析文章的主体部分
+# Only parse the main body of the article
 loader = WebBaseLoader(
     web_paths=[page_url],
     bs_kwargs={

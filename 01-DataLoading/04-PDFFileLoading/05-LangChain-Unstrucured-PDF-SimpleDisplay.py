@@ -1,16 +1,16 @@
 file_path = ("90-Data/Shanxi Cultural Tourism/Yungang Grottoes-en.pdf")
 from langchain_unstructured import UnstructuredLoader
 loader = UnstructuredLoader(
-    file_path=file_path,  # PDF文件路径
-    strategy="hi_res",    # 使用高分辨率策略进行文档处理
-    # partition_via_api=True,  # 通过API进行文档分块
-    # coordinates=True,     # 提取文本坐标信息
+    file_path=file_path,  # PDF file path
+    strategy="hi_res",    # use the high-resolution strategy for document processing
+    # partition_via_api=True,  # chunk the document via the API
+    # coordinates=True,     # extract text coordinate info
 )
 docs = []
 
-# lazy_load() 是一种延迟加载方法
-# 它不会一次性将所有文档加载到内存中，而是在需要时才逐个加载文档
-# 这对于处理大型PDF文件时可以节省内存使用
+# lazy_load() is a lazy-loading method
+# rather than loading all documents into memory at once, it loads them one at a time as needed
+# this can save memory when working with large PDF files
 for doc in loader.lazy_load():
     docs.append(doc)
 

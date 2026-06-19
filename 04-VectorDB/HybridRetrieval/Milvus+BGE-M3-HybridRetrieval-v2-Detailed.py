@@ -1,7 +1,7 @@
 # 1. 加载并预处理数据集
 import json
 from typing import Optional, Dict
-with open("90-Data/Destruction of Gods/BattleScenes.json", 'r', encoding='utf-8') as f:
+with open("90-Data/Chronicles of Godslaying/BattleScenes.json", 'r', encoding='utf-8') as f:
     dataset = json.load(f)
 
 docs = []

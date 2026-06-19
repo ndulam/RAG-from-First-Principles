@@ -1,46 +1,46 @@
 import pymupdf
-# 打开PDF文件
+# Open the PDF file
 doc = pymupdf.open("90-Data/BlackMythWukong/black mythWukong.pdf")
 text = [page.get_text() for page in doc]
 print(text)
 
-# 示例: 使用PyMuPDF的基础功能
-print("=== PyMuPDF 基本信息提取 ===")
-print(f"文档页数: {len(doc)}")
-print(f"文档标题: {doc.metadata['title']}")
-print(f"文档作者: {doc.metadata['author']}")
-print(f"文档元数据: {doc.metadata}")  # 比Unstructured提供更多元数据
+# Example: basic PyMuPDF features
+print("=== PyMuPDF basic info extraction ===")
+print(f"Number of pages: {len(doc)}")
+print(f"Document title: {doc.metadata['title']}")
+print(f"Document author: {doc.metadata['author']}")
+print(f"Document metadata: {doc.metadata}")  # provides more metadata than Unstructured
 
-# 遍历每一页
+# Iterate over every page
 for page_num, page in enumerate(doc):
-    # 提取文本
+    # Extract text
     text = page.get_text()
-    print(f"\n--- 第{page_num + 1}页 ---")
-    print("文本内容:", text[:200])  # 显示前200个字符
-    
-    # 提取图片
+    print(f"\n--- Page {page_num + 1} ---")
+    print("Text content:", text[:200])  # show the first 200 characters
+
+    # Extract images
     images = page.get_images()
-    print(f"图片数量: {len(images)}")
-    
-    # 获取页面链接
+    print(f"Number of images: {len(images)}")
+
+    # Get page links
     links = page.get_links()
-    print(f"链接数量: {len(links)}")
-    
-    # 获取页面大小
+    print(f"Number of links: {len(links)}")
+
+    # Get page size
     width, height = page.rect.width, page.rect.height
-    print(f"页面尺寸: {width} x {height}")
+    print(f"Page size: {width} x {height}")
 
 doc.close()
 
-# PyMuPDF (fitz) 与 Unstructured 对比:
-# 优势:
-# 1. 更快的处理速度
-# 2. 更细粒度的PDF控制能力
-# 3. 可以获取更多元数据和文档结构信息
-# 4. 内存占用更少
-# 5. 不依赖外部工具
+# PyMuPDF (fitz) vs Unstructured:
+# Advantages:
+# 1. Faster processing speed
+# 2. Finer-grained control over the PDF
+# 3. Can retrieve more metadata and document structure information
+# 4. Lower memory usage
+# 5. No dependency on external tools
 
-# 劣势:
-# 1. 文本提取的智能化程度较低
-# 2. 没有自动的文档结构理解
-# 3. 需要手动处理布局分析
+# Disadvantages:
+# 1. Text extraction is less "intelligent"
+# 2. No automatic document structure understanding
+# 3. Layout analysis has to be handled manually

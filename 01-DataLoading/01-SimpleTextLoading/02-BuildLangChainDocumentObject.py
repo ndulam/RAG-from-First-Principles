@@ -1,13 +1,12 @@
 from langchain_core.documents import Document
 documents = [
     Document(
-        page_content="Wukong是大师兄.",
-        metadata={"source": "师徒四人.txt"},
+        page_content="Wukong is the eldest disciple.",
+        metadata={"source": "master_and_disciples.txt"},
     ),
     Document(
-        page_content="八戒是二师兄.",
-        metadata={"source": "师徒四人.txt "},
+        page_content="Bajie is the second disciple.",
+        metadata={"source": "master_and_disciples.txt "},
     ),
 ]
 print(documents)
-

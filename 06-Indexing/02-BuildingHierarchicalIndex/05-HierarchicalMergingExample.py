@@ -8,7 +8,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1)
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh")
 # 准备游戏知识文本
-game_knowledge = """《Destruction of Gods∙猢狲》的战斗系统设计精妙绝伦。玩家可以在战斗中自由切换多种战斗形态，每种形态都有其独特优势。金刚形态下……魔佛形态则……"""
+game_knowledge = """《Chronicles of Godslaying∙猢狲》的战斗系统设计精妙绝伦。玩家可以在战斗中自由切换多种战斗形态，每种形态都有其独特优势。金刚形态下……魔佛形态则……"""
 # 创建Document对象
 documents = [Document(text=game_knowledge)]
 # 创建分层节点解析器并处理文档

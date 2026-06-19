@@ -3,11 +3,11 @@ import base64
 import os
 from openai import OpenAI
 
-# 初始化 OpenAI 客户端
+# Initialize the OpenAI client
 client = OpenAI()
 output_dir = "temp_images"
 
-# 1. PDF 转图片
+# 1. Convert the PDF to images
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
@@ -17,23 +17,23 @@ for i, image in enumerate(images):
     image_path = os.path.join(output_dir, f'page_{i+1}.jpg')
     image.save(image_path, 'JPEG')
     image_paths.append(image_path)
-print(f"成功转换 {len(image_paths)} 页")
+print(f"Successfully converted {len(image_paths)} pages")
 
 
-# 2. GPT-4o 分析图片
-print("\n开始分析图片...")
+# 2. Analyze the images with GPT-4o
+print("\nAnalyzing images...")
 results = []
 for image_path in image_paths:
     with open(image_path, "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-    
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "请详细描述这张PPT幻灯片的内容，包括标题、正文和图片内容。"},
+                    {"type": "text", "text": "Please describe in detail the content of this PPT slide, including the title, body text, and any images."},
                     {
                         "type": "image_url",
                         "image_url": {
@@ -48,7 +48,7 @@ for image_path in image_paths:
 results.append(response.choices[0].message.content)
 
 
-# 3. 转换为 LangChain 的 Document 数据结构
+# 3. Convert to LangChain's Document data structure
 from langchain_core.documents import Document
 
 documents = [
@@ -59,14 +59,13 @@ documents = [
     for i, result in enumerate(results)
 ]
 
-# 输出所有生成的 Document 对象
-print("\n分析结果：")
+# Print all the generated Document objects
+print("\nAnalysis results:")
 for doc in documents:
-    print(f"内容: {doc.page_content}\n元数据: {doc.metadata}\n")
+    print(f"Content: {doc.page_content}\nMetadata: {doc.metadata}\n")
     print("-" * 80)
 
-# 清理临时文件
+# Clean up temporary files
 for image_path in image_paths:
     os.remove(image_path)
 os.rmdir(output_dir)
-

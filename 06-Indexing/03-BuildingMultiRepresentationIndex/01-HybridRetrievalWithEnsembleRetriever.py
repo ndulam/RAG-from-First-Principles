@@ -3,7 +3,7 @@ from langchain_deepseek import ChatDeepSeek
 from langchain.chains import RetrievalQA
 # 系统setup文档：关注具体游戏机制和系统
 system_docs = [
-    "《Destruction of Gods∙猢狲》采用独特的变身系统作为核心战斗机制",
+    "《Chronicles of Godslaying∙猢狲》采用独特的变身系统作为核心战斗机制",
     "金刚形态下可以使用重型武器，增加攻击力和防御力",
     "魔佛形态专注于法术攻击，可以释放强大的法术伤害",
     "战斗中可以随时切换不同形态，实现连击",

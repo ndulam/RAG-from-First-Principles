@@ -1,17 +1,18 @@
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
-# 加载目录下所有文件，跳过出错文件，因为有些文件是图片，TextLoader 无法加载
+# Load every file in the directory, skipping files that error out, since some files
+# are images that TextLoader cannot load
 import os
-# 获取当前脚本文件所在的目录
+# Get the directory the current script is in
 script_dir = os.path.dirname(__file__)
-print(f"获取当前脚本文件所在的目录：{script_dir}") 
-# 结合相对路径构建完整路径
+print(f"Directory of the current script: {script_dir}")
+# Build the full path from the relative path
 data_dir = os.path.join(script_dir, '../../90-Data/BlackMythWukong')
 
-# 加载目录下所有 Markdown 文件
+# Load every Markdown file in the directory
 loader = DirectoryLoader(data_dir,
                           silent_errors=True,
                          loader_cls=TextLoader
                          )
 
 docs = loader.load()
-print(docs[0].page_content[:100])  # 打印第一个文档内容的前100个字符
+print(docs[0].page_content[:100])  # print the first 100 characters of the first document's content
