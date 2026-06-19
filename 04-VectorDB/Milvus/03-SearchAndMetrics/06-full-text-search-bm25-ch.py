@@ -58,11 +58,11 @@ client.create_collection(
 # 6. Insert text data
 print("\nInserting text data...")
 documents = [
-    {'text': '信息检索是一个研究领域。'},
-    {'text': '信息检索专注于在大型数据集中查找相关信息。'},
-    {'text': '数据挖掘和信息检索在研究中有所重叠。'},
-    {'text': '搜索引擎是信息检索系统的一个典型例子。'},
-    {'text': '自然语言处理在信息检索中扮演重要角色。'},
+    {'text': 'Information retrieval is a research field.'},
+    {'text': 'Information retrieval focuses on finding relevant information in large datasets.'},
+    {'text': 'Data mining and information retrieval overlap in research.'},
+    {'text': 'Search engines are a typical example of information retrieval systems.'},
+    {'text': 'Natural language processing plays an important role in information retrieval.'},
 ]
 
 insert_result = client.insert(COLLECTION_NAME, documents)
@@ -78,7 +78,7 @@ search_params = {
     'params': {'drop_ratio_search': 0.2},
 }
 
-query_text = "信息"
+query_text = "information"
 print(f"\nRunning search, query text: {query_text}")
 results = client.search(
     collection_name=COLLECTION_NAME,
