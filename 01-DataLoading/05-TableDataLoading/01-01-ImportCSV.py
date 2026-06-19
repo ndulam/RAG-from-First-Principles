@@ -1,44 +1,44 @@
 from langchain_community.document_loaders import CSVLoader
-# # 第 1 部分: 基本加载 CSV 文件并打印记录
+# # Part 1: basic CSV loading and printing records
 file_path = "90-Data/BlackMythWukong/black mythWukong.csv"
 # loader = CSVLoader(file_path=file_path)
 # data = loader.load()
-# print("示例 1: 基本加载 CSV 文件并打印前两条记录")
+# print("Example 1: basic CSV loading and printing the first two records")
 # for record in data[:2]:
 #     print(record)
 # print("-" * 80)
 
-# 第 2 部分: 跳过 CSV 文件的标题行并使用自定义列名
+# Part 2: skip the CSV header row and use custom column names
 # loader = CSVLoader(
 #     file_path=file_path,
 #     csv_args={
 #         "delimiter": ",",
 #         "quotechar": '"',
-#         "fieldnames": ["种类", "名称", "说明", "等级"],
+#         "fieldnames": ["Category", "Name", "Description", "PowerLevel"],
 #     },
 # )
 # data = loader.load()
 
-# print("示例 2: 跳过标题行并使用自定义列名")
+# print("Example 2: skip the header row and use custom column names")
 # for record in data[:2]:
 #     print(record)
 # print("-" * 80)
 
 
-# # 第 3 部分: 指定 "Name" 列作为 source_column
+# # Part 3: specify the "Name" column as the source_column
 # loader = CSVLoader(file_path=file_path, source_column="Name")
 # data = loader.load()
 
-# print("示例 3: 使用 'Name' 列作为主要内容来源")
+# print("Example 3: use the 'Name' column as the primary content source")
 # for record in data[:2]:
 #     print(record)
 # print("-" * 80)
 
 
-# 第 4 部分: 使用 UnstructuredCSVLoader 加载 CSV 文件
+# Part 4: use UnstructuredCSVLoader to load the CSV file
 from langchain_community.document_loaders import UnstructuredCSVLoader
 loader = UnstructuredCSVLoader(file_path=file_path)
 data = loader.load()
-print("示例 4: 使用 UnstructuredCSVLoader 加载文件")
+print("Example 4: load the file with UnstructuredCSVLoader")
 print(data)
 print("-" * 80)

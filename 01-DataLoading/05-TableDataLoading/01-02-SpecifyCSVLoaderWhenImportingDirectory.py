@@ -8,5 +8,5 @@ loader = DirectoryLoader(
 )
 
 docs = loader.load()
-print(f"文档数：{len(docs)}")  # 输出文档总数
+print(f"Number of documents: {len(docs)}")  # print the total document count
 print(docs[0])

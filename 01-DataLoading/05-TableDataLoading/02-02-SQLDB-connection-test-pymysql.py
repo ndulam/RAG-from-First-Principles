@@ -17,6 +17,4 @@ try:
     connection.close()
 
 except Exception as e:
-    print("数据库连接失败:", e)
-
-
+    print("Database connection failed:", e)
