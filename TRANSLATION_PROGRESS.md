@@ -20,7 +20,7 @@ Status values: `pending`, `in_progress`, `done`, `skipped` (with reason).
 | 00-SimpleRAG | 21 | done |
 | 01-DataLoading | 47 | done |
 | 02-DocChunking | 7 | done |
-| 03-Embedding | 6 | pending |
+| 03-Embedding | 6 | done |
 | 04-VectorDB | 28 | pending |
 | 05-PreRetrieval | 22 | pending |
 | 06-Indexing | 16 | pending |

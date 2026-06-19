@@ -8,17 +8,17 @@ from langchain_community.vectorstores import Chroma # pip install chromadb
 from langchain_community.retrievers import BM25Retriever # pip install rank_bm25
 
 battle_logs = [
-    "猢狲身披锁子甲。",
-    "猢狲在无回谷遭遇了妖怪，妖怪开始攻击，猢狲使用铜云棒抵挡。",
-    "猢狲施展烈焰拳击退妖怪随后开启金刚体抵挡神兵攻击。",
-    "妖怪使用寒冰箭攻击猢狲但被烈焰拳反击击溃。",
-    "猢狲召唤烈焰拳与毁灭咆哮击败妖怪随后收集妖怪精华。"
+    "Wukong wears chainmail armor.",
+    "Wukong encountered a demon in the Valley of No Return; the demon attacked, and Wukong blocked with the Bronze Cloud Staff.",
+    "Wukong used Flaming Fist to repel the demon, then activated Vajra Body to block the divine weapon's attack.",
+    "The demon used Frost Arrow to attack Wukong, but was counterattacked and crushed by Flaming Fist.",
+    "Wukong summoned Flaming Fist and Devastating Roar to defeat the demon, then collected the demon's essence."
 ]
-request = "猢狲有什么装备和招数？"
+request = "What equipment and moves does Wukong have?"
 
 bm25_retriever = BM25Retriever.from_texts(battle_logs)
 bm25_response = bm25_retriever.invoke(request)
-print(f"BM25检索结果：\n{bm25_response}")
+print(f"BM25 retrieval results:\n{bm25_response}")
 
 docs = [Document(page_content=log) for log in battle_logs]
 load_dotenv()
@@ -32,18 +32,19 @@ chroma_vs = Chroma.from_documents(
     )
 chroma_retriever = chroma_vs.as_retriever()
 chroma_response = chroma_retriever.invoke(request)
-print(f"Chroma检索结果：\n{chroma_response}")
+print(f"Chroma retrieval results:\n{chroma_response}")
 
-# hybrid_response = list({doc.page_content for doc in bm25_response}) # 缺锁子甲
-# hybrid_response = list({doc.page_content for doc in chroma_response}) # 缺铜云棒
-hybrid_response = list({doc.page_content for doc in bm25_response + chroma_response}) 
-print(f"混合检索结果：\n{hybrid_response}")
+# hybrid_response = list({doc.page_content for doc in bm25_response}) # missing the chainmail armor
+# hybrid_response = list({doc.page_content for doc in chroma_response}) # missing the Bronze Cloud Staff
+hybrid_response = list({doc.page_content for doc in bm25_response + chroma_response})
+print(f"Hybrid retrieval results:\n{hybrid_response}")
 prompt = ChatPromptTemplate.from_template("""
-                基于以下上下文，回答问题。如果上下文中没有相关信息，
-                请说"我无法从提供的上下文中找到相关信息"。
-                上下文: {context}
-                问题: {question}
-                回答:"""
+                Answer the question based on the following context. If the context
+                does not contain relevant information, say "I cannot find relevant
+                information in the provided context".
+                Context: {context}
+                Question: {question}
+                Answer:"""
                                           )
 llm = ChatOpenAI(
     model="gpt-4o",
@@ -51,4 +52,4 @@ llm = ChatOpenAI(
     base_url=os.getenv("O3_BASE_URL"))
 doc_content = "\n\n".join(hybrid_response)
 answer = llm.invoke(prompt.format(question=request, context=doc_content))
-print(f"LLM回答：\n{answer.content}")
+print(f"LLM answer:\n{answer.content}")
